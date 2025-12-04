@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/card_background">
+
+    <ImageView
+        android:id="@+id/imgPartyLogo"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_bjp"
+        android:background="@drawable/bg_party_circle"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/tvPartyName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Party Name"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#1E3A8A"
+        android:gravity="center"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/tvPartySymbol"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Symbol: Lotus"
+        android:textSize="14sp"
+        android:textColor="#4B5563"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/tvPartyDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Party Description goes here..."
+        android:textSize="14sp"
+        android:textColor="#374151"
+        android:lineSpacingExtra="4dp"
+        android:gravity="center_horizontal"/>
+
+    <Button
+        android:id="@+id/btnClose"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Close"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="#1E3A8A"
+        android:textColor="#FFFFFF"/>
+
+</LinearLayout>

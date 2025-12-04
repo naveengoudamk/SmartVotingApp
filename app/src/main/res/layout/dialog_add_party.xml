@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add/Edit Party"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/etPartyName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Party Name"
+        android:layout_marginBottom="12dp"/>
+
+    <EditText
+        android:id="@+id/etPartySymbol"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Symbol (e.g., Lotus, Hand)"
+        android:layout_marginBottom="12dp"/>
+
+    <EditText
+        android:id="@+id/etPartyDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Description (optional)"
+        android:minLines="2"
+        android:gravity="top"/>
+
+</LinearLayout>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Background Image -->
+    <ImageView
+        android:id="@+id/backgroundImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/app_background"
+        android:scaleType="centerCrop"
+        android:alpha="0.2"
+        android:contentDescription="@null" />
+
+    <!-- Foreground Content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="24dp"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:background="@android:color/transparent">
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/loginAnimation"
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                app:lottie_rawRes="@raw/login_animation"
+                app:lottie_autoPlay="true"
+                app:lottie_loop="true" />
+
+            <EditText
+                android:id="@+id/aadhaarInput"
+                android:hint="Enter Aadhaar Number"
+                android:inputType="number"
+                android:maxLength="12"
+                android:digits="0123456789"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/edittext_box_style"/>
+
+            <EditText
+                android:id="@+id/dobInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter DOB (yyyy-mm-dd)"
+                android:focusable="false"
+                android:clickable="true"
+                android:inputType="none"
+                android:drawableEnd="@drawable/baseline_calendar_month_24"
+                android:padding="12dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/edittext_box_style" />
+
+            <!-- Send OTP button -->
+            <Button
+                android:id="@+id/sendOtpButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Send OTP"
+                android:layout_marginTop="12dp"/>
+
+            <!-- OTP area: hidden until OTP sent -->
+            <LinearLayout
+                android:id="@+id/otpArea"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="12dp">
+
+                <EditText
+                    android:id="@+id/otpInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Enter OTP"
+                    android:inputType="number"
+                    android:maxLength="6"
+                    android:padding="12dp"
+                    android:background="@drawable/edittext_box_style"/>
+
+                <TextView
+                    android:id="@+id/otpTimerText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Time left: 02:00"
+                    android:layout_marginTop="6dp"
+                    android:visibility="gone"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginTop="8dp">
+
+                    <Button
+                        android:id="@+id/verifyOtpButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Verify OTP" />
+
+                    <Button
+                        android:id="@+id/resendOtpButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Resend OTP"
+                        android:layout_marginStart="12dp"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/loginButton"
+                android:text="Login"
+                android:layout_marginTop="20dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/govtLoginLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Government Login"
+                android:textColor="@android:color/holo_blue_dark"
+                android:textStyle="bold"
+                android:paddingTop="34dp"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

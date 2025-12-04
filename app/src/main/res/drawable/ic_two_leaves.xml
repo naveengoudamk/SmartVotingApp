@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/ic_two_leaves.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- two simple leaf shapes -->
+    <path android:fillColor="#111827" android:pathData="M6,18 C9,12 11,8 12,6 C9,8 7,12 6,18z" />
+    <path android:fillColor="#111827" android:pathData="M18,18 C15,12 13,8 12,6 C15,8 17,12 18,18z" />
+</vector>

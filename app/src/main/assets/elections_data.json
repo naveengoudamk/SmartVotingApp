@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "title": "Karnataka Assembly Elections 2025",
+    "state": "Karnataka",
+    "min_age": 18,
+    "status": "active",
+    "stopDate": "2025-05-31"
+  },
+  {
+    "id": 2,
+    "title": "Maharashtra Legislative Assembly Elections 2025",
+    "state": "Maharashtra",
+    "min_age": 18,
+    "status": "active",
+    "stopDate": "2025-06-15"
+  },
+  {
+    "id": 3,
+    "title": "Delhi Municipal Corporation Elections 2025",
+    "state": "Delhi",
+    "min_age": 18,
+    "status": "active",
+    "stopDate": "2025-04-30"
+  }
+]

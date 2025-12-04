@@ -1,0 +1,14 @@
+[
+  {
+    "dept_code": "ECI-INDIA",
+    "password": "eci@2024"
+  },
+  {
+    "dept_code": "KAR-GOVT",
+    "password": "kar12345"
+  },
+  {
+    "dept_code": "TN-GOVT",
+    "password": "tn2024@vote"
+  }
+]

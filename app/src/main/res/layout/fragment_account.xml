@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 🌄 Background Image -->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/app_background"
+        android:scaleType="centerCrop"
+        android:alpha="0.25"
+        android:contentDescription="@null" />
+
+    <!-- 📋 Scrollable Profile UI -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        android:background="@android:color/transparent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <!-- 👤 Profile Image -->
+            <ImageView
+                android:id="@+id/img_profile"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/ic_account"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/circle_background"
+                android:padding="16dp"
+                android:scaleType="centerInside" />
+
+            <!-- 📄 Card container -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/card_background"
+                android:elevation="4dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView android:text="Name" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                <TextView android:id="@+id/txt_name" android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+                <TextView android:text="Aadhaar ID" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                <TextView android:id="@+id/txt_aadhaar" android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+                <TextView android:text="Mobile" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                <TextView android:id="@+id/txt_mobile" android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+                <TextView android:text="Address" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                <TextView android:id="@+id/txt_address" android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+                <TextView android:text="City" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                <TextView android:id="@+id/txt_city" android:layout_width="match_parent" android:layout_height="wrap_content" />
+
+                <TextView android:text="Pincode" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+                <TextView android:id="@+id/txt_pincode" android:layout_width="match_parent" android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- ✉️ Email Field -->
+            <TextView android:text="Email" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/edit_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"
+                android:background="@drawable/edittext_box_style"
+                android:padding="12dp"
+                android:layout_marginBottom="16dp" />
+
+            <!-- 🔄 Buttons -->
+            <Button
+                android:id="@+id/btn_update_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Update Email"
+                android:backgroundTint="#6A1B9A"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btn_change_photo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Change Profile Photo"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="#6A1B9A"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btn_save_photo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Save Photo"
+                android:layout_marginTop="12dp"
+                android:backgroundTint="#388E3C"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <!-- ✅ Eligibility Info -->
+            <TextView
+                android:id="@+id/txt_eligible"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Eligibility status"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#444" />
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

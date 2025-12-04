@@ -1,0 +1,18 @@
+[
+  {
+    "party_id": "BJP",
+    "name": "Bharatiya Janata Party (BJP)",
+    "leader": "Narendra Modi",
+    "nominees": ["Amit Shah", "Rajnath Singh", "Nirmala Sitharaman"],
+    "founded": "1980",
+    "history": "The BJP emerged from the Jana Sangh, founded by Syama Prasad Mukherjee..."
+  },
+  {
+    "party_id": "INC",
+    "name": "Indian National Congress (INC)",
+    "leader": "Mallikarjun Kharge",
+    "nominees": ["Rahul Gandhi", "Priyanka Gandhi", "Sonia Gandhi"],
+    "founded": "1885",
+    "history": "The Indian National Congress is one of the oldest political parties in India..."
+  }
+]

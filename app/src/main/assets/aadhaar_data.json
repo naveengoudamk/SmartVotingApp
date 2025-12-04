@@ -1,0 +1,93 @@
+[
+  {
+    "aadhaar_id": "234567890123",
+    "dob": "1995-03-15",
+    "name": "Rajesh Kumar Singh",
+    "email": "rajesh.singh@gmail.com",
+    "mobile": "9876543210",
+    "photo": "rajesh.jpg",
+    "address": "Block A, Flat 302, Vasant Vihar Apartments",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "pincode": "400067",
+    "eligible": true
+  },
+  {
+    "aadhaar_id": "345678901234",
+    "dob": "1988-07-22",
+    "name": "Priya Sharma",
+    "email": "priya.sharma@yahoo.com",
+    "mobile": "9123456789",
+    "photo": "priya.jpg",
+    "address": "House No. 45, Sector 15, Rohini",
+    "city": "New Delhi",
+    "state": "Karnataka",
+    "pincode": "110085",
+    "eligible": true
+  },
+  {
+    "aadhaar_id": "456789012345",
+    "dob": "2001-11-08",
+    "name": "Mohammed Aamir Khan",
+    "email": "aamir.khan@outlook.com",
+    "mobile": "8765432109",
+    "photo": "aamir.jpg",
+    "address": "23/7, Charminar Road, Old City",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "pincode": "500002",
+    "eligible": true
+  },
+  {
+    "aadhaar_id": "112233445566",
+    "dob": "1990-01-01",
+    "name": "Ramesh Gowda",
+    "email": "ramesh.gowda@example.com",
+    "mobile": "9900112233",
+    "photo": "ramesh.jpg",
+    "address": "123, MG Road, Indiranagar",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "pincode": "560038",
+    "eligible": true
+  },
+  {
+    "aadhaar_id": "556677889900",
+    "dob": "2010-05-20",
+    "name": "Arjun Reddy",
+    "email": "arjun.reddy@example.com",
+    "mobile": "8877665544",
+    "photo": "arjun.jpg",
+    "address": "45, 2nd Cross, Jayanagar",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "pincode": "560041",
+    "eligible": false
+  },
+  {
+    "aadhaar_id": "667788990011",
+    "dob": "1998-12-12",
+    "name": "Sneha Patil",
+    "email": "sneha.patil@example.com",
+    "mobile": "7766554433",
+    "photo": "sneha.jpg",
+    "address": "89, Main Road, Hubli",
+    "city": "Hubli",
+    "state": "Karnataka",
+    "pincode": "580020",
+    "eligible": true
+  },
+  {
+    "aadhaar_id": "778899001122",
+    "dob": "2012-08-15",
+    "name": "Rahul K",
+    "email": "rahul.k@example.com",
+    "mobile": "6655443322",
+    "photo": "rahul.jpg",
+    "address": "12, Temple Street, Mysore",
+    "city": "Mysore",
+    "state": "Karnataka",
+    "pincode": "570001",
+    "eligible": false
+  }
+]

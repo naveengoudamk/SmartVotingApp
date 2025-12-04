@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/ic_broom.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- stylized broom: handle + brush base -->
+    <path android:fillColor="#111827"
+        android:pathData="M6,20
+                          L10,10
+                          L12,11.5
+                          L8,21.5
+                          z" />
+    <path android:fillColor="#111827"
+        android:pathData="M14.5,9.5
+                          L21,3
+                          L22.2,4.2
+                          L15.7,10.7 z" />
+</vector>

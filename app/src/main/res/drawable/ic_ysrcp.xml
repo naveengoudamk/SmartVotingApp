@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Fan blades -->
+    <path android:fillColor="#111827"
+        android:pathData="M12,8 L15,12 L12,16 L9,12z" />
+
+    <!-- Outer ring -->
+    <path android:fillColor="#111827"
+        android:pathData="M12,4 A8,8 0 1,0 12,20 A8,8 0 1,0 12,4z"
+        android:fillAlpha="0.15" />
+
+</vector>

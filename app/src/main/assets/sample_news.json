@@ -1,0 +1,58 @@
+[
+    {
+        "id": "news001",
+        "title": "2024 General Elections Announced",
+        "description": "The Election Commission of India has announced the schedule for the 2024 General Elections. Voting will take place in 7 phases starting from April 19, 2024. All eligible citizens are encouraged to register and participate in this democratic process.",
+        "date": "2024-01-15 10:30",
+        "timestamp": 1705311000000,
+        "imageUrl": "https://images.unsplash.com/photo-1541872703-74c34d2b0f7c?w=800"
+    },
+    {
+        "id": "news002",
+        "title": "New Voter ID Cards with QR Code",
+        "description": "The government has introduced new voter ID cards featuring QR codes for enhanced security and faster verification. Existing voters can apply for the updated cards through the official portal. The new cards will help prevent electoral fraud and streamline the voting process.",
+        "date": "2024-01-10 14:15",
+        "timestamp": 1704896100000,
+        "imageUrl": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800"
+    },
+    {
+        "id": "news003",
+        "title": "Register to Vote - Last Date Extended",
+        "description": "Great news for new voters! The last date for voter registration has been extended to February 28, 2024. Don't miss this opportunity to exercise your democratic right. Visit your nearest electoral office or register online through the official website.",
+        "date": "2024-01-08 09:00",
+        "timestamp": 1704700800000,
+        "imageUrl": "https://images.unsplash.com/photo-1495556650867-99590cea3657?w=800"
+    },
+    {
+        "id": "ad001",
+        "title": "📢 Know Your Candidate Campaign",
+        "description": "Make an informed choice! Visit our candidate information portal to learn about their backgrounds, manifestos, and track records. Democracy thrives on informed voters. Research before you vote!",
+        "date": "2024-01-12 16:45",
+        "timestamp": 1705074300000,
+        "imageUrl": "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800"
+    },
+    {
+        "id": "news004",
+        "title": "Free Transportation for Senior Citizens",
+        "description": "Special arrangements have been made to provide free transportation for senior citizens (60+) and differently-abled voters on election day. Contact your local electoral office to avail this facility. Let's ensure everyone can vote!",
+        "date": "2024-01-05 11:20",
+        "timestamp": 1704448800000,
+        "imageUrl": "https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=800"
+    },
+    {
+        "id": "ad002",
+        "title": "🗳️ Every Vote Counts!",
+        "description": "Your vote is your voice! Don't let others decide your future. Make sure you're registered and ready to vote. Check your name in the electoral roll today. Together, we build a stronger democracy.",
+        "date": "2024-01-03 13:30",
+        "timestamp": 1704285000000,
+        "imageUrl": "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800"
+    },
+    {
+        "id": "news005",
+        "title": "Digital Voting Awareness Campaign",
+        "description": "Learn about the EVM (Electronic Voting Machine) and VVPAT (Voter Verifiable Paper Audit Trail) systems. Free demonstrations are being conducted at all district headquarters. Understand how your vote is recorded and counted securely.",
+        "date": "2024-01-01 10:00",
+        "timestamp": 1704096000000,
+        "imageUrl": "https://images.unsplash.com/photo-1495556650867-99590cea3657?w=800"
+    }
+]

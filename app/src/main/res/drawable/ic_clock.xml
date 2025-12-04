@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/ic_clock.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- clock circle + hands -->
+    <path android:fillColor="#111827"
+        android:pathData="M12,2
+                          A10,10 0 1,0 12,22
+                          A10,10 0 1,0 12,2z" />
+    <path android:fillColor="#FFFFFF" android:fillAlpha="1"
+        android:pathData="M12.5,7h-1v6l5.2,3.1l0.6-0.8L12.5,13V7z" />
+</vector>

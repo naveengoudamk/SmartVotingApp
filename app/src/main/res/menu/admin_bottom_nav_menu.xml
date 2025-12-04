@@ -1,0 +1,28 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_admin_home"
+        android:icon="@drawable/ic_home"
+        android:title="Home" />
+
+    <item
+        android:id="@+id/nav_admin_users"
+        android:icon="@drawable/ic_account"
+        android:title="Users" />
+
+    <item
+        android:id="@+id/nav_admin_elections"
+        android:icon="@drawable/ic_vote"
+        android:title="Elections" />
+
+    <item
+        android:id="@+id/nav_admin_parties"
+        android:icon="@drawable/ic_list"
+        android:title="Parties" />
+
+    <item
+        android:id="@+id/nav_admin_results"
+        android:icon="@drawable/ic_list"
+        android:title="Results" />
+
+</menu>

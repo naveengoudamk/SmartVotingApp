@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Wheels -->
+    <path android:fillColor="#111827"
+        android:pathData="M6,17 a3,3 0 1,0 0.1,0 M18,17 a3,3 0 1,0 0.1,0" />
+
+    <!-- Frame -->
+    <path android:fillColor="#111827"
+        android:pathData="M6,17 L9,12 L13,12 L15,15" />
+
+    <!-- Handle -->
+    <path android:fillColor="#111827"
+        android:pathData="M13,12 L11,8 L15,6" />
+
+</vector>

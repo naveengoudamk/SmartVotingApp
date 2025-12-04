@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/ic_elephant.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- very simplified elephant silhouette -->
+    <path android:fillColor="#111827"
+        android:pathData="M3,13
+                          c0,0 2-5 6-5
+                          c3.2,0 5.6,1.4 7,3.2
+                          c1.4,1.8 2,4.8 2,6.8
+                          H3z" />
+    <path android:fillColor="#111827"
+        android:pathData="M19,14 L22,14 L22,16 L19,16 z" />
+</vector>

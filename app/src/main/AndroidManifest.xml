@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.smartvotingapp">
+
+    <!-- Required Permissions -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_logo"
+        android:label="SmartVotingApp"
+        android:roundIcon="@drawable/ic_logo"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SmartVotingApp">
+
+        <activity
+            android:name=".VotingActivity"
+            android:exported="false" />
+
+        <!-- Launcher Activity (Splash) -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"> <!-- Required: true for LAUNCHER -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Login Screen for Users -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
+
+        <!-- Main Home/Dashboard for General Users -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
+        <!-- Government Admin Login Page -->
+        <activity
+            android:name=".GovernmentLoginActivity"
+            android:exported="true" />
+
+        <!-- Government Admin Dashboard -->
+        <activity
+            android:name=".AdminDashboardActivity"
+            android:exported="true" />
+
+        <!-- 🆕 Party Details Screen (added new) -->
+        <activity
+            android:name=".PartyDetailsActivity"
+            android:exported="true"
+            android:label="Party Details"
+            android:theme="@style/Theme.SmartVotingApp" />
+
+    </application>
+
+</manifest>

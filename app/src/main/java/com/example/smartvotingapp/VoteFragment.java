@@ -23,18 +23,24 @@ public class VoteFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_vote, container, false);
+        try {
+            View view = inflater.inflate(R.layout.fragment_vote, container, false);
 
-        recyclerView = view.findViewById(R.id.electionRecyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+            recyclerView = view.findViewById(R.id.electionRecyclerView);
+            recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        ElectionManager electionManager = new ElectionManager(getContext());
-        electionList = electionManager.getAllElections();
+            ElectionManager electionManager = new ElectionManager(getContext());
+            electionList = electionManager.getAllElections();
 
-        ElectionAdapter adapter = new ElectionAdapter(electionList, this::checkEligibility);
-        recyclerView.setAdapter(adapter);
+            ElectionAdapter adapter = new ElectionAdapter(electionList, this::checkEligibility);
+            recyclerView.setAdapter(adapter);
 
-        return view;
+            return view;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Error loading elections: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return new View(getContext());
+        }
     }
 
     private void checkEligibility(Election election) {

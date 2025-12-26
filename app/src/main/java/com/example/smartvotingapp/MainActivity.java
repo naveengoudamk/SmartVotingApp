@@ -27,119 +27,114 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        try {
+            setContentView(R.layout.activity_main);
 
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
-        // searchButton = findViewById(R.id.icon_search); // Removed as search is now
-        // persistent
-        notificationIcon = findViewById(R.id.icon_notification);
-        tvNotificationBadge = findViewById(R.id.tvNotificationBadge);
-        dashboardTitle = findViewById(R.id.dashboard_title);
-        etSearch = findViewById(R.id.etSearch);
+            bottomNavigationView = findViewById(R.id.bottom_navigation);
+            notificationIcon = findViewById(R.id.icon_notification);
+            tvNotificationBadge = findViewById(R.id.tvNotificationBadge);
+            dashboardTitle = findViewById(R.id.dashboard_title);
+            etSearch = findViewById(R.id.etSearch);
 
-        notificationHelper = new NotificationHelper(this);
+            notificationHelper = new NotificationHelper(this);
 
-        // Receive user data from LoginActivity
-        Intent intent = getIntent();
-        aadhaarId = intent.getStringExtra("aadhaar_id");
-        dob = intent.getStringExtra("dob");
-        name = intent.getStringExtra("name");
-        email = intent.getStringExtra("email");
-        mobile = intent.getStringExtra("mobile");
-        photo = intent.getStringExtra("photo");
-        address = intent.getStringExtra("address");
-        city = intent.getStringExtra("city");
-        pincode = intent.getStringExtra("pincode");
-        eligible = intent.getBooleanExtra("eligible", false);
+            Intent intent = getIntent();
+            aadhaarId = intent.getStringExtra("aadhaar_id");
+            dob = intent.getStringExtra("dob");
+            name = intent.getStringExtra("name");
+            email = intent.getStringExtra("email");
+            mobile = intent.getStringExtra("mobile");
+            photo = intent.getStringExtra("photo");
+            address = intent.getStringExtra("address");
+            city = intent.getStringExtra("city");
+            pincode = intent.getStringExtra("pincode");
+            eligible = intent.getBooleanExtra("eligible", false);
 
-        // Load default fragment
-        loadFragment(new HomeFragment());
-        // dashboardTitle.setText("Dashboard"); // Title is hidden now
+            loadFragment(new HomeFragment());
 
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            Fragment selectedFragment = null;
-            int itemId = item.getItemId();
+            bottomNavigationView.setOnItemSelectedListener(item -> {
+                try {
+                    Fragment selectedFragment = null;
+                    int itemId = item.getItemId();
 
-            if (itemId == R.id.nav_home) {
-                selectedFragment = new HomeFragment();
-            } else if (itemId == R.id.nav_list) {
-                selectedFragment = new ListFragment();
-            } else if (itemId == R.id.nav_vote) {
-                selectedFragment = new VoteFragment();
-            } else if (itemId == R.id.nav_history) {
-                selectedFragment = new HistoryFragment();
-            } else if (itemId == R.id.nav_account) {
-                selectedFragment = new AccountFragment();
-            }
+                    if (itemId == R.id.nav_home) {
+                        selectedFragment = new HomeFragment();
+                    } else if (itemId == R.id.nav_list) {
+                        selectedFragment = new ListFragment();
+                    } else if (itemId == R.id.nav_vote) {
+                        selectedFragment = new VoteFragment();
+                    } else if (itemId == R.id.nav_history) {
+                        selectedFragment = new HistoryFragment();
+                    } else if (itemId == R.id.nav_account) {
+                        selectedFragment = new AccountFragment();
+                    }
 
-            if (selectedFragment != null) {
-                loadFragment(selectedFragment);
-                // Clear search when switching fragments
-                etSearch.setText("");
-            }
+                    if (selectedFragment != null) {
+                        loadFragment(selectedFragment);
+                        etSearch.setText("");
+                    }
+                    return true;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(this, "Nav Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    return false;
+                }
+            });
 
-            return true;
-        });
+            etSearch.addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
 
-        // Persistent Search Logic
-        etSearch.addTextChangedListener(new android.text.TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    performSearch(s.toString());
+                }
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                performSearch(s.toString());
-            }
+                @Override
+                public void afterTextChanged(android.text.Editable s) {
+                }
+            });
 
-            @Override
-            public void afterTextChanged(android.text.Editable s) {
-            }
-        });
+            notificationIcon.setOnClickListener(v -> {
+                try {
+                    Intent notificationIntent = new Intent(MainActivity.this, NotificationActivity.class);
+                    startActivity(notificationIntent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
 
-        notificationIcon.setOnClickListener(v -> {
-            Intent notificationIntent = new Intent(MainActivity.this, NotificationActivity.class);
-            startActivity(notificationIntent);
-        });
+            updateNotificationBadge();
+            handleNavigationIntent(getIntent());
 
-        updateNotificationBadge();
-
-        handleNavigationIntent(getIntent());
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-        handleNavigationIntent(intent);
-    }
-
-    private void handleNavigationIntent(Intent intent) {
-        if (intent != null && intent.hasExtra("navigate_to")) {
-            String destination = intent.getStringExtra("navigate_to");
-            if ("vote".equals(destination)) {
-                bottomNavigationView.setSelectedItemId(R.id.nav_vote);
-            } else if ("account".equals(destination)) {
-                bottomNavigationView.setSelectedItemId(R.id.nav_account);
-            } else if ("home".equals(destination)) {
-                bottomNavigationView.setSelectedItemId(R.id.nav_home);
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Dashboard Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        updateNotificationBadge();
+        try {
+            updateNotificationBadge();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void updateNotificationBadge() {
-        int count = notificationHelper.getUnreadCount();
-        if (count > 0) {
-            tvNotificationBadge.setVisibility(android.view.View.VISIBLE);
-            tvNotificationBadge.setText(String.valueOf(count));
-        } else {
-            tvNotificationBadge.setVisibility(android.view.View.GONE);
+        try {
+            int count = notificationHelper.getUnreadCount();
+            if (count > 0) {
+                tvNotificationBadge.setVisibility(android.view.View.VISIBLE);
+                tvNotificationBadge.setText(String.valueOf(count));
+            } else {
+                tvNotificationBadge.setVisibility(android.view.View.GONE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

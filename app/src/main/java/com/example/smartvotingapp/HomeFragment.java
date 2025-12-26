@@ -22,17 +22,25 @@ public class HomeFragment extends Fragment implements SearchableFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        try {
+            View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        newsManager = new NewsManager(getContext());
-        newsContainer = view.findViewById(R.id.newsContainer);
+            newsManager = new NewsManager(getContext());
+            newsContainer = view.findViewById(R.id.newsContainer);
 
-        loadSampleNewsIfNeeded();
+            loadSampleNewsIfNeeded();
 
-        allNews = newsManager.getAllNews();
-        loadNews(allNews);
+            allNews = newsManager.getAllNews();
+            loadNews(allNews);
 
-        return view;
+            return view;
+        } catch (Exception e) {
+            e.printStackTrace();
+            android.widget.Toast
+                    .makeText(getContext(), "Error loading home: " + e.getMessage(), android.widget.Toast.LENGTH_SHORT)
+                    .show();
+            return new View(getContext());
+        }
     }
 
     @Override

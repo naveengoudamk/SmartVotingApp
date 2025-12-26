@@ -31,6 +31,14 @@ public class CustomAlert {
     }
 
     private static void showAlert(Context context, String title, String message, int colorResId, int iconResId) {
+        // Check if context is an activity and if it's finishing
+        if (context instanceof android.app.Activity) {
+            android.app.Activity activity = (android.app.Activity) context;
+            if (activity.isFinishing() || activity.isDestroyed()) {
+                return; // Don't show dialog if activity is finishing
+            }
+        }
+
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.layout_custom_alert);
@@ -48,11 +56,6 @@ public class CustomAlert {
             // Allow interaction with the activity behind
             window.setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
-
-            // Ensure the window doesn't steal focus (optional, but good for typing while
-            // alert shows)
-            // window.setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-            // WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
         }
 
         TextView tvTitle = dialog.findViewById(R.id.tvAlertTitle);
@@ -69,14 +72,39 @@ public class CustomAlert {
         imgIcon.setColorFilter(color);
         viewColor.setBackgroundColor(color);
 
-        btnClose.setOnClickListener(v -> dialog.dismiss());
+        btnClose.setOnClickListener(v -> {
+            try {
+                if (dialog.isShowing()) {
+                    dialog.dismiss();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
-        dialog.show();
+        try {
+            dialog.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
 
-        // Auto dismiss after 4 seconds
+        // Auto dismiss after 4 seconds with safety checks
         new android.os.Handler().postDelayed(() -> {
-            if (dialog.isShowing()) {
-                dialog.dismiss();
+            try {
+                // Check if activity is still valid
+                if (context instanceof android.app.Activity) {
+                    android.app.Activity activity = (android.app.Activity) context;
+                    if (activity.isFinishing() || activity.isDestroyed()) {
+                        return; // Don't try to dismiss if activity is gone
+                    }
+                }
+                if (dialog != null && dialog.isShowing()) {
+                    dialog.dismiss();
+                }
+            } catch (Exception e) {
+                // Silently catch any exceptions during auto-dismiss
+                e.printStackTrace();
             }
         }, 4000);
     }

@@ -29,15 +29,22 @@ public class ListFragment extends Fragment implements SearchableFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_list, container, false);
+        try {
+            View view = inflater.inflate(R.layout.fragment_list, container, false);
 
-        gridParties = view.findViewById(R.id.gridParties);
-        partyManager = new PartyManager(getContext());
+            gridParties = view.findViewById(R.id.gridParties);
+            partyManager = new PartyManager(getContext());
 
-        allParties = partyManager.getAllParties();
-        loadParties(allParties);
+            allParties = partyManager.getAllParties();
+            loadParties(allParties);
 
-        return view;
+            return view;
+        } catch (Exception e) {
+            e.printStackTrace();
+            android.widget.Toast.makeText(getContext(), "Error loading parties: " + e.getMessage(),
+                    android.widget.Toast.LENGTH_SHORT).show();
+            return new View(getContext());
+        }
     }
 
     @Override

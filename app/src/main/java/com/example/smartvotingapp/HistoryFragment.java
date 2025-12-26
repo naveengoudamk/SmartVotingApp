@@ -27,14 +27,21 @@ public class HistoryFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_history, container, false);
+        try {
+            View view = inflater.inflate(R.layout.fragment_history, container, false);
 
-        rvHistory = view.findViewById(R.id.rvHistory);
-        rvHistory.setLayoutManager(new LinearLayoutManager(getContext()));
+            rvHistory = view.findViewById(R.id.rvHistory);
+            rvHistory.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        loadHistory();
+            loadHistory();
 
-        return view;
+            return view;
+        } catch (Exception e) {
+            e.printStackTrace();
+            android.widget.Toast.makeText(getContext(), "Error loading history: " + e.getMessage(),
+                    android.widget.Toast.LENGTH_SHORT).show();
+            return new View(getContext());
+        }
     }
 
     private void loadHistory() {

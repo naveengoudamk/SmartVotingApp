@@ -58,87 +58,90 @@ public class AccountFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_account, container, false);
+        try {
+            View view = inflater.inflate(R.layout.fragment_account, container, false);
 
-        prefs = requireContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        feedbackManager = new FeedbackManager(getContext());
+            prefs = requireContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            feedbackManager = new FeedbackManager(getContext());
 
-        txtName = view.findViewById(R.id.txt_name);
-        txtAadhaar = view.findViewById(R.id.txt_aadhaar);
-        txtMobile = view.findViewById(R.id.txt_mobile);
-        txtAddress = view.findViewById(R.id.txt_address);
-        txtCity = view.findViewById(R.id.txt_city);
-        txtPincode = view.findViewById(R.id.txt_pincode);
-        txtEligible = view.findViewById(R.id.txt_eligible);
-        editEmail = view.findViewById(R.id.edit_email);
-        updateEmailButton = view.findViewById(R.id.btn_update_email);
-        changePhotoButton = view.findViewById(R.id.btn_change_photo);
-        savePhotoButton = view.findViewById(R.id.btn_save_photo);
-        profileImage = view.findViewById(R.id.img_profile);
-        btnSubmitFeedback = view.findViewById(R.id.btnSubmitFeedback);
-        feedbackListContainer = view.findViewById(R.id.feedbackListContainer);
-        tvNoFeedback = view.findViewById(R.id.tvNoFeedback);
-        tvFeedbackBadge = view.findViewById(R.id.tvFeedbackBadge);
+            txtName = view.findViewById(R.id.txt_name);
+            txtAadhaar = view.findViewById(R.id.txt_aadhaar);
+            txtMobile = view.findViewById(R.id.txt_mobile);
+            txtAddress = view.findViewById(R.id.txt_address);
+            txtCity = view.findViewById(R.id.txt_city);
+            txtPincode = view.findViewById(R.id.txt_pincode);
+            txtEligible = view.findViewById(R.id.txt_eligible);
+            editEmail = view.findViewById(R.id.edit_email);
+            updateEmailButton = view.findViewById(R.id.btn_update_email);
+            changePhotoButton = view.findViewById(R.id.btn_change_photo);
+            savePhotoButton = view.findViewById(R.id.btn_save_photo);
+            profileImage = view.findViewById(R.id.img_profile);
+            btnSubmitFeedback = view.findViewById(R.id.btnSubmitFeedback);
+            feedbackListContainer = view.findViewById(R.id.feedbackListContainer);
+            tvNoFeedback = view.findViewById(R.id.tvNoFeedback);
+            tvFeedbackBadge = view.findViewById(R.id.tvFeedbackBadge);
 
-        // Animations are now handled by layoutAnimation in XML
-
-        User user = UserUtils.getCurrentUser(getContext());
-        if (user != null) {
-            txtName.setText(user.getName());
-            txtAadhaar.setText(user.getAadhaarId());
-            txtMobile.setText(user.getMobile());
-            txtAddress.setText(user.getAddress());
-            txtCity.setText(user.getCity());
-            txtPincode.setText(user.getPincode());
-            txtEligible.setText(user.isEligible() ? "Eligible to vote" : "Not eligible");
-            if (user.isEligible()) {
-                txtEligible.setTextColor(0xFF059669); // Green
-            } else {
-                txtEligible.setTextColor(0xFFDC2626); // Red
-            }
-            editEmail.setText(user.getEmail());
-        } else {
-            CustomAlert.showError(getContext(), "Error", "User data not found");
-        }
-
-        loadSavedProfileImage();
-
-        updateEmailButton.setOnClickListener(v -> {
-            String updatedEmail = editEmail.getText().toString().trim();
-            MainActivity.email = updatedEmail;
-            updateEmailInJson(updatedEmail);
-            CustomAlert.showSuccess(getContext(), "Success", "Email updated successfully!");
-        });
-
-        changePhotoButton.setOnClickListener(v -> showImagePickerOptions());
-        profileImage.setOnClickListener(v -> showImagePickerOptions());
-
-        savePhotoButton.setVisibility(View.GONE);
-        savePhotoButton.setOnClickListener(v -> {
-            String filename = "profile_" + MainActivity.aadhaarId + ".jpg";
-
-            if (capturedImageBitmap != null) {
-                saveBitmapToInternalStorage(capturedImageBitmap, filename);
-            } else if (selectedImageUri != null) {
-                try {
-                    InputStream is = getContext().getContentResolver().openInputStream(selectedImageUri);
-                    Bitmap bitmap = BitmapFactory.decodeStream(is);
-                    saveBitmapToInternalStorage(bitmap, filename);
-                } catch (Exception e) {
-                    e.printStackTrace();
+            User user = UserUtils.getCurrentUser(getContext());
+            if (user != null) {
+                txtName.setText(user.getName());
+                txtAadhaar.setText(user.getAadhaarId());
+                txtMobile.setText(user.getMobile());
+                txtAddress.setText(user.getAddress());
+                txtCity.setText(user.getCity());
+                txtPincode.setText(user.getPincode());
+                txtEligible.setText(user.isEligible() ? "Eligible to vote" : "Not eligible");
+                if (user.isEligible()) {
+                    txtEligible.setTextColor(0xFF059669);
+                } else {
+                    txtEligible.setTextColor(0xFFDC2626);
                 }
+                editEmail.setText(user.getEmail());
+            } else {
+                CustomAlert.showError(getContext(), "Error", "User data not found");
             }
 
-            updatePhotoInJson(filename);
-            CustomAlert.showSuccess(getContext(), "Success", "Profile photo saved!");
+            loadSavedProfileImage();
+
+            updateEmailButton.setOnClickListener(v -> {
+                String updatedEmail = editEmail.getText().toString().trim();
+                MainActivity.email = updatedEmail;
+                updateEmailInJson(updatedEmail);
+                CustomAlert.showSuccess(getContext(), "Success", "Email updated successfully!");
+            });
+
+            changePhotoButton.setOnClickListener(v -> showImagePickerOptions());
+            profileImage.setOnClickListener(v -> showImagePickerOptions());
+
             savePhotoButton.setVisibility(View.GONE);
-        });
+            savePhotoButton.setOnClickListener(v -> {
+                String filename = "profile_" + MainActivity.aadhaarId + ".jpg";
 
-        // Feedback functionality
-        btnSubmitFeedback.setOnClickListener(v -> showSubmitFeedbackDialog());
-        loadUserFeedback();
+                if (capturedImageBitmap != null) {
+                    saveBitmapToInternalStorage(capturedImageBitmap, filename);
+                } else if (selectedImageUri != null) {
+                    try {
+                        InputStream is = getContext().getContentResolver().openInputStream(selectedImageUri);
+                        Bitmap bitmap = BitmapFactory.decodeStream(is);
+                        saveBitmapToInternalStorage(bitmap, filename);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
 
-        return view;
+                updatePhotoInJson(filename);
+                CustomAlert.showSuccess(getContext(), "Success", "Profile photo saved!");
+                savePhotoButton.setVisibility(View.GONE);
+            });
+
+            btnSubmitFeedback.setOnClickListener(v -> showSubmitFeedbackDialog());
+            loadUserFeedback();
+
+            return view;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Error loading account: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return new View(getContext());
+        }
     }
 
     private void showImagePickerOptions() {

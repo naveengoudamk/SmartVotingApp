@@ -36,7 +36,13 @@ public class MainActivity extends AppCompatActivity {
             dashboardTitle = findViewById(R.id.dashboard_title);
             etSearch = findViewById(R.id.etSearch);
 
-            notificationHelper = new NotificationHelper(this);
+            // Initialize notification helper with error handling
+            try {
+                notificationHelper = new NotificationHelper(this);
+            } catch (Exception e) {
+                e.printStackTrace();
+                notificationHelper = null;
+            }
 
             Intent intent = getIntent();
             aadhaarId = intent.getStringExtra("aadhaar_id");
@@ -49,6 +55,20 @@ public class MainActivity extends AppCompatActivity {
             city = intent.getStringExtra("city");
             pincode = intent.getStringExtra("pincode");
             eligible = intent.getBooleanExtra("eligible", false);
+
+            // Validate that we have minimum required data
+            if (aadhaarId == null || aadhaarId.isEmpty()) {
+                Toast.makeText(this, "Login session error. Please login again.", Toast.LENGTH_LONG).show();
+                finish();
+                return;
+            }
+
+            // Save user session
+            try {
+                UserUtils.saveUserSession(this, aadhaarId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             loadFragment(new HomeFragment());
 
@@ -71,7 +91,9 @@ public class MainActivity extends AppCompatActivity {
 
                     if (selectedFragment != null) {
                         loadFragment(selectedFragment);
-                        etSearch.setText("");
+                        if (etSearch != null) {
+                            etSearch.setText("");
+                        }
                     }
                     return true;
                 } catch (Exception e) {
@@ -81,29 +103,38 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            etSearch.addTextChangedListener(new android.text.TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
+            if (etSearch != null) {
+                etSearch.addTextChangedListener(new android.text.TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    }
 
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    performSearch(s.toString());
-                }
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        try {
+                            performSearch(s.toString());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
 
-                @Override
-                public void afterTextChanged(android.text.Editable s) {
-                }
-            });
+                    @Override
+                    public void afterTextChanged(android.text.Editable s) {
+                    }
+                });
+            }
 
-            notificationIcon.setOnClickListener(v -> {
-                try {
-                    Intent notificationIntent = new Intent(MainActivity.this, NotificationActivity.class);
-                    startActivity(notificationIntent);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
+            if (notificationIcon != null) {
+                notificationIcon.setOnClickListener(v -> {
+                    try {
+                        Intent notificationIntent = new Intent(MainActivity.this, NotificationActivity.class);
+                        startActivity(notificationIntent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(this, "Cannot open notifications", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
 
             updateNotificationBadge();
             handleNavigationIntent(getIntent());
@@ -111,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Dashboard Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            // Don't finish - try to keep app running
         }
     }
 
@@ -159,9 +191,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
+        try {
+            if (fragment == null) {
+                return;
+            }
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .commitAllowingStateLoss();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error loading view: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

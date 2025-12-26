@@ -138,6 +138,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void handleNavigationIntent(Intent intent) {
+        if (intent != null && intent.hasExtra("navigate_to")) {
+            String destination = intent.getStringExtra("navigate_to");
+            if ("vote".equals(destination)) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_vote);
+            } else if ("account".equals(destination)) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_account);
+            } else if ("home".equals(destination)) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_home);
+            }
+        }
+    }
+
     private void performSearch(String query) {
         Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         if (currentFragment instanceof SearchableFragment) {

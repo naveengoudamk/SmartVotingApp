@@ -29,19 +29,25 @@ public class AdminResultFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (getArguments() != null) {
-            adminScope = getArguments().getString("admin_scope");
+        try {
+            if (getArguments() != null) {
+                adminScope = getArguments().getString("admin_scope");
+            }
+            View view = inflater.inflate(R.layout.fragment_admin_result, container, false);
+
+            resultsContainer = view.findViewById(R.id.resultsContainer);
+            electionManager = new ElectionManager(getContext());
+            voteManager = new VoteManager(getContext());
+            optionManager = new VotingOptionManager(getContext());
+
+            loadElections();
+
+            return view;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Error loading results: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return new View(getContext()); // Return dummy view to prevent crash
         }
-        View view = inflater.inflate(R.layout.fragment_admin_result, container, false);
-
-        resultsContainer = view.findViewById(R.id.resultsContainer);
-        electionManager = new ElectionManager(getContext());
-        voteManager = new VoteManager(getContext());
-        optionManager = new VotingOptionManager(getContext());
-
-        loadElections();
-
-        return view;
     }
 
     private void loadElections() {

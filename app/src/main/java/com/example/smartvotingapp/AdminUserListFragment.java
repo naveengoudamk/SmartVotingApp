@@ -26,26 +26,27 @@ public class AdminUserListFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (getArguments() != null) {
-            adminScope = getArguments().getString("admin_scope");
-        }
-
-        View view = inflater.inflate(R.layout.fragment_admin_user_list, container, false);
-
-        userManager = new UserManager(getContext());
-        userContainer = view.findViewById(R.id.userContainer);
-        Button btnAddUser = view.findViewById(R.id.btnAddUser);
-
-        btnAddUser.setOnClickListener(v -> showAddUserDialog());
-
         try {
-            loadUsers();
-        } catch (Exception e) {
-            Toast.makeText(getContext(), "Error loading users: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
-        }
+            if (getArguments() != null) {
+                adminScope = getArguments().getString("admin_scope");
+            }
 
-        return view;
+            View view = inflater.inflate(R.layout.fragment_admin_user_list, container, false);
+
+            userManager = new UserManager(getContext());
+            userContainer = view.findViewById(R.id.userContainer);
+            Button btnAddUser = view.findViewById(R.id.btnAddUser);
+
+            btnAddUser.setOnClickListener(v -> showAddUserDialog());
+
+            loadUsers();
+
+            return view;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Error loading users: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return new View(getContext());
+        }
     }
 
     private void loadUsers() {

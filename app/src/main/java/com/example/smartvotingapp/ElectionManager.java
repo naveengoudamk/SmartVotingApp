@@ -41,7 +41,8 @@ public class ElectionManager {
                         obj.getString("state"),
                         obj.getInt("minAge"),
                         obj.getString("status"),
-                        obj.optString("stopDate", "")));
+                        obj.optString("stopDate", ""),
+                        obj.optString("resultDate", null)));
             }
         } catch (Exception e) {
             Log.e("ElectionManager", "Error reading elections", e);
@@ -83,6 +84,9 @@ public class ElectionManager {
                 obj.put("minAge", e.getMinAge());
                 obj.put("status", e.getStatus());
                 obj.put("stopDate", e.getStopDate());
+                if (e.getResultDate() != null) {
+                    obj.put("resultDate", e.getResultDate());
+                }
                 array.put(obj);
             } catch (JSONException ex) {
                 ex.printStackTrace();
@@ -113,7 +117,8 @@ public class ElectionManager {
                         obj.getString("state"),
                         obj.getInt("min_age"), // Note: JSON uses min_age, verify this matches
                         obj.getString("status"),
-                        obj.optString("stopDate", "")));
+                        obj.optString("stopDate", ""),
+                        obj.optString("resultDate", null)));
             }
             // Save these defaults to local storage so edits persist
             saveElections(list);

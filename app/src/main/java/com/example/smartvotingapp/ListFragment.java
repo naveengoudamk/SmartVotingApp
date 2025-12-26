@@ -1,22 +1,27 @@
 package com.example.smartvotingapp;
 
 import android.app.Dialog;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.Button;
+import android.widget.GridLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.card.MaterialCardView;
+import java.io.File;
+import java.util.List;
 
-public class ListFragment extends Fragment {
+public class ListFragment extends Fragment implements SearchableFragment {
+
+    private GridLayout gridParties;
+    private PartyManager partyManager;
+    private List<Party> allParties;
 
     public ListFragment() {
     }
@@ -26,75 +31,139 @@ public class ListFragment extends Fragment {
             Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_list, container, false);
 
-        setupPartyCard(view, R.id.cardBJP, "Bharatiya Janata Party (BJP)", "Lotus",
-                "The Bharatiya Janata Party is one of two major political parties in India, along with the Indian National Congress. It is the ruling political party of the Republic of India since 2014.",
-                R.drawable.img_bjp);
+        gridParties = view.findViewById(R.id.gridParties);
+        partyManager = new PartyManager(getContext());
 
-        setupPartyCard(view, R.id.cardINC, "Indian National Congress (INC)", "Hand",
-                "The Indian National Congress is a political party in India with widespread roots. Founded in 1885, it was the first modern nationalist movement to emerge in the British Empire in Asia and Africa.",
-                R.drawable.img_inc);
-
-        setupPartyCard(view, R.id.cardJDS, "Janata Dal (Secular) (JDS)", "Lady Farmer carrying Paddy",
-                "Janata Dal (Secular) is an Indian regional political party recognized as a State Party in the states of Karnataka, Kerala and Arunachal Pradesh.",
-                R.drawable.img_jds);
-
-        setupPartyCard(view, R.id.cardAAP, "Aam Aadmi Party (AAP)", "Broom",
-                "The Aam Aadmi Party is a political party in India. It was founded in November 2012 by Arvind Kejriwal and his companions.",
-                R.drawable.ic_aap);
-
-        setupPartyCard(view, R.id.cardTMC, "Trinamool Congress (TMC)", "Flowers & Grass",
-                "All India Trinamool Congress is an Indian political party which is predominantly active in West Bengal.",
-                R.drawable.ic_tmc);
-
-        setupPartyCard(view, R.id.cardDMK, "Dravida Munnetra Kazhagam (DMK)", "Rising Sun",
-                "Dravida Munnetra Kazhagam is a political party in India, particularly in the state of Tamil Nadu and the union territory of Puducherry.",
-                R.drawable.ic_dmk);
-
-        setupPartyCard(view, R.id.cardAIADMK, "AIADMK", "Two Leaves",
-                "All India Anna Dravida Munnetra Kazhagam is an Indian regional political party with great influence in the state of Tamil Nadu and union territory of Puducherry.",
-                R.drawable.ic_aiadmk);
-
-        setupPartyCard(view, R.id.cardSP, "Samajwadi Party (SP)", "Bicycle",
-                "The Samajwadi Party is a socialist political party in India, headquartered in New Delhi and also a recognised state party in Uttar Pradesh.",
-                R.drawable.ic_sp);
-
-        setupPartyCard(view, R.id.cardBSP, "Bahujan Samaj Party (BSP)", "Elephant",
-                "The Bahujan Samaj Party is a national level political party in India that was formed to represent the Bahujans, referring to Scheduled Castes, Scheduled Tribes, and Other Backward Classes.",
-                R.drawable.ic_bsp);
+        allParties = partyManager.getAllParties();
+        loadParties(allParties);
 
         return view;
     }
 
-    private void setupPartyCard(View view, int cardId, String name, String symbol, String description, int logoResId) {
-        MaterialCardView card = view.findViewById(cardId);
-        if (card != null) {
-            card.setOnClickListener(v -> showPartyDetails(name, symbol, description, logoResId));
+    @Override
+    public void onSearch(String query) {
+        if (allParties == null)
+            return;
+
+        if (query == null || query.isEmpty()) {
+            loadParties(allParties);
+            return;
+        }
+
+        List<Party> filteredList = new java.util.ArrayList<>();
+        String lowerQuery = query.toLowerCase();
+
+        for (Party party : allParties) {
+            if (party.getName().toLowerCase().contains(lowerQuery) ||
+                    party.getSymbol().toLowerCase().contains(lowerQuery)) {
+                filteredList.add(party);
+            }
+        }
+        loadParties(filteredList);
+    }
+
+    private void loadParties(List<Party> parties) {
+        gridParties.removeAllViews();
+        for (Party party : parties) {
+            createPartyCard(party);
         }
     }
 
-    private void showPartyDetails(String name, String symbol, String description, int logoResId) {
+    private void createPartyCard(Party party) {
+        View cardView = LayoutInflater.from(getContext()).inflate(R.layout.item_party_card, gridParties, false);
+
+        GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+        params.width = 0;
+        params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+        params.setMargins(16, 16, 16, 16);
+        cardView.setLayoutParams(params);
+
+        ImageView imgLogo = cardView.findViewById(R.id.imgPartyLogo);
+        TextView tvName = cardView.findViewById(R.id.tvPartyName);
+
+        tvName.setText(party.getName());
+
+        if (party.getLogoPath() != null) {
+            loadPartyLogo(party.getLogoPath(), imgLogo);
+        } else {
+            imgLogo.setImageResource(R.drawable.ic_bjp); // Fallback
+        }
+
+        cardView.setOnClickListener(v -> showPartyDetails(
+                party.getName(),
+                party.getSymbol(),
+                party.getDescription(),
+                party.getLogoPath()));
+
+        // Add animation
+        android.view.animation.Animation animation = android.view.animation.AnimationUtils.loadAnimation(getContext(),
+                R.anim.slide_in_up);
+        animation.setStartOffset(gridParties.getChildCount() * 50); // Staggered effect
+        cardView.startAnimation(animation);
+
+        gridParties.addView(cardView);
+    }
+
+    private void loadPartyLogo(String filename, ImageView imageView) {
+        if (filename == null)
+            return;
+
+        if (filename.startsWith("res:")) {
+            String resName = filename.substring(4);
+            int resId = getResources().getIdentifier(resName, "drawable", getContext().getPackageName());
+            if (resId != 0) {
+                imageView.setImageResource(resId);
+            } else {
+                // Fallback if resource not found
+                imageView.setImageResource(R.drawable.ic_bjp);
+            }
+            return;
+        }
+
+        try {
+            File file = new File(getContext().getFilesDir(), filename);
+            if (file.exists()) {
+                Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                imageView.setImageBitmap(bitmap);
+            } else {
+                // Try to load from drawable if it matches a known party code/name (optional
+                // fallback logic)
+                imageView.setImageResource(R.drawable.ic_bjp);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showPartyDetails(String name, String symbol, String description, String logoPath) {
         if (getContext() == null)
             return;
 
         Dialog dialog = new Dialog(getContext());
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_party_details);
 
+        // Make dialog background transparent to show card corners
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
             dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
 
         ImageView imgLogo = dialog.findViewById(R.id.imgPartyLogo);
         TextView tvName = dialog.findViewById(R.id.tvPartyName);
         TextView tvSymbol = dialog.findViewById(R.id.tvPartySymbol);
-        TextView tvDesc = dialog.findViewById(R.id.tvPartyDescription);
+        TextView tvDescription = dialog.findViewById(R.id.tvPartyDescription);
         Button btnClose = dialog.findViewById(R.id.btnClose);
 
-        imgLogo.setImageResource(logoResId);
         tvName.setText(name);
         tvSymbol.setText("Symbol: " + symbol);
-        tvDesc.setText(description);
+        tvDescription.setText(description);
+
+        if (logoPath != null) {
+            loadPartyLogo(logoPath, imgLogo);
+        } else {
+            imgLogo.setImageResource(R.drawable.ic_bjp);
+        }
 
         btnClose.setOnClickListener(v -> dialog.dismiss());
 

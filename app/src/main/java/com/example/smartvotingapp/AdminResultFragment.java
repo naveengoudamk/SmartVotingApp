@@ -8,109 +8,128 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.fragment.app.Fragment;
-import java.io.*;
+import com.google.android.material.card.MaterialCardView;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
 public class AdminResultFragment extends Fragment {
 
-    private TextView tvReleaseDate, tvResults;
     private LinearLayout resultsContainer;
-    private final String RELEASE_DATE_FILE = "release_date.txt";
+    private ElectionManager electionManager;
+    private VoteManager voteManager;
+    private VotingOptionManager optionManager;
 
     public AdminResultFragment() {
     }
 
+    private String adminScope;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        if (getArguments() != null) {
+            adminScope = getArguments().getString("admin_scope");
+        }
         View view = inflater.inflate(R.layout.fragment_admin_result, container, false);
 
-        tvReleaseDate = view.findViewById(R.id.tvReleaseDate);
-        tvResults = view.findViewById(R.id.tvResults);
-        Button btnSetDate = view.findViewById(R.id.btnSetDate);
+        resultsContainer = view.findViewById(R.id.resultsContainer);
+        electionManager = new ElectionManager(getContext());
+        voteManager = new VoteManager(getContext());
+        optionManager = new VotingOptionManager(getContext());
 
-        btnSetDate.setOnClickListener(v -> openDatePicker());
-
-        loadReleaseDate();
-        loadResults();
+        loadElections();
 
         return view;
     }
 
-    private void openDatePicker() {
-        Calendar calendar = Calendar.getInstance();
-        new DatePickerDialog(getContext(), (view, year, month, dayOfMonth) -> {
-            String date = year + "-" + (month + 1) + "-" + dayOfMonth;
-            saveToFile(RELEASE_DATE_FILE, date);
-            tvReleaseDate.setText("Release Date: " + date);
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show();
-    }
-
-    private void loadReleaseDate() {
-        String date = readFile(RELEASE_DATE_FILE);
-        tvReleaseDate.setText("Release Date: " + (date != null ? date : "Not set"));
-    }
-
-    private void loadResults() {
-        ElectionManager electionManager = new ElectionManager(getContext());
-        VoteManager voteManager = new VoteManager(getContext());
-        VotingOptionManager optionManager = new VotingOptionManager(getContext());
-
+    private void loadElections() {
+        resultsContainer.removeAllViews();
         List<Election> elections = electionManager.getAllElections();
 
         if (elections.isEmpty()) {
-            tvResults.setText("No elections found.");
+            TextView emptyView = new TextView(getContext());
+            emptyView.setText("No elections found.");
+            emptyView.setPadding(32, 32, 32, 32);
+            resultsContainer.addView(emptyView);
             return;
         }
 
-        StringBuilder results = new StringBuilder();
-
         for (Election election : elections) {
-            results.append("━━━━━━━━━━━━━━━━━━━━\n");
-            results.append("📊 ").append(election.getTitle()).append("\n");
-            results.append("━━━━━━━━━━━━━━━━━━━━\n\n");
+            // FILTER: Scope Logic
+            if (adminScope != null && !adminScope.isEmpty()) {
+                if (!election.getState().equalsIgnoreCase(adminScope)) {
+                    continue;
+                }
+            }
 
+            View cardView = LayoutInflater.from(getContext()).inflate(R.layout.item_admin_result_card, resultsContainer,
+                    false);
+
+            TextView tvTitle = cardView.findViewById(R.id.tvTitle);
+            TextView tvStatus = cardView.findViewById(R.id.tvStatus);
+            TextView tvResultDate = cardView.findViewById(R.id.tvResultDate);
+            Button btnSetDate = cardView.findViewById(R.id.btnSetDate);
+            LinearLayout layoutCounts = cardView.findViewById(R.id.layoutCounts);
+
+            tvTitle.setText(election.getTitle());
+            tvStatus.setText("Status: " + election.getStatus());
+
+            String date = election.getResultDate();
+            tvResultDate.setText(date != null ? "Results Date: " + date : "Results Date: Not Set");
+
+            btnSetDate.setOnClickListener(v -> {
+                Calendar c = Calendar.getInstance();
+                new DatePickerDialog(getContext(), (dp, year, month, day) -> {
+                    String newDate = year + "-" + (month + 1) + "-" + day;
+                    election.setResultDate(newDate);
+                    electionManager.updateElection(election);
+                    loadElections(); // Refresh
+                    Toast.makeText(getContext(), "Result date updated", Toast.LENGTH_SHORT).show();
+                }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
+            });
+
+            // Populate Counts
             Map<String, Integer> voteCounts = voteManager.getVoteCountsByElection(election.getId());
             List<VotingOption> options = optionManager.getOptionsByElection(election.getId());
 
+            layoutCounts.removeAllViews();
             if (options.isEmpty()) {
-                results.append("  No voting options configured.\n\n");
-                continue;
+                TextView tvNoOptions = new TextView(getContext());
+                tvNoOptions.setText("No candidates configured.");
+                layoutCounts.addView(tvNoOptions);
+            } else {
+                int totalVotes = 0;
+                for (VotingOption option : options) {
+                    totalVotes += voteCounts.getOrDefault(option.getId(), 0);
+                }
+
+                for (VotingOption option : options) {
+                    View countView = LayoutInflater.from(getContext()).inflate(R.layout.item_result_count_row,
+                            layoutCounts, false);
+                    TextView tvName = countView.findViewById(R.id.tvOptionName);
+                    TextView tvCount = countView.findViewById(R.id.tvVoteCount);
+                    android.widget.ProgressBar progressBar = countView.findViewById(R.id.progressBar);
+
+                    int count = voteCounts.getOrDefault(option.getId(), 0);
+                    tvName.setText(option.getOptionName());
+                    tvCount.setText(count + " votes");
+
+                    progressBar.setMax(totalVotes > 0 ? totalVotes : 1);
+                    progressBar.setProgress(count);
+
+                    layoutCounts.addView(countView);
+                }
+
+                TextView tvTotal = new TextView(getContext());
+                tvTotal.setText("Total Votes: " + totalVotes);
+                tvTotal.setTypeface(null, android.graphics.Typeface.BOLD);
+                tvTotal.setPadding(0, 16, 0, 0);
+                layoutCounts.addView(tvTotal);
             }
 
-            int totalVotes = 0;
-            for (VotingOption option : options) {
-                int count = voteCounts.getOrDefault(option.getId(), 0);
-                totalVotes += count;
-                results.append("  • ").append(option.getOptionName())
-                        .append(": ").append(count).append(" votes\n");
-            }
-
-            results.append("\n  Total Votes: ").append(totalVotes).append("\n\n");
-        }
-
-        tvResults.setText(results.toString());
-    }
-
-    private void saveToFile(String filename, String content) {
-        try (FileOutputStream fos = getContext().openFileOutput(filename, android.content.Context.MODE_PRIVATE)) {
-            fos.write(content.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private String readFile(String filename) {
-        File file = new File(getContext().getFilesDir(), filename);
-        if (!file.exists())
-            return null;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            return reader.readLine();
-        } catch (IOException e) {
-            return null;
+            resultsContainer.addView(cardView);
         }
     }
 }

@@ -17,6 +17,62 @@ public class PartyManager {
 
     public PartyManager(Context context) {
         this.context = context;
+        seedDefaultParties();
+    }
+
+    private void seedDefaultParties() {
+        List<Party> existingParties = getAllParties();
+        boolean changed = false;
+
+        List<Party> defaults = new ArrayList<>();
+        defaults.add(new Party("1", "Bharatiya Janata Party (BJP)", "Lotus",
+                "The Bharatiya Janata Party is one of two major political parties in India.", "res:ic_bjp"));
+        defaults.add(new Party("2", "Indian National Congress (INC)", "Hand",
+                "The Indian National Congress is a political party in India with widespread roots.", "res:img_inc"));
+        defaults.add(new Party("3", "Aam Aadmi Party (AAP)", "Broom",
+                "The Aam Aadmi Party is a political party in India that was founded in November 2012.", "res:ic_aap"));
+        defaults.add(new Party("4", "Trinamool Congress (TMC)", "Flowers & Grass",
+                "The All India Trinamool Congress is an Indian political party which is predominantly active in West Bengal.",
+                "res:ic_tmc"));
+        defaults.add(new Party("5", "Dravida Munnetra Kazhagam (DMK)", "Rising Sun",
+                "Dravida Munnetra Kazhagam is a political party in India, particularly in the state of Tamil Nadu and Puducherry.",
+                "res:ic_dmk"));
+        defaults.add(new Party("6", "AIADMK", "Two Leaves",
+                "All India Anna Dravida Munnetra Kazhagam is an Indian regional political party with great influence in the state of Tamil Nadu.",
+                "res:ic_aiadmk"));
+        defaults.add(new Party("7", "Samajwadi Party (SP)", "Bicycle",
+                "The Samajwadi Party is a socialist political party in India, headquartered in New Delhi.",
+                "res:ic_sp"));
+        defaults.add(new Party("8", "Bahujan Samaj Party (BSP)", "Elephant",
+                "The Bahujan Samaj Party is a national level political party in India that was formed to represent the Bahujans.",
+                "res:ic_bsp"));
+
+        for (Party def : defaults) {
+            boolean exists = false;
+            for (Party p : existingParties) {
+                if (p.getName().equalsIgnoreCase(def.getName())) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                Party partyToAdd = def;
+                final String defId = def.getId();
+                boolean idExists = existingParties.stream().anyMatch(p -> p.getId().equals(defId));
+                if (idExists) {
+                    // If ID exists but name doesn't, it's a conflict. Let's give a new ID to the
+                    // default party being added.
+                    partyToAdd = new Party(java.util.UUID.randomUUID().toString(), def.getName(), def.getSymbol(),
+                            def.getDescription(), def.getLogoPath());
+                }
+                existingParties.add(partyToAdd);
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            saveParties(existingParties);
+        }
     }
 
     public List<Party> getAllParties() {
@@ -38,7 +94,8 @@ public class PartyManager {
                         obj.getString("id"),
                         obj.getString("name"),
                         obj.optString("symbol", ""),
-                        obj.optString("description", "")));
+                        obj.optString("description", ""),
+                        obj.optString("logoPath", null)));
             }
         } catch (Exception e) {
             Log.e("PartyManager", "Error reading parties", e);
@@ -78,6 +135,9 @@ public class PartyManager {
                 obj.put("name", p.getName());
                 obj.put("symbol", p.getSymbol());
                 obj.put("description", p.getDescription());
+                if (p.getLogoPath() != null) {
+                    obj.put("logoPath", p.getLogoPath());
+                }
                 array.put(obj);
             } catch (JSONException e) {
                 e.printStackTrace();

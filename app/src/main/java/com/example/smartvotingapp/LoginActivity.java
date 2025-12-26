@@ -102,8 +102,7 @@ public class LoginActivity extends AppCompatActivity {
                                 String.format("%02d", selectedDay);
                         dobInput.setText(formattedDate);
                     },
-                    year, month, day
-            );
+                    year, month, day);
             datePickerDialog.show();
         });
 
@@ -113,17 +112,17 @@ public class LoginActivity extends AppCompatActivity {
             String dob = dobInput.getText().toString().trim();
 
             if (aadhaar.isEmpty() || aadhaar.length() != 12) {
-                Toast.makeText(this, "Enter valid 12-digit Aadhaar first", Toast.LENGTH_SHORT).show();
+                CustomAlert.showError(this, "Invalid Input", "Enter valid 12-digit Aadhaar first");
                 return;
             }
             if (dob.isEmpty()) {
-                Toast.makeText(this, "Please select DOB", Toast.LENGTH_SHORT).show();
+                CustomAlert.showError(this, "Missing Info", "Please select DOB");
                 return;
             }
 
             // Validate user exists before sending OTP (keeps flow safe)
             if (!validateUser(aadhaar, dob)) {
-                Toast.makeText(this, "Aadhaar/DOB not found. Please check details.", Toast.LENGTH_SHORT).show();
+                CustomAlert.showError(this, "Authentication Failed", "Aadhaar/DOB not found. Please check details.");
                 return;
             }
 
@@ -133,7 +132,7 @@ public class LoginActivity extends AppCompatActivity {
             showOtpArea(true);
             startOtpCountdown(2 * 60 * 1000L);
 
-            Toast.makeText(this, "OTP sent (demo). Check popup.", Toast.LENGTH_LONG).show();
+            CustomAlert.showSuccess(this, "OTP Sent", "OTP sent successfully. Check popup.");
             sendOtpNotification(currentOtp);
 
             // Show demo dialog (copy & autofill)
@@ -148,37 +147,38 @@ public class LoginActivity extends AppCompatActivity {
         verifyOtpButton.setOnClickListener(v -> {
             String entered = otpInput.getText().toString().trim();
             if (entered.isEmpty()) {
-                Toast.makeText(this, "Enter OTP", Toast.LENGTH_SHORT).show();
+                CustomAlert.showWarning(this, "Input Required", "Please enter OTP");
                 return;
             }
             if (currentOtp == null) {
-                Toast.makeText(this, "No OTP requested yet.", Toast.LENGTH_SHORT).show();
+                CustomAlert.showWarning(this, "Action Required", "No OTP requested yet. Click Send OTP.");
                 return;
             }
             if (System.currentTimeMillis() > otpExpiryMillis) {
-                Toast.makeText(this, "OTP expired. Please resend.", Toast.LENGTH_SHORT).show();
+                CustomAlert.showError(this, "Expired", "OTP expired. Please resend.");
                 return;
             }
             if (entered.equals(currentOtp)) {
-                Toast.makeText(this, "OTP Verified. You can now use the Login button.", Toast.LENGTH_SHORT).show();
+                CustomAlert.showSuccess(this, "Verified", "OTP Verified. You can now Login.");
 
                 // mark verified and enable login button
                 otpVerified = true;
                 setLoginButtonEnabled(true);
             } else {
-                Toast.makeText(this, "Invalid OTP", Toast.LENGTH_SHORT).show();
+                CustomAlert.showError(this, "Failed", "Invalid OTP. Please try again.");
             }
         });
 
         // Resend OTP
         resendOtpButton.setOnClickListener(v -> {
-            if (otpTimer != null) otpTimer.cancel();
+            if (otpTimer != null)
+                otpTimer.cancel();
 
             currentOtp = generateOtp(6);
             otpExpiryMillis = System.currentTimeMillis() + (2 * 60 * 1000);
             startOtpCountdown(2 * 60 * 1000L);
 
-            Toast.makeText(this, "OTP resent (demo)", Toast.LENGTH_SHORT).show();
+            CustomAlert.showInfo(this, "Resent", "OTP has been resent.");
             sendOtpNotification(currentOtp);
 
             showOtpDialog(currentOtp);
@@ -191,7 +191,8 @@ public class LoginActivity extends AppCompatActivity {
         // NEW: Login button now requires OTP verification first
         loginButton.setOnClickListener(v -> {
             if (!otpVerified) {
-                Toast.makeText(this, "Please verify OTP first (use Send OTP → Verify).", Toast.LENGTH_SHORT).show();
+                CustomAlert.showWarning(this, "Verification Pending",
+                        "Please verify OTP first (use Send OTP → Verify).");
                 return;
             }
 
@@ -201,6 +202,8 @@ public class LoginActivity extends AppCompatActivity {
             JSONObject user = getUserDetails(aadhaar, dob);
 
             if (user != null) {
+                UserUtils.saveUserSession(LoginActivity.this, user.optString("aadhaar_id"));
+
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 intent.putExtra("aadhaar_id", user.optString("aadhaar_id"));
                 intent.putExtra("dob", user.optString("dob"));
@@ -218,7 +221,7 @@ public class LoginActivity extends AppCompatActivity {
             } else {
                 // This should be rare because we validated earlier before sending OTP,
                 // but handle gracefully.
-                Toast.makeText(this, "User details not found. Please check Aadhaar/DOB.", Toast.LENGTH_SHORT).show();
+                CustomAlert.showError(this, "Error", "User details not found. Please check Aadhaar/DOB.");
             }
         });
     }
@@ -232,7 +235,8 @@ public class LoginActivity extends AppCompatActivity {
     // -------------------- OTP DIALOG --------------------
 
     private void showOtpDialog(String otp) {
-        if (otp == null) return;
+        if (otp == null)
+            return;
 
         String title = "Demo OTP";
         String message = "Your OTP is:\n\n" + otp + "\n\nValid for 2 minutes.";
@@ -245,7 +249,8 @@ public class LoginActivity extends AppCompatActivity {
         builder.setPositiveButton("Copy & Autofill", (dialog, which) -> {
             ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
             ClipData clip = ClipData.newPlainText("OTP", otp);
-            if (clipboard != null) clipboard.setPrimaryClip(clip);
+            if (clipboard != null)
+                clipboard.setPrimaryClip(clip);
 
             otpInput.setText(otp);
             otpInput.setSelection(otp.length());
@@ -276,11 +281,9 @@ public class LoginActivity extends AppCompatActivity {
             CharSequence name = "OTP Channel";
             String description = "Channel for OTP notifications";
             int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel channel =
-                    new NotificationChannel(CHANNEL_ID, name, importance);
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
-            NotificationManager notificationManager =
-                    getSystemService(NotificationManager.class);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
             if (notificationManager != null)
                 notificationManager.createNotificationChannel(channel);
         }
@@ -294,22 +297,20 @@ public class LoginActivity extends AppCompatActivity {
                 this, 0, intent,
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                         ? PendingIntent.FLAG_UPDATE_CURRENT |
-                        PendingIntent.FLAG_IMMUTABLE
-                        : PendingIntent.FLAG_UPDATE_CURRENT
-        );
+                                PendingIntent.FLAG_IMMUTABLE
+                        : PendingIntent.FLAG_UPDATE_CURRENT);
 
         String title = "Your SmartVoting OTP";
         String text = "Your OTP is: " + otp + " (valid 2 minutes)";
 
-        NotificationCompat.Builder builder =
-                new NotificationCompat.Builder(this, CHANNEL_ID)
-                        .setSmallIcon(R.drawable.ic_notification)
-                        .setContentTitle(title)
-                        .setContentText(text)
-                        .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        .setAutoCancel(true)
-                        .setContentIntent(pendingIntent);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent);
 
         NotificationManagerCompat manager = NotificationManagerCompat.from(this);
         manager.notify(OTP_NOTIFICATION_ID, builder.build());
@@ -323,7 +324,8 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             otpArea.setVisibility(View.GONE);
             otpTimerText.setVisibility(View.GONE);
-            if (otpTimer != null) otpTimer.cancel();
+            if (otpTimer != null)
+                otpTimer.cancel();
             currentOtp = null;
         }
     }
@@ -366,7 +368,9 @@ public class LoginActivity extends AppCompatActivity {
                     return true;
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
@@ -385,13 +389,16 @@ public class LoginActivity extends AppCompatActivity {
                     return obj;
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (otpTimer != null) otpTimer.cancel();
+        if (otpTimer != null)
+            otpTimer.cancel();
     }
 }

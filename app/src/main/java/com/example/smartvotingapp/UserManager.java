@@ -65,8 +65,7 @@ public class UserManager {
                         obj.optString("city", ""),
                         obj.optString("state", ""),
                         obj.optString("pincode", ""),
-                        obj.optBoolean("eligible", true)
-                ));
+                        obj.optBoolean("eligible", true)));
             }
         } catch (Exception e) {
             Log.e("UserManager", "Error reading users", e);
@@ -107,6 +106,42 @@ public class UserManager {
                     obj.put("pincode", u.getPincode());
                     obj.put("eligible", u.isEligible());
                 }
+                array.put(obj);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        saveJsonToFile(array.toString());
+    }
+
+    public void addUser(User newUser) {
+        List<User> users = getAllUsers();
+
+        // Check if user with same Aadhaar ID already exists
+        for (User u : users) {
+            if (u.getAadhaarId().equals(newUser.getAadhaarId())) {
+                Log.w("UserManager", "User with Aadhaar ID " + newUser.getAadhaarId() + " already exists");
+                return;
+            }
+        }
+
+        users.add(newUser);
+
+        JSONArray array = new JSONArray();
+        for (User u : users) {
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("aadhaar_id", u.getAadhaarId());
+                obj.put("name", u.getName());
+                obj.put("dob", u.getDob());
+                obj.put("email", u.getEmail());
+                obj.put("mobile", u.getMobile());
+                obj.put("photo", u.getPhoto());
+                obj.put("address", u.getAddress());
+                obj.put("city", u.getCity());
+                obj.put("state", u.getState());
+                obj.put("pincode", u.getPincode());
+                obj.put("eligible", u.isEligible());
                 array.put(obj);
             } catch (JSONException e) {
                 e.printStackTrace();

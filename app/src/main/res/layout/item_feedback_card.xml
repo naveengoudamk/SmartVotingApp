@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:strokeColor="#E5E7EB"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvFeedbackTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Issue Title"
+                android:textColor="#111827"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end"/>
+
+            <TextView
+                android:id="@+id/tvFeedbackStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pending"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:background="@drawable/bg_status_active"
+                android:backgroundTint="#F59E0B"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvFeedbackDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Description of the issue goes here..."
+            android:textColor="#6B7280"
+            android:textSize="14sp"
+            android:maxLines="3"
+            android:ellipsize="end"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvFeedbackDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Submitted on: 2024-12-05"
+            android:textColor="#9CA3AF"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp"/>
+
+        <!-- Admin Response Section (Initially Hidden) -->
+        <LinearLayout
+            android:id="@+id/layoutAdminResponse"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_status_active"
+            android:backgroundTint="#F0FDF4"
+            android:padding="12dp"
+            android:layout_marginTop="4dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="6dp">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@android:drawable/ic_dialog_info"
+                    app:tint="#059669"
+                    android:layout_marginEnd="6dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Admin Response"
+                    android:textColor="#059669"
+                    android:textSize="13sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvAdminResponse"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Your issue has been resolved..."
+                android:textColor="#065F46"
+                android:textSize="13sp"
+                android:lineSpacingExtra="2dp"/>
+
+            <TextView
+                android:id="@+id/tvResolvedDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Resolved on: 2024-12-05"
+                android:textColor="#059669"
+                android:textSize="11sp"
+                android:layout_marginTop="4dp"
+                android:textStyle="italic"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

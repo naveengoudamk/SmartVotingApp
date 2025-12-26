@@ -49,6 +49,11 @@
             android:name=".AdminDashboardActivity"
             android:exported="true" />
 
+        <!-- Notification Activity -->
+        <activity
+            android:name=".NotificationActivity"
+            android:exported="false" />
+
         <!-- 🆕 Party Details Screen (added new) -->
         <activity
             android:name=".PartyDetailsActivity"

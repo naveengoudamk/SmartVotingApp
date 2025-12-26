@@ -89,5 +89,18 @@
     "state": "Karnataka",
     "pincode": "570001",
     "eligible": false
+  },
+  {
+    "aadhaar_id": "998877665544",
+    "dob": "1995-08-15",
+    "name": "Rahul Koo",
+    "email": "rahul.ii@example.com",
+    "mobile": "6655443322",
+    "photo": "rahul.jpg",
+    "address": "12, Temple Street, sollapur",
+    "city": "sollapur",
+    "state": "Maharashtra",
+    "pincode": "570001",
+    "eligible": true
   }
 ]

@@ -20,15 +20,24 @@ public class MainActivity extends AppCompatActivity {
     public static String aadhaarId, dob, name, email, mobile, photo, address, city, pincode;
     public static boolean eligible;
 
+    private android.widget.EditText etSearch;
+    private android.widget.TextView tvNotificationBadge;
+    private NotificationHelper notificationHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-        searchButton = findViewById(R.id.icon_search);
+        // searchButton = findViewById(R.id.icon_search); // Removed as search is now
+        // persistent
         notificationIcon = findViewById(R.id.icon_notification);
+        tvNotificationBadge = findViewById(R.id.tvNotificationBadge);
         dashboardTitle = findViewById(R.id.dashboard_title);
+        etSearch = findViewById(R.id.etSearch);
+
+        notificationHelper = new NotificationHelper(this);
 
         // Receive user data from LoginActivity
         Intent intent = getIntent();
@@ -45,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Load default fragment
         loadFragment(new HomeFragment());
-        dashboardTitle.setText("Dashboard");
+        // dashboardTitle.setText("Dashboard"); // Title is hidden now
 
         bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
@@ -53,32 +62,92 @@ public class MainActivity extends AppCompatActivity {
 
             if (itemId == R.id.nav_home) {
                 selectedFragment = new HomeFragment();
-                dashboardTitle.setText("Dashboard");
             } else if (itemId == R.id.nav_list) {
                 selectedFragment = new ListFragment();
-                dashboardTitle.setText("List");
             } else if (itemId == R.id.nav_vote) {
                 selectedFragment = new VoteFragment();
-                dashboardTitle.setText("Vote Now");
             } else if (itemId == R.id.nav_history) {
                 selectedFragment = new HistoryFragment();
-                dashboardTitle.setText("History");
             } else if (itemId == R.id.nav_account) {
                 selectedFragment = new AccountFragment();
-                dashboardTitle.setText("My Account");
             }
 
             if (selectedFragment != null) {
                 loadFragment(selectedFragment);
+                // Clear search when switching fragments
+                etSearch.setText("");
             }
 
             return true;
         });
 
-        searchButton.setOnClickListener(v -> Toast.makeText(this, "Search Clicked", Toast.LENGTH_SHORT).show());
+        // Persistent Search Logic
+        etSearch.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
-        notificationIcon
-                .setOnClickListener(v -> Toast.makeText(this, "Notifications Clicked", Toast.LENGTH_SHORT).show());
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                performSearch(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+            }
+        });
+
+        notificationIcon.setOnClickListener(v -> {
+            Intent notificationIntent = new Intent(MainActivity.this, NotificationActivity.class);
+            startActivity(notificationIntent);
+        });
+
+        updateNotificationBadge();
+
+        handleNavigationIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleNavigationIntent(intent);
+    }
+
+    private void handleNavigationIntent(Intent intent) {
+        if (intent != null && intent.hasExtra("navigate_to")) {
+            String destination = intent.getStringExtra("navigate_to");
+            if ("vote".equals(destination)) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_vote);
+            } else if ("account".equals(destination)) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_account);
+            } else if ("home".equals(destination)) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_home);
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateNotificationBadge();
+    }
+
+    private void updateNotificationBadge() {
+        int count = notificationHelper.getUnreadCount();
+        if (count > 0) {
+            tvNotificationBadge.setVisibility(android.view.View.VISIBLE);
+            tvNotificationBadge.setText(String.valueOf(count));
+        } else {
+            tvNotificationBadge.setVisibility(android.view.View.GONE);
+        }
+    }
+
+    private void performSearch(String query) {
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (currentFragment instanceof SearchableFragment) {
+            ((SearchableFragment) currentFragment).onSearch(query);
+        }
     }
 
     private void loadFragment(Fragment fragment) {

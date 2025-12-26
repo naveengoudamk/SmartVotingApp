@@ -41,7 +41,7 @@ public class VoteFragment extends Fragment {
         User user = UserUtils.getCurrentUser(getContext());
 
         if (user == null) {
-            Toast.makeText(getContext(), "User data not found!", Toast.LENGTH_SHORT).show();
+            CustomAlert.showError(getContext(), "Error", "User data not found!");
             return;
         }
 
@@ -50,15 +50,14 @@ public class VoteFragment extends Fragment {
         // Check if election is active (running, active, or open)
         String status = election.getStatus().toLowerCase();
         if (!status.equals("running") && !status.equals("active") && !status.equals("open")) {
-            Toast.makeText(getContext(), "This election is not active (Status: " + election.getStatus() + ")",
-                    Toast.LENGTH_SHORT).show();
+            CustomAlert.showWarning(getContext(), "Election Closed",
+                    "This election is currently " + election.getStatus());
             return;
         }
 
         if (age < election.getMinAge()) {
-            Toast.makeText(getContext(),
-                    "Not Eligible (Age < " + election.getMinAge() + ")",
-                    Toast.LENGTH_SHORT).show();
+            CustomAlert.showError(getContext(), "Not Eligible",
+                    "You must be at least " + election.getMinAge() + " years old to vote in this election.");
             return;
         }
 
@@ -70,10 +69,9 @@ public class VoteFragment extends Fragment {
                 "Checking eligibility: User State='" + userState + "', Election State='" + electionState + "'");
 
         if (!userState.equalsIgnoreCase(electionState)) {
-            Toast.makeText(getContext(),
-                    "Not Eligible - This election is for " + electionState + " residents only. Your state: "
-                            + userState,
-                    Toast.LENGTH_LONG).show();
+            CustomAlert.showError(getContext(), "Not Eligible",
+                    "This election is for residents of " + electionState + " only.\nYour registered state is "
+                            + userState + ".");
             return;
         }
 

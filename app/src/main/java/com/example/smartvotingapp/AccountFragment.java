@@ -33,8 +33,13 @@ public class AccountFragment extends Fragment {
 
     private TextView txtName, txtAadhaar, txtMobile, txtAddress, txtCity, txtPincode, txtEligible;
     private EditText editEmail;
-    private Button updateEmailButton, changePhotoButton, savePhotoButton;
+    private View updateEmailButton, changePhotoButton;
+    private Button savePhotoButton;
     private ImageView profileImage;
+    private Button btnSubmitFeedback;
+    private LinearLayout feedbackListContainer;
+    private TextView tvNoFeedback, tvFeedbackBadge;
+    private FeedbackManager feedbackManager;
 
     private static final int REQUEST_CAMERA = 100;
     private static final int REQUEST_GALLERY = 101;
@@ -47,14 +52,16 @@ public class AccountFragment extends Fragment {
     private static final String PREF_NAME = "UserProfilePrefs";
     private static final String JSON_FILE_NAME = "user_data.json";
 
-    public AccountFragment() {}
+    public AccountFragment() {
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_account, container, false);
 
         prefs = requireContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        feedbackManager = new FeedbackManager(getContext());
 
         txtName = view.findViewById(R.id.txt_name);
         txtAadhaar = view.findViewById(R.id.txt_aadhaar);
@@ -68,15 +75,31 @@ public class AccountFragment extends Fragment {
         changePhotoButton = view.findViewById(R.id.btn_change_photo);
         savePhotoButton = view.findViewById(R.id.btn_save_photo);
         profileImage = view.findViewById(R.id.img_profile);
+        btnSubmitFeedback = view.findViewById(R.id.btnSubmitFeedback);
+        feedbackListContainer = view.findViewById(R.id.feedbackListContainer);
+        tvNoFeedback = view.findViewById(R.id.tvNoFeedback);
+        tvFeedbackBadge = view.findViewById(R.id.tvFeedbackBadge);
 
-        txtName.setText(MainActivity.name);
-        txtAadhaar.setText(MainActivity.aadhaarId);
-        txtMobile.setText(MainActivity.mobile);
-        txtAddress.setText(MainActivity.address);
-        txtCity.setText(MainActivity.city);
-        txtPincode.setText(MainActivity.pincode);
-        txtEligible.setText(MainActivity.eligible ? "Eligible to vote" : "Not eligible");
-        editEmail.setText(MainActivity.email);
+        // Animations are now handled by layoutAnimation in XML
+
+        User user = UserUtils.getCurrentUser(getContext());
+        if (user != null) {
+            txtName.setText(user.getName());
+            txtAadhaar.setText(user.getAadhaarId());
+            txtMobile.setText(user.getMobile());
+            txtAddress.setText(user.getAddress());
+            txtCity.setText(user.getCity());
+            txtPincode.setText(user.getPincode());
+            txtEligible.setText(user.isEligible() ? "Eligible to vote" : "Not eligible");
+            if (user.isEligible()) {
+                txtEligible.setTextColor(0xFF059669); // Green
+            } else {
+                txtEligible.setTextColor(0xFFDC2626); // Red
+            }
+            editEmail.setText(user.getEmail());
+        } else {
+            CustomAlert.showError(getContext(), "Error", "User data not found");
+        }
 
         loadSavedProfileImage();
 
@@ -84,10 +107,11 @@ public class AccountFragment extends Fragment {
             String updatedEmail = editEmail.getText().toString().trim();
             MainActivity.email = updatedEmail;
             updateEmailInJson(updatedEmail);
-            Toast.makeText(getContext(), "Email updated!", Toast.LENGTH_SHORT).show();
+            CustomAlert.showSuccess(getContext(), "Success", "Email updated successfully!");
         });
 
         changePhotoButton.setOnClickListener(v -> showImagePickerOptions());
+        profileImage.setOnClickListener(v -> showImagePickerOptions());
 
         savePhotoButton.setVisibility(View.GONE);
         savePhotoButton.setOnClickListener(v -> {
@@ -106,18 +130,19 @@ public class AccountFragment extends Fragment {
             }
 
             updatePhotoInJson(filename);
-            Toast.makeText(getContext(), "Photo saved permanently!", Toast.LENGTH_SHORT).show();
+            CustomAlert.showSuccess(getContext(), "Success", "Profile photo saved!");
             savePhotoButton.setVisibility(View.GONE);
         });
 
-        Animation fadeIn = AnimationUtils.loadAnimation(getContext(), android.R.anim.fade_in);
-        view.startAnimation(fadeIn);
+        // Feedback functionality
+        btnSubmitFeedback.setOnClickListener(v -> showSubmitFeedbackDialog());
+        loadUserFeedback();
 
         return view;
     }
 
     private void showImagePickerOptions() {
-        String[] options = {"Choose from Gallery", "Take Photo"};
+        String[] options = { "Choose from Gallery", "Take Photo" };
         new AlertDialog.Builder(getContext())
                 .setTitle("Update Profile Picture")
                 .setItems(options, (dialog, which) -> {
@@ -132,15 +157,15 @@ public class AccountFragment extends Fragment {
 
     private void pickImageFromGallery() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_MEDIA_IMAGES)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.READ_MEDIA_IMAGES}, PERMISSION_REQUEST_CODE);
+            if (ContextCompat.checkSelfPermission(getContext(),
+                    Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[] { Manifest.permission.READ_MEDIA_IMAGES }, PERMISSION_REQUEST_CODE);
                 return;
             }
         } else {
-            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+            if (ContextCompat.checkSelfPermission(getContext(),
+                    Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, PERMISSION_REQUEST_CODE);
                 return;
             }
         }
@@ -151,9 +176,9 @@ public class AccountFragment extends Fragment {
     }
 
     private void takePhotoFromCamera() {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.CAMERA}, PERMISSION_REQUEST_CODE);
+        if (ContextCompat.checkSelfPermission(getContext(),
+                Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] { Manifest.permission.CAMERA }, PERMISSION_REQUEST_CODE);
             return;
         }
 
@@ -163,7 +188,7 @@ public class AccountFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode,
-                                 @Nullable Intent data) {
+            @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == Activity.RESULT_OK && data != null) {
@@ -185,15 +210,23 @@ public class AccountFragment extends Fragment {
             FileOutputStream fos = new FileOutputStream(file);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
             fos.close();
-            prefs.edit().putBoolean("hasSavedImage_" + MainActivity.aadhaarId, true).apply();
+
+            User user = UserUtils.getCurrentUser(getContext());
+            if (user != null) {
+                prefs.edit().putBoolean("hasSavedImage_" + user.getAadhaarId(), true).apply();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private void loadSavedProfileImage() {
-        String filename = "profile_" + MainActivity.aadhaarId + ".jpg";
-        if (prefs.getBoolean("hasSavedImage_" + MainActivity.aadhaarId, false)) {
+        User user = UserUtils.getCurrentUser(getContext());
+        if (user == null)
+            return;
+
+        String filename = "profile_" + user.getAadhaarId() + ".jpg";
+        if (prefs.getBoolean("hasSavedImage_" + user.getAadhaarId(), false)) {
             File file = new File(getContext().getFilesDir(), filename);
             if (file.exists()) {
                 Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
@@ -204,6 +237,10 @@ public class AccountFragment extends Fragment {
 
     private void updatePhotoInJson(String filename) {
         try {
+            User currentUser = UserUtils.getCurrentUser(getContext());
+            if (currentUser == null)
+                return;
+
             File jsonFile = new File(getContext().getFilesDir(), JSON_FILE_NAME);
             JSONArray jsonArray;
 
@@ -213,7 +250,7 @@ public class AccountFragment extends Fragment {
 
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject user = jsonArray.getJSONObject(i);
-                    if (user.getString("aadhaar_id").equals(MainActivity.aadhaarId)) {
+                    if (user.getString("aadhaar_id").equals(currentUser.getAadhaarId())) {
                         user.put("photo", filename);
                         break;
                     }
@@ -230,6 +267,10 @@ public class AccountFragment extends Fragment {
 
     private void updateEmailInJson(String newEmail) {
         try {
+            User currentUser = UserUtils.getCurrentUser(getContext());
+            if (currentUser == null)
+                return;
+
             File jsonFile = new File(getContext().getFilesDir(), JSON_FILE_NAME);
             JSONArray jsonArray;
 
@@ -239,7 +280,7 @@ public class AccountFragment extends Fragment {
 
                 for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject user = jsonArray.getJSONObject(i);
-                    if (user.getString("aadhaar_id").equals(MainActivity.aadhaarId)) {
+                    if (user.getString("aadhaar_id").equals(currentUser.getAadhaarId())) {
                         user.put("email", newEmail);
                         break;
                     }
@@ -254,15 +295,164 @@ public class AccountFragment extends Fragment {
         }
     }
 
+    private void showSubmitFeedbackDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        View dialogView = LayoutInflater.from(getContext())
+                .inflate(R.layout.dialog_submit_feedback, null);
+        builder.setView(dialogView);
+
+        EditText etTitle = dialogView.findViewById(R.id.etFeedbackTitle);
+        EditText etDescription = dialogView.findViewById(R.id.etFeedbackDescription);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancelFeedback);
+        Button btnSubmit = dialogView.findViewById(R.id.btnSubmitFeedback);
+
+        AlertDialog dialog = builder.create();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSubmit.setOnClickListener(v -> {
+            String title = etTitle.getText().toString().trim();
+            String description = etDescription.getText().toString().trim();
+
+            if (title.isEmpty() || description.isEmpty()) {
+                CustomAlert.showWarning(getContext(), "Missing Info", "Please fill all fields");
+                return;
+            }
+
+            User user = UserUtils.getCurrentUser(getContext());
+            if (user == null) {
+                CustomAlert.showError(getContext(), "Error", "User not found");
+                return;
+            }
+
+            Feedback feedback = new Feedback(
+                    java.util.UUID.randomUUID().toString(),
+                    user.getAadhaarId(),
+                    user.getName(),
+                    user.getAadhaarId(),
+                    title,
+                    description,
+                    "pending",
+                    "",
+                    System.currentTimeMillis(),
+                    0);
+
+            if (feedbackManager.addFeedback(feedback)) {
+                CustomAlert.showSuccess(getContext(), "Submitted", "Feedback submitted successfully!");
+                loadUserFeedback();
+                dialog.dismiss();
+            } else {
+                CustomAlert.showError(getContext(), "Failed", "Failed to submit feedback");
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void loadUserFeedback() {
+        feedbackListContainer.removeAllViews();
+
+        User user = UserUtils.getCurrentUser(getContext());
+        if (user == null)
+            return;
+
+        java.util.List<Feedback> userFeedback = feedbackManager.getFeedbackByUserId(user.getAadhaarId());
+
+        if (userFeedback.isEmpty()) {
+            tvNoFeedback.setVisibility(View.VISIBLE);
+            tvFeedbackBadge.setVisibility(View.GONE);
+            return;
+        }
+
+        tvNoFeedback.setVisibility(View.GONE);
+
+        // Sort by timestamp (newest first)
+        userFeedback.sort((f1, f2) -> Long.compare(f2.getTimestamp(), f1.getTimestamp()));
+
+        // Check for newly resolved feedback
+        long lastCheckTime = prefs.getLong("lastFeedbackCheck_" + user.getAadhaarId(), 0);
+        int newlyResolvedCount = feedbackManager.getNewlyResolvedCount(user.getAadhaarId(), lastCheckTime);
+
+        if (newlyResolvedCount > 0) {
+            tvFeedbackBadge.setText(String.valueOf(newlyResolvedCount));
+            tvFeedbackBadge.setVisibility(View.VISIBLE);
+        } else {
+            tvFeedbackBadge.setVisibility(View.GONE);
+        }
+
+        // Update last check time
+        prefs.edit().putLong("lastFeedbackCheck_" + user.getAadhaarId(), System.currentTimeMillis()).apply();
+
+        for (Feedback feedback : userFeedback) {
+            View feedbackView = LayoutInflater.from(getContext())
+                    .inflate(R.layout.item_feedback_card, feedbackListContainer, false);
+
+            TextView tvTitle = feedbackView.findViewById(R.id.tvFeedbackTitle);
+            TextView tvStatus = feedbackView.findViewById(R.id.tvFeedbackStatus);
+            TextView tvDescription = feedbackView.findViewById(R.id.tvFeedbackDescription);
+            TextView tvDate = feedbackView.findViewById(R.id.tvFeedbackDate);
+            LinearLayout layoutAdminResponse = feedbackView.findViewById(R.id.layoutAdminResponse);
+            TextView tvAdminResponse = feedbackView.findViewById(R.id.tvAdminResponse);
+            TextView tvResolvedDate = feedbackView.findViewById(R.id.tvResolvedDate);
+
+            tvTitle.setText(feedback.getTitle());
+            tvDescription.setText(feedback.getDescription());
+
+            // Format date
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM dd, yyyy",
+                    java.util.Locale.getDefault());
+            tvDate.setText("Submitted on: " + sdf.format(new java.util.Date(feedback.getTimestamp())));
+
+            // Set status badge
+            updateStatusBadge(tvStatus, feedback.getStatus());
+
+            // Show admin response if exists
+            if (feedback.getStatus().equals("resolved") &&
+                    feedback.getAdminResponse() != null &&
+                    !feedback.getAdminResponse().isEmpty()) {
+                layoutAdminResponse.setVisibility(View.VISIBLE);
+                tvAdminResponse.setText(feedback.getAdminResponse());
+                tvResolvedDate
+                        .setText("Resolved on: " + sdf.format(new java.util.Date(feedback.getResolvedTimestamp())));
+
+                // Highlight if newly resolved
+                if (feedback.getResolvedTimestamp() > lastCheckTime) {
+                    feedbackView.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF0FDF4));
+                }
+            } else {
+                layoutAdminResponse.setVisibility(View.GONE);
+            }
+
+            feedbackListContainer.addView(feedbackView);
+        }
+    }
+
+    private void updateStatusBadge(TextView badge, String status) {
+        switch (status) {
+            case "pending":
+                badge.setText("Pending");
+                badge.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF59E0B));
+                break;
+            case "in_progress":
+                badge.setText("In Progress");
+                badge.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF3B82F6));
+                break;
+            case "resolved":
+                badge.setText("Resolved");
+                badge.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF059669));
+                break;
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+            @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
         if (requestCode == PERMISSION_REQUEST_CODE && grantResults.length > 0 &&
                 grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(getContext(), "Permission granted", Toast.LENGTH_SHORT).show();
+            CustomAlert.showSuccess(getContext(), "Permission", "Permission granted");
         } else {
-            Toast.makeText(getContext(), "Permission denied", Toast.LENGTH_SHORT).show();
+            CustomAlert.showError(getContext(), "Permission", "Permission denied");
         }
     }
 }

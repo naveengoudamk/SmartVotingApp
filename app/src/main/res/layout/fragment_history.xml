@@ -4,35 +4,30 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="#FFFFFF">
+    android:background="#F9FAFB">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Election Results"
-        android:textSize="22sp"
+        android:text="Election History"
+        android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="#000000"
-        android:layout_marginBottom="20dp"/>
+        android:textColor="#111827"
+        android:layout_marginBottom="4dp"/>
 
     <TextView
-        android:id="@+id/tvResultStatus"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Checking status..."
-        android:textSize="16sp"
-        android:layout_marginBottom="10dp"/>
+        android:text="Past results and upcoming announcements"
+        android:textSize="14sp"
+        android:textColor="#6B7280"
+        android:layout_marginBottom="16dp"/>
 
-    <ScrollView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvHistory"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        
-        <TextView
-            android:id="@+id/tvResults"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:fontFamily="monospace"/>
-    </ScrollView>
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"/>
 
 </LinearLayout>

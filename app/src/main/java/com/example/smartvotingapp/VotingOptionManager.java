@@ -50,7 +50,8 @@ public class VotingOptionManager {
                         obj.getString("id"),
                         obj.getInt("electionId"),
                         obj.getString("optionName"),
-                        obj.optString("description", "")));
+                        obj.optString("description", ""),
+                        obj.optString("logoPath", null)));
             }
         } catch (Exception e) {
             Log.e("VotingOptionManager", "Error reading options", e);
@@ -90,6 +91,9 @@ public class VotingOptionManager {
                 obj.put("electionId", option.getElectionId());
                 obj.put("optionName", option.getOptionName());
                 obj.put("description", option.getDescription());
+                if (option.getLogoPath() != null) {
+                    obj.put("logoPath", option.getLogoPath());
+                }
                 array.put(obj);
             } catch (JSONException e) {
                 e.printStackTrace();

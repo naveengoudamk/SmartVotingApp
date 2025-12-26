@@ -24,8 +24,13 @@ public class AdminElectionFragment extends Fragment {
     public AdminElectionFragment() {
     }
 
+    private String adminScope;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        if (getArguments() != null) {
+            adminScope = getArguments().getString("admin_scope");
+        }
         View view = inflater.inflate(R.layout.fragment_admin_election, container, false);
 
         electionManager = new ElectionManager(getContext());
@@ -44,6 +49,13 @@ public class AdminElectionFragment extends Fragment {
         List<Election> elections = electionManager.getAllElections();
 
         for (Election election : elections) {
+            // FILTER: Scope Logic
+            if (adminScope != null && !adminScope.isEmpty()) {
+                if (!election.getState().equalsIgnoreCase(adminScope)) {
+                    continue;
+                }
+            }
+
             View electionView = LayoutInflater.from(getContext()).inflate(R.layout.item_election_admin,
                     electionContainer, false);
 
@@ -61,6 +73,7 @@ public class AdminElectionFragment extends Fragment {
             stopDate.setText("Stop Date: " + election.getStopDate());
 
             btnEdit.setOnClickListener(v -> showAddEditDialog(election));
+            // Only allow deletions if they match scope (Redundant check but safe)
             btnDelete.setOnClickListener(v -> {
                 electionManager.deleteElection(election.getId());
                 loadElections();
@@ -95,6 +108,12 @@ public class AdminElectionFragment extends Fragment {
             etMinAge.setText(String.valueOf(election.getMinAge()));
             etStatus.setText(election.getStatus());
             etStopDate.setText(election.getStopDate());
+        } else {
+            // New Election: Pre-fill and lock state if scoped
+            if (adminScope != null && !adminScope.isEmpty()) {
+                etState.setText(adminScope);
+                etState.setEnabled(false);
+            }
         }
 
         builder.setPositiveButton("Save", (dialog, which) -> {
@@ -187,20 +206,67 @@ public class AdminElectionFragment extends Fragment {
         View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_voting_option, null);
         builder.setView(view);
 
+        // UI Elements
+        android.widget.Spinner spinnerParties = view.findViewById(R.id.spinnerParties);
         EditText etOptionName = view.findViewById(R.id.etOptionName);
         EditText etOptionDescription = view.findViewById(R.id.etOptionDescription);
 
-        builder.setPositiveButton("Add", (dialog, which) -> {
-            String name = etOptionName.getText().toString().trim();
-            String description = etOptionDescription.getText().toString().trim();
+        // Load Parties
+        PartyManager partyManager = new PartyManager(getContext());
+        List<Party> parties = partyManager.getAllParties();
 
-            if (name.isEmpty()) {
-                Toast.makeText(getContext(), "Option name is required", Toast.LENGTH_SHORT).show();
+        List<String> partyNames = new java.util.ArrayList<>();
+        partyNames.add("Select a Party (Optional)");
+        for (Party p : parties) {
+            partyNames.add(p.getName());
+        }
+
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(getContext(),
+                android.R.layout.simple_spinner_item, partyNames);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerParties.setAdapter(adapter);
+
+        // Handle Selection
+        final String[] selectedLogoPath = { null };
+        spinnerParties.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                if (position > 0) {
+                    Party selectedParty = parties.get(position - 1);
+                    // Set Party Name in Description field
+                    etOptionDescription.setText(selectedParty.getName());
+                    // Clear Candidate Name for user input
+                    // etOptionName.setText(""); // Optional: keep empty or pre-fill
+                    selectedLogoPath[0] = selectedParty.getLogoPath();
+                } else {
+                    etOptionDescription.setText("");
+                    selectedLogoPath[0] = null;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+            }
+        });
+
+        builder.setPositiveButton("Add", (dialog, which) -> {
+            String candidateName = etOptionName.getText().toString().trim();
+            String partyName = etOptionDescription.getText().toString().trim();
+
+            if (candidateName.isEmpty()) {
+                Toast.makeText(getContext(), "Candidate name is required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (partyName.isEmpty()) {
+                Toast.makeText(getContext(), "Please select a party", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             String id = java.util.UUID.randomUUID().toString();
-            VotingOption option = new VotingOption(id, election.getId(), name, description);
+            // Option Name = Candidate Name
+            // Description = Party Name
+            VotingOption option = new VotingOption(id, election.getId(), candidateName, partyName, selectedLogoPath[0]);
             optionManager.addOption(option);
             onComplete.run();
         });

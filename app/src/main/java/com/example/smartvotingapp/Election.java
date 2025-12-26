@@ -7,14 +7,20 @@ public class Election {
     private int minAge;
     private String status;
     private String stopDate;
+    private String resultDate;
 
     public Election(int id, String title, String state, int minAge, String status, String stopDate) {
+        this(id, title, state, minAge, status, stopDate, null);
+    }
+
+    public Election(int id, String title, String state, int minAge, String status, String stopDate, String resultDate) {
         this.id = id;
         this.title = title;
         this.state = state;
         this.minAge = minAge;
         this.status = status;
         this.stopDate = stopDate;
+        this.resultDate = resultDate;
     }
 
     public int getId() {
@@ -39,5 +45,13 @@ public class Election {
 
     public String getStopDate() {
         return stopDate;
+    }
+
+    public String getResultDate() {
+        return resultDate;
+    }
+
+    public void setResultDate(String resultDate) {
+        this.resultDate = resultDate;
     }
 }

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@android:color/white">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Resolve Feedback"
+        android:textColor="#1E3A8A"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogFeedbackTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Issue Title"
+        android:textColor="#374151"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogUserInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="User: Name • Aadhaar"
+        android:textColor="#6B7280"
+        android:textSize="13sp"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="User's Issue:"
+        android:textColor="#374151"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="6dp"/>
+
+    <TextView
+        android:id="@+id/tvDialogFeedbackDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Description of the issue..."
+        android:textColor="#6B7280"
+        android:textSize="14sp"
+        android:background="@drawable/bg_status_active"
+        android:backgroundTint="#F9FAFB"
+        android:padding="12dp"
+        android:layout_marginBottom="20dp"
+        android:maxLines="6"
+        android:scrollbars="vertical"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:boxBackgroundMode="outline"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp"
+        app:boxStrokeColor="#1E3A8A"
+        app:hintTextColor="#1E3A8A">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etAdminResponse"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Your response to the user"
+            android:inputType="textMultiLine|textCapSentences"
+            android:minLines="4"
+            android:maxLines="8"
+            android:gravity="top|start"
+            android:textColor="#374151"
+            android:textSize="16sp"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btnCancelResolve"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:text="Cancel"
+            android:textColor="#6B7280"
+            android:layout_marginEnd="12dp"
+            app:strokeColor="#D1D5DB"
+            app:cornerRadius="12dp"/>
+
+        <Button
+            android:id="@+id/btnMarkResolved"
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:text="Mark as Resolved"
+            android:backgroundTint="#059669"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            app:cornerRadius="12dp"
+            app:icon="@android:drawable/checkbox_on_background"
+            app:iconTint="#FFFFFF"/>
+    </LinearLayout>
+
+</LinearLayout>

@@ -27,17 +27,35 @@ public class AdminHomeFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_admin_home, container, false);
+        try {
+            View view = inflater.inflate(R.layout.fragment_admin_home, container, false);
 
-        newsManager = new NewsManager(getContext());
-        newsContainer = view.findViewById(R.id.newsContainer);
-        Button btnAddNews = view.findViewById(R.id.btnAddNews);
+            newsManager = new NewsManager(getContext());
+            newsContainer = view.findViewById(R.id.newsContainer);
+            Button btnAddNews = view.findViewById(R.id.btnAddNews);
+            Button btnViewFeedback = view.findViewById(R.id.btnViewFeedback);
 
-        btnAddNews.setOnClickListener(v -> showAddEditDialog(null));
+            btnAddNews.setOnClickListener(v -> showAddEditDialog(null));
 
-        loadNews();
+            btnViewFeedback.setOnClickListener(v -> {
+                try {
+                    getParentFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_container, new AdminFeedbackFragment())
+                            .addToBackStack(null)
+                            .commit();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
 
-        return view;
+            loadNews();
+
+            return view;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Error loading home: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return new View(getContext());
+        }
     }
 
     private void loadNews() {

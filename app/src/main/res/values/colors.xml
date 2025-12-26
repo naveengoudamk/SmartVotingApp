@@ -2,4 +2,27 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Brand Colors -->
+    <color name="primary">#2563EB</color> <!-- Royal Blue -->
+    <color name="primary_dark">#1E40AF</color>
+    <color name="primary_light">#60A5FA</color>
+    <color name="accent">#F59E0B</color> <!-- Amber -->
+    
+    <!-- Backgrounds -->
+    <color name="background_light">#F3F4F6</color>
+    <color name="surface_white">#FFFFFF</color>
+    
+    <!-- Text -->
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#4B5563</color>
+    <color name="text_tertiary">#9CA3AF</color>
+    
+    <!-- Status -->
+    <color name="success">#10B981</color>
+    <color name="error">#EF4444</color>
+    <color name="warning">#F59E0B</color>
+    
+    <!-- UI Elements -->
+    <color name="divider">#E5E7EB</color>
 </resources>

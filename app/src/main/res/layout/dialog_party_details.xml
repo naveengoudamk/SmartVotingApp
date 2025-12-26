@@ -1,59 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:background="@drawable/card_background">
+    android:layout_margin="16dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="12dp">
 
-    <ImageView
-        android:id="@+id/imgPartyLogo"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_gravity="center"
-        android:src="@drawable/ic_bjp"
-        android:background="@drawable/bg_party_circle"
-        android:padding="16dp"
-        android:layout_marginBottom="16dp"/>
-
-    <TextView
-        android:id="@+id/tvPartyName"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Party Name"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="#1E3A8A"
-        android:gravity="center"
-        android:layout_marginBottom="8dp"/>
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tvPartySymbol"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Symbol: Lotus"
-        android:textSize="14sp"
-        android:textColor="#4B5563"
-        android:gravity="center"
-        android:layout_marginBottom="16dp"/>
+        <!-- Header with Logo -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:background="#F3F4F6">
 
-    <TextView
-        android:id="@+id/tvPartyDescription"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Party Description goes here..."
-        android:textSize="14sp"
-        android:textColor="#374151"
-        android:lineSpacingExtra="4dp"
-        android:gravity="center_horizontal"/>
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:alpha="0.1"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_launcher_background" />
 
-    <Button
-        android:id="@+id/btnClose"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Close"
-        android:layout_marginTop="24dp"
-        android:backgroundTint="#1E3A8A"
-        android:textColor="#FFFFFF"/>
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                app:cardBackgroundColor="#FFFFFF"
+                app:cardCornerRadius="50dp"
+                app:cardElevation="4dp"
+                app:strokeColor="#E5E7EB"
+                app:strokeWidth="1dp">
 
-</LinearLayout>
+                <ImageView
+                    android:id="@+id/imgPartyLogo"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="16dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_bjp" />
+            </com.google.android.material.card.MaterialCardView>
+        </FrameLayout>
+
+        <!-- Content -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/tvPartyName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Party Name"
+                android:textColor="#111827"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvPartySymbol"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_party_circle"
+                android:backgroundTint="#EFF6FF"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp"
+                android:text="Symbol: Lotus"
+                android:textColor="#1D4ED8"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="16dp"
+                android:background="#F3F4F6" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="About"
+                android:textColor="#6B7280"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textAllCaps="true" />
+
+            <TextView
+                android:id="@+id/tvPartyDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="6dp"
+                android:text="Party Description goes here..."
+                android:textColor="#374151"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/btnClose"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Close"
+                android:textColor="#1E3A8A"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

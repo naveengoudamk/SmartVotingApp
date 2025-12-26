@@ -10,10 +10,11 @@ import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import java.util.List;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements SearchableFragment {
 
     private LinearLayout newsContainer;
     private NewsManager newsManager;
+    private List<News> allNews;
 
     public HomeFragment() {
     }
@@ -27,9 +28,33 @@ public class HomeFragment extends Fragment {
         newsContainer = view.findViewById(R.id.newsContainer);
 
         loadSampleNewsIfNeeded();
-        loadNews();
+
+        allNews = newsManager.getAllNews();
+        loadNews(allNews);
 
         return view;
+    }
+
+    @Override
+    public void onSearch(String query) {
+        if (allNews == null)
+            return;
+
+        if (query == null || query.isEmpty()) {
+            loadNews(allNews);
+            return;
+        }
+
+        List<News> filteredList = new java.util.ArrayList<>();
+        String lowerQuery = query.toLowerCase();
+
+        for (News news : allNews) {
+            if (news.getTitle().toLowerCase().contains(lowerQuery) ||
+                    news.getDescription().toLowerCase().contains(lowerQuery)) {
+                filteredList.add(news);
+            }
+        }
+        loadNews(filteredList);
     }
 
     private void loadSampleNewsIfNeeded() {
@@ -59,9 +84,8 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void loadNews() {
+    private void loadNews(List<News> newsList) {
         newsContainer.removeAllViews();
-        List<News> newsList = newsManager.getAllNews();
 
         if (newsList.isEmpty()) {
             TextView emptyView = new TextView(getContext());
@@ -110,11 +134,14 @@ public class HomeFragment extends Fragment {
                     imgNews.setImageResource(R.drawable.ic_news_placeholder);
                 }
             } else {
-                // If no image, maybe hide the image view or show a placeholder?
-                // For the card design, a placeholder looks better than collapsing it.
-                imgNews.setImageResource(R.drawable.ic_news_placeholder); // Fallback if available, or just keep
-                                                                          // default
+                imgNews.setImageResource(R.drawable.ic_news_placeholder);
             }
+
+            // Add animation
+            android.view.animation.Animation animation = android.view.animation.AnimationUtils
+                    .loadAnimation(getContext(), R.anim.slide_in_up);
+            animation.setStartOffset(newsContainer.getChildCount() * 100); // Staggered effect
+            newsView.startAnimation(animation);
 
             newsContainer.addView(newsView);
         }

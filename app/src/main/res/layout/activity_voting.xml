@@ -19,29 +19,47 @@
         android:id="@+id/textViewUserInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="User Info"
-        android:textSize="18sp"
-        android:padding="8dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Select a Candidate:"
+        android:text="Welcome User, you are eligible to vote!"
         android:textSize="16sp"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="10dp"/>
+        android:textColor="#374151"
+        android:layout_marginBottom="16dp"/>
 
-    <RadioGroup
-        android:id="@+id/radioGroupCandidates"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvVotingOptions"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="80dp"/>
+
+    <LinearLayout
+        android:id="@+id/bottomBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginBottom="20dp"/>
+        android:background="#FFFFFF"
+        android:elevation="16dp"
+        android:padding="16dp"
+        android:visibility="gone">
 
-    <Button
-        android:id="@+id/voteButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Cast Vote"
-        android:layout_marginTop="20dp"/>
+        <TextView
+            android:id="@+id/tvSelectedOption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Selected: None"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/voteButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Confirm Vote"
+            android:backgroundTint="#1E3A8A"
+            android:textColor="#FFFFFF"
+            android:padding="12dp"/>
+    </LinearLayout>
+
 </LinearLayout>

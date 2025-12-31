@@ -130,6 +130,21 @@ public class AdminUserListFragment extends Fragment {
             }
         }
 
+        // LOCK STATE for State Admins
+        if (adminScope != null && !adminScope.isEmpty()) {
+            spinnerState.setEnabled(false); // Disable changing state
+            // Ensure the spinner is set to the admin's scope (should match user's state
+            // anyway due to filtering)
+            for (int i = 0; i < states.length; i++) {
+                if (states[i].equalsIgnoreCase(adminScope)) {
+                    spinnerState.setSelection(i);
+                    break;
+                }
+            }
+        } else {
+            spinnerState.setEnabled(true); // India Govt can change state
+        }
+
         // DOB Picker
         etDob.setOnClickListener(v -> {
             java.util.Calendar c = java.util.Calendar.getInstance();
@@ -210,6 +225,19 @@ public class AdminUserListFragment extends Fragment {
                 android.R.layout.simple_spinner_item, states);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerState.setAdapter(adapter);
+
+        // AUTO-SELECT & LOCK STATE for State Admins
+        if (adminScope != null && !adminScope.isEmpty()) {
+            for (int i = 0; i < states.length; i++) {
+                if (states[i].equalsIgnoreCase(adminScope)) {
+                    spinnerState.setSelection(i);
+                    break;
+                }
+            }
+            spinnerState.setEnabled(false); // Lock it
+        } else {
+            spinnerState.setEnabled(true); // India Govt can select any
+        }
 
         // Date picker for DOB
         etDob.setOnClickListener(v -> {

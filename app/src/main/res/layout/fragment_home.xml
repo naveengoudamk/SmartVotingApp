@@ -24,45 +24,6 @@
 
 
 
-        <!-- Category Chips -->
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="none"
-            android:layout_marginBottom="12dp">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="National"
-                    style="@style/Widget.MaterialComponents.Chip.Choice"
-                    android:checked="true" />
-
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="State"
-                    style="@style/Widget.MaterialComponents.Chip.Choice" />
-
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="EC Updates"
-                    style="@style/Widget.MaterialComponents.Chip.Choice" />
-
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Party News"
-                    style="@style/Widget.MaterialComponents.Chip.Choice" />
-
-            </LinearLayout>
-        </HorizontalScrollView>
 
         <LinearLayout
             android:id="@+id/newsContainer"

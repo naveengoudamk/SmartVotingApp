@@ -149,4 +149,14 @@ public class UserManager {
         }
         saveJsonToFile(array.toString());
     }
+
+    public User getUser(String aadhaar, String dob) {
+        List<User> users = getAllUsers();
+        for (User u : users) {
+            if (u.getAadhaarId().equals(aadhaar) && u.getDob().equals(dob)) {
+                return u;
+            }
+        }
+        return null; // User not found
+    }
 }

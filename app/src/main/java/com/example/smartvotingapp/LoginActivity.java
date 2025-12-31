@@ -44,6 +44,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText otpInput;
     LinearLayout otpArea;
     TextView otpTimerText;
+    private UserManager userManager;
 
     // OTP state
     private String currentOtp = null;
@@ -57,6 +58,8 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        userManager = new UserManager(this);
 
         createNotificationChannel();
 
@@ -121,7 +124,7 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             // Validate user exists before sending OTP (keeps flow safe)
-            if (!validateUser(aadhaar, dob)) {
+            if (userManager.getUser(aadhaar, dob) == null) {
                 CustomAlert.showError(this, "Authentication Failed", "Aadhaar/DOB not found. Please check details.");
                 return;
             }
@@ -199,22 +202,22 @@ public class LoginActivity extends AppCompatActivity {
             // proceed to fetch user details and open main activity
             String aadhaar = aadhaarInput.getText().toString().trim();
             String dob = dobInput.getText().toString().trim();
-            JSONObject user = getUserDetails(aadhaar, dob);
+            User user = userManager.getUser(aadhaar, dob);
 
             if (user != null) {
-                UserUtils.saveUserSession(LoginActivity.this, user.optString("aadhaar_id"));
+                UserUtils.saveUserSession(LoginActivity.this, user.getAadhaarId());
 
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                intent.putExtra("aadhaar_id", user.optString("aadhaar_id"));
-                intent.putExtra("dob", user.optString("dob"));
-                intent.putExtra("name", user.optString("name"));
-                intent.putExtra("email", user.optString("email"));
-                intent.putExtra("mobile", user.optString("mobile"));
-                intent.putExtra("photo", user.optString("photo"));
-                intent.putExtra("address", user.optString("address"));
-                intent.putExtra("city", user.optString("city"));
-                intent.putExtra("pincode", user.optString("pincode"));
-                intent.putExtra("eligible", user.optBoolean("eligible"));
+                intent.putExtra("aadhaar_id", user.getAadhaarId());
+                intent.putExtra("dob", user.getDob());
+                intent.putExtra("name", user.getName());
+                intent.putExtra("email", user.getEmail());
+                intent.putExtra("mobile", user.getMobile());
+                intent.putExtra("photo", user.getPhoto());
+                intent.putExtra("address", user.getAddress());
+                intent.putExtra("city", user.getCity());
+                intent.putExtra("pincode", user.getPincode());
+                intent.putExtra("eligible", user.isEligible());
 
                 startActivity(intent);
                 finish();
@@ -349,50 +352,6 @@ public class LoginActivity extends AppCompatActivity {
                 setLoginButtonEnabled(false);
             }
         }.start();
-    }
-
-    // ---------- Existing user JSON methods ----------
-
-    private boolean validateUser(String aadhaar, String dob) {
-        try {
-            InputStream is = getAssets().open("aadhaar_data.json");
-            Scanner scanner = new Scanner(is, StandardCharsets.UTF_8.name());
-            String json = scanner.useDelimiter("\\A").next();
-            scanner.close();
-
-            JSONArray array = new JSONArray(json);
-            for (int i = 0; i < array.length(); i++) {
-                JSONObject obj = array.getJSONObject(i);
-                if (aadhaar.equals(obj.getString("aadhaar_id"))
-                        && dob.equals(obj.getString("dob"))) {
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    private JSONObject getUserDetails(String aadhaar, String dob) {
-        try {
-            InputStream is = getAssets().open("aadhaar_data.json");
-            Scanner scanner = new Scanner(is, StandardCharsets.UTF_8.name());
-            String json = scanner.useDelimiter("\\A").next();
-            scanner.close();
-
-            JSONArray array = new JSONArray(json);
-            for (int i = 0; i < array.length(); i++) {
-                JSONObject obj = array.getJSONObject(i);
-                if (aadhaar.equals(obj.getString("aadhaar_id"))
-                        && dob.equals(obj.getString("dob"))) {
-                    return obj;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     @Override

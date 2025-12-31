@@ -102,5 +102,18 @@
     "state": "Maharashtra",
     "pincode": "570001",
     "eligible": true
+  },
+  {
+    "aadhaar_id": "123456789102",
+    "dob": "2004-01-01",
+    "name": "Naveen Gouda ",
+    "email": "navi.patil@example.com",
+    "mobile": "7766557733",
+    "photo": "sneha.jpg",
+    "address": "89, Main Road, Hubli",
+    "city": "Hubli",
+    "state": "Karnataka",
+    "pincode": "580020",
+    "eligible": true
   }
 ]

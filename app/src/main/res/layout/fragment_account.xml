@@ -16,11 +16,7 @@
             android:layout_height="wrap_content"
             app:layout_scrollFlags="scroll|exitUntilCollapsed">
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:background="@drawable/bg_header_gradient"
-                android:layout_marginBottom="60dp"/>
+
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -115,7 +111,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="#CCFFFFFF"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="2dp"
                 app:strokeColor="#F3F4F6"
@@ -330,7 +326,7 @@
                 android:id="@+id/cardStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="#CCFFFFFF"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="2dp"
                 app:strokeColor="#F3F4F6"
@@ -388,7 +384,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="#CCFFFFFF"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="2dp"
                 app:strokeColor="#F3F4F6"

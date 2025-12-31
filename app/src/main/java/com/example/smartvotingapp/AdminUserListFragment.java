@@ -93,32 +93,85 @@ public class AdminUserListFragment extends Fragment {
         EditText etEmail = view.findViewById(R.id.etEmail);
         EditText etMobile = view.findViewById(R.id.etMobile);
         EditText etAddress = view.findViewById(R.id.etAddress);
+        EditText etCity = view.findViewById(R.id.etCity);
+        android.widget.Spinner spinnerState = view.findViewById(R.id.spinnerState);
+        EditText etPincode = view.findViewById(R.id.etPincode);
+        EditText etDob = view.findViewById(R.id.etDob);
         CheckBox cbEligible = view.findViewById(R.id.cbEligible);
 
+        // Populate state spinner
+        String[] states = new String[] { "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+                "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
+                "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha",
+                "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+                "Uttarakhand", "West Bengal", "Delhi" };
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(getContext(),
+                android.R.layout.simple_spinner_item, states);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerState.setAdapter(adapter);
+
+        // Set existing values
         etName.setText(user.getName());
         etEmail.setText(user.getEmail());
         etMobile.setText(user.getMobile());
         etAddress.setText(user.getAddress());
+        etCity.setText(user.getCity());
+        etPincode.setText(user.getPincode());
+        etDob.setText(user.getDob());
         cbEligible.setChecked(user.isEligible());
+
+        // Set spinner selection
+        if (user.getState() != null) {
+            for (int i = 0; i < states.length; i++) {
+                if (states[i].equalsIgnoreCase(user.getState())) {
+                    spinnerState.setSelection(i);
+                    break;
+                }
+            }
+        }
+
+        // DOB Picker
+        etDob.setOnClickListener(v -> {
+            java.util.Calendar c = java.util.Calendar.getInstance();
+            int y = c.get(java.util.Calendar.YEAR);
+            int m = c.get(java.util.Calendar.MONTH);
+            int d = c.get(java.util.Calendar.DAY_OF_MONTH);
+            try {
+                String[] parts = user.getDob().split("-");
+                if (parts.length == 3) {
+                    y = Integer.parseInt(parts[0]);
+                    m = Integer.parseInt(parts[1]) - 1;
+                    d = Integer.parseInt(parts[2]);
+                }
+            } catch (Exception ignored) {
+            }
+            new android.app.DatePickerDialog(getContext(), (dp, year, month, day) -> {
+                etDob.setText(year + "-" + String.format("%02d", (month + 1)) + "-" + String.format("%02d", day));
+            }, y, m, d).show();
+        });
 
         builder.setPositiveButton("Save", (dialog, which) -> {
             String newName = etName.getText().toString().trim();
             String newEmail = etEmail.getText().toString().trim();
             String newMobile = etMobile.getText().toString().trim();
             String newAddress = etAddress.getText().toString().trim();
+            String newCity = etCity.getText().toString().trim();
+            String newState = spinnerState.getSelectedItem() != null ? spinnerState.getSelectedItem().toString() : "";
+            String newPincode = etPincode.getText().toString().trim();
+            String newDob = etDob.getText().toString().trim();
             boolean isEligible = cbEligible.isChecked();
 
             User updatedUser = new User(
                     user.getAadhaarId(),
                     newName,
-                    user.getDob(),
+                    newDob,
                     newEmail,
                     newMobile,
                     user.getPhoto(),
                     newAddress,
-                    user.getCity(),
-                    user.getState(),
-                    user.getPincode(),
+                    newCity,
+                    newState,
+                    newPincode,
                     isEligible);
 
             userManager.updateUser(updatedUser);
@@ -143,9 +196,20 @@ public class AdminUserListFragment extends Fragment {
         EditText etMobile = view.findViewById(R.id.etMobile);
         EditText etAddress = view.findViewById(R.id.etAddress);
         EditText etCity = view.findViewById(R.id.etCity);
-        EditText etState = view.findViewById(R.id.etState);
+        android.widget.Spinner spinnerState = view.findViewById(R.id.spinnerState);
         EditText etPincode = view.findViewById(R.id.etPincode);
         CheckBox cbEligible = view.findViewById(R.id.cbEligible);
+
+        // Populate state spinner
+        String[] states = new String[] { "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+                "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
+                "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha",
+                "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+                "Uttarakhand", "West Bengal", "Delhi" };
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(getContext(),
+                android.R.layout.simple_spinner_item, states);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerState.setAdapter(adapter);
 
         // Date picker for DOB
         etDob.setOnClickListener(v -> {
@@ -164,7 +228,7 @@ public class AdminUserListFragment extends Fragment {
             String mobile = etMobile.getText().toString().trim();
             String address = etAddress.getText().toString().trim();
             String city = etCity.getText().toString().trim();
-            String state = etState.getText().toString().trim();
+            String state = spinnerState.getSelectedItem() != null ? spinnerState.getSelectedItem().toString() : "";
             String pincode = etPincode.getText().toString().trim();
             boolean isEligible = cbEligible.isChecked();
 

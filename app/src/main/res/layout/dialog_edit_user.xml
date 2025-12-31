@@ -47,6 +47,46 @@
             android:hint="Address"
             android:layout_marginBottom="8dp"/>
 
+        <EditText
+            android:id="@+id/etCity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="City"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="State"
+            android:textSize="12sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="2dp"/>
+
+        <Spinner
+            android:id="@+id/spinnerState"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
+            android:spinnerMode="dropdown"/>
+
+        <EditText
+            android:id="@+id/etPincode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Pincode"
+            android:inputType="number"
+            android:maxLength="6"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etDob"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="DOB (YYYY-MM-DD)"
+            android:focusable="false"
+            android:clickable="true"
+            android:layout_marginBottom="8dp"/>
+
         <CheckBox
             android:id="@+id/cbEligible"
             android:layout_width="wrap_content"

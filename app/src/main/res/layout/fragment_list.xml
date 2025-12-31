@@ -85,6 +85,16 @@
                         android:textSize="13sp"
                         android:gravity="center"
                         android:paddingTop="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Leader: J.P. Nadda\nFounded: 1980"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:lineSpacingExtra="2dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -126,6 +136,16 @@
                         android:textSize="13sp"
                         android:gravity="center"
                         android:paddingTop="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Leader: Mallikarjun Kharge\nFounded: 1885"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:lineSpacingExtra="2dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -168,6 +188,16 @@
                         android:textSize="13sp"
                         android:gravity="center"
                         android:paddingTop="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Leader: H.D. Deve Gowda\nFounded: 1999"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:lineSpacingExtra="2dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -210,6 +240,16 @@
                         android:textSize="13sp"
                         android:gravity="center"
                         android:paddingTop="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Leader: Arvind Kejriwal\nFounded: 2012"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:lineSpacingExtra="2dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -252,6 +292,16 @@
                         android:textSize="13sp"
                         android:gravity="center"
                         android:paddingTop="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Leader: Mamata Banerjee\nFounded: 1998"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:lineSpacingExtra="2dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -294,6 +344,16 @@
                         android:textSize="13sp"
                         android:gravity="center"
                         android:paddingTop="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Leader: M.K. Stalin\nFounded: 1949"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:lineSpacingExtra="2dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -336,6 +396,16 @@
                         android:textSize="13sp"
                         android:gravity="center"
                         android:paddingTop="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Leader: Edappadi K. Palaniswami\nFounded: 1972"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:lineSpacingExtra="2dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -378,6 +448,16 @@
                         android:textSize="13sp"
                         android:gravity="center"
                         android:paddingTop="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Leader: Akhilesh Yadav\nFounded: 1992"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:lineSpacingExtra="2dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -420,6 +500,16 @@
                         android:textSize="13sp"
                         android:gravity="center"
                         android:paddingTop="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Leader: Mayawati\nFounded: 1984"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280"
+                        android:gravity="center"
+                        android:paddingTop="4dp"
+                        android:lineSpacingExtra="2dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

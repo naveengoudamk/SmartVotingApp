@@ -22,39 +22,7 @@
             android:textSize="22sp"
             android:paddingBottom="8dp" />
 
-        <!-- Search Bar -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="3dp"
-            android:layout_marginBottom="12dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="12dp">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@android:drawable/ic_menu_search"
-                    android:tint="#6B7280"
-                    android:contentDescription="Search" />
-
-                <EditText
-                    android:id="@+id/etSearch"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:background="@android:color/transparent"
-                    android:hint="Search latest election updates..."
-                    android:textSize="14sp"
-                    android:inputType="text" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
 
         <!-- Category Chips -->
         <HorizontalScrollView

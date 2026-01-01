@@ -15,7 +15,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
-public class AdminResultFragment extends Fragment {
+public class AdminResultFragment extends Fragment implements VoteManager.VoteUpdateListener {
 
     private LinearLayout resultsContainer;
     private ElectionManager electionManager;
@@ -37,7 +37,10 @@ public class AdminResultFragment extends Fragment {
 
             resultsContainer = view.findViewById(R.id.resultsContainer);
             electionManager = new ElectionManager(getContext());
+
             voteManager = new VoteManager(getContext());
+            voteManager.addListener(this);
+
             optionManager = new VotingOptionManager(getContext());
 
             loadElections();
@@ -50,7 +53,24 @@ public class AdminResultFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (voteManager != null) {
+            voteManager.removeListener(this);
+        }
+    }
+
+    @Override
+    public void onVotesUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(this::loadElections);
+        }
+    }
+
     private void loadElections() {
+        if (resultsContainer == null)
+            return;
         resultsContainer.removeAllViews();
         List<Election> elections = electionManager.getAllElections();
 

@@ -2,28 +2,83 @@ package com.example.smartvotingapp;
 
 import android.content.Context;
 import android.util.Log;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import androidx.annotation.NonNull;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 
 public class VoteManager {
-    private static final String FILE_NAME = "votes.json";
+    private static final String TAG = "VoteManager";
     private Context context;
+    private DatabaseReference databaseReference;
+    private List<VoteRecord> cachedVotes = new ArrayList<>();
+    private List<VoteUpdateListener> listeners = new ArrayList<>();
+    private boolean isDataLoaded = false;
+
+    public interface VoteUpdateListener {
+        void onVotesUpdated();
+    }
 
     public VoteManager(Context context) {
         this.context = context;
+        databaseReference = FirebaseDatabase.getInstance().getReference("votes");
+
+        // Start listening for real-time updates
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                cachedVotes.clear();
+                for (DataSnapshot child : snapshot.getChildren()) {
+                    try {
+                        VoteRecord vote = child.getValue(VoteRecord.class);
+                        if (vote != null) {
+                            cachedVotes.add(vote);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing vote: " + e.getMessage());
+                    }
+                }
+                isDataLoaded = true;
+                notifyListeners();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Database error: " + error.getMessage());
+            }
+        });
+    }
+
+    public void addListener(VoteUpdateListener listener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+        }
+        // If we already have data, notify immediately
+        if (isDataLoaded) {
+            listener.onVotesUpdated();
+        }
+    }
+
+    public void removeListener(VoteUpdateListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyListeners() {
+        for (VoteUpdateListener listener : listeners) {
+            listener.onVotesUpdated();
+        }
     }
 
     public boolean hasUserVoted(String aadhaarId, int electionId) {
-        List<VoteRecord> votes = getAllVotes();
-        for (VoteRecord vote : votes) {
+        for (VoteRecord vote : cachedVotes) {
             if (vote.getAadhaarId().equals(aadhaarId) && vote.getElectionId() == electionId) {
                 return true;
             }
@@ -32,16 +87,18 @@ public class VoteManager {
     }
 
     public void recordVote(VoteRecord vote) {
-        List<VoteRecord> votes = getAllVotes();
-        votes.add(vote);
-        saveVotes(votes);
+        // Push to Firebase; this will trigger onDataChange which updates local cache
+        String key = databaseReference.push().getKey();
+        if (key != null) {
+            databaseReference.child(key).setValue(vote)
+                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Vote recorded successfully"))
+                    .addOnFailureListener(e -> Log.e(TAG, "Failed to record vote", e));
+        }
     }
 
     public List<VoteRecord> getVotesByElection(int electionId) {
         List<VoteRecord> result = new ArrayList<>();
-        List<VoteRecord> allVotes = getAllVotes();
-
-        for (VoteRecord vote : allVotes) {
+        for (VoteRecord vote : cachedVotes) {
             if (vote.getElectionId() == electionId) {
                 result.add(vote);
             }
@@ -61,51 +118,6 @@ public class VoteManager {
     }
 
     public List<VoteRecord> getAllVotes() {
-        List<VoteRecord> votes = new ArrayList<>();
-        File file = new File(context.getFilesDir(), FILE_NAME);
-        if (!file.exists())
-            return votes;
-
-        try {
-            FileInputStream fis = context.openFileInput(FILE_NAME);
-            Scanner scanner = new Scanner(fis, StandardCharsets.UTF_8.name());
-            String json = scanner.useDelimiter("\\A").next();
-            scanner.close();
-
-            JSONArray array = new JSONArray(json);
-            for (int i = 0; i < array.length(); i++) {
-                JSONObject obj = array.getJSONObject(i);
-                votes.add(new VoteRecord(
-                        obj.getString("aadhaarId"),
-                        obj.getInt("electionId"),
-                        obj.getString("optionId"),
-                        obj.getLong("timestamp")));
-            }
-        } catch (Exception e) {
-            Log.e("VoteManager", "Error reading votes", e);
-        }
-        return votes;
-    }
-
-    private void saveVotes(List<VoteRecord> votes) {
-        JSONArray array = new JSONArray();
-        for (VoteRecord vote : votes) {
-            JSONObject obj = new JSONObject();
-            try {
-                obj.put("aadhaarId", vote.getAadhaarId());
-                obj.put("electionId", vote.getElectionId());
-                obj.put("optionId", vote.getOptionId());
-                obj.put("timestamp", vote.getTimestamp());
-                array.put(obj);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try (FileOutputStream fos = context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE)) {
-            fos.write(array.toString().getBytes());
-        } catch (IOException e) {
-            Log.e("VoteManager", "Error saving votes", e);
-        }
+        return new ArrayList<>(cachedVotes);
     }
 }

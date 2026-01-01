@@ -10,7 +10,7 @@ import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import java.util.List;
 
-public class HomeFragment extends Fragment implements SearchableFragment {
+public class HomeFragment extends Fragment implements SearchableFragment, NewsManager.NewsUpdateListener {
 
     private LinearLayout newsContainer;
     private NewsManager newsManager;
@@ -26,12 +26,14 @@ public class HomeFragment extends Fragment implements SearchableFragment {
             View view = inflater.inflate(R.layout.fragment_home, container, false);
 
             newsManager = new NewsManager(getContext());
+            // Register listener immediately
+            newsManager.addListener(this);
+
             newsContainer = view.findViewById(R.id.newsContainer);
 
-            loadSampleNewsIfNeeded();
-
-            allNews = newsManager.getAllNews();
-            loadNews(allNews);
+            // Initial load (might be empty if firebase not ready, but listener will catch
+            // it)
+            updateNewsUI();
 
             return view;
         } catch (Exception e) {
@@ -44,8 +46,32 @@ public class HomeFragment extends Fragment implements SearchableFragment {
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (newsManager != null) {
+            newsManager.removeListener(this);
+        }
+    }
+
+    @Override
+    public void onNewsUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(this::updateNewsUI);
+        }
+    }
+
+    private void updateNewsUI() {
+        allNews = newsManager.getAllNews(); // Get cached news
+        loadNews(allNews);
+    }
+
+    @Override
     public void onSearch(String query) {
-        if (allNews == null)
+        if (allNews == null) {
+            allNews = newsManager.getAllNews();
+        }
+
+        if (allNews == null || allNews.isEmpty())
             return;
 
         if (query == null || query.isEmpty()) {
@@ -65,46 +91,20 @@ public class HomeFragment extends Fragment implements SearchableFragment {
         loadNews(filteredList);
     }
 
-    private void loadSampleNewsIfNeeded() {
-        // Load sample news from assets if no news exists
-        if (newsManager.getAllNews().isEmpty()) {
-            try {
-                java.io.InputStream is = getContext().getAssets().open("sample_news.json");
-                java.util.Scanner scanner = new java.util.Scanner(is, "UTF-8");
-                String json = scanner.useDelimiter("\\A").next();
-                scanner.close();
-
-                org.json.JSONArray array = new org.json.JSONArray(json);
-                for (int i = 0; i < array.length(); i++) {
-                    org.json.JSONObject obj = array.getJSONObject(i);
-                    News news = new News(
-                            obj.getString("id"),
-                            obj.getString("title"),
-                            obj.getString("description"),
-                            obj.getString("date"),
-                            obj.getLong("timestamp"),
-                            obj.optString("imageUrl", ""));
-                    newsManager.addNews(news);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     private void loadNews(List<News> newsList) {
+        if (newsContainer == null)
+            return;
         newsContainer.removeAllViews();
 
         if (newsList.isEmpty()) {
             TextView emptyView = new TextView(getContext());
-            emptyView.setText("No news available.");
+            emptyView.setText("Loading news or no news available...");
             emptyView.setPadding(20, 20, 20, 20);
             newsContainer.addView(emptyView);
             return;
         }
 
         for (News news : newsList) {
-            // Use the new modern card layout
             View newsView = LayoutInflater.from(getContext()).inflate(R.layout.item_news_card, newsContainer, false);
 
             TextView title = newsView.findViewById(R.id.tvTitle);
@@ -122,10 +122,8 @@ public class HomeFragment extends Fragment implements SearchableFragment {
                     android.net.Uri uri = android.net.Uri.parse(news.getImageUrl());
                     if (uri.getScheme() != null
                             && (uri.getScheme().equals("content") || uri.getScheme().equals("file"))) {
-                        // Local URI, load directly
                         imgNews.setImageURI(uri);
                     } else {
-                        // Web URL, load in background
                         new Thread(() -> {
                             try {
                                 java.io.InputStream in = new java.net.URL(news.getImageUrl()).openStream();
@@ -145,10 +143,9 @@ public class HomeFragment extends Fragment implements SearchableFragment {
                 imgNews.setImageResource(R.drawable.ic_news_placeholder);
             }
 
-            // Add animation
             android.view.animation.Animation animation = android.view.animation.AnimationUtils
                     .loadAnimation(getContext(), R.anim.slide_in_up);
-            animation.setStartOffset(newsContainer.getChildCount() * 100); // Staggered effect
+            animation.setStartOffset(newsContainer.getChildCount() * 100);
             newsView.startAnimation(animation);
 
             newsContainer.addView(newsView);

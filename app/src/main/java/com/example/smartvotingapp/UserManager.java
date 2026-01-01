@@ -2,138 +2,80 @@ package com.example.smartvotingapp;
 
 import android.content.Context;
 import android.util.Log;
+import androidx.annotation.NonNull;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
-import java.io.*;
+
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class UserManager {
+    private static final String TAG = "UserManager";
     private static final String FILE_NAME = "aadhaar_data.json";
     private Context context;
+    private DatabaseReference databaseReference;
+    private List<User> cachedUsers = new ArrayList<>();
+    private boolean isDataLoaded = false;
 
     public UserManager(Context context) {
         this.context = context;
-        ensureFileExists();
-    }
+        databaseReference = FirebaseDatabase.getInstance().getReference("users");
 
-    private void ensureFileExists() {
-        File file = new File(context.getFilesDir(), FILE_NAME);
-        if (!file.exists()) {
-            copyAssetsAttributes();
-        } else {
-            // MERGE POLICY: If file exists, we still check if there are new users in Assets
-            // that are missing in internal storage (e.g. developer added them manually).
-            syncWithAssets();
-        }
-    }
-
-    private void copyAssetsAttributes() {
-        try {
-            InputStream is = context.getAssets().open(FILE_NAME);
-            Scanner scanner = new Scanner(is, StandardCharsets.UTF_8.name());
-            String json = scanner.useDelimiter("\\A").next();
-            scanner.close();
-            saveJsonToFile(json);
-        } catch (IOException e) {
-            Log.e("UserManager", "Error copying asset to internal storage", e);
-        }
-    }
-
-    private void syncWithAssets() {
-        try {
-            // Read Internal Users
-            List<User> internalUsers = getAllUsers();
-
-            // Read Asset Users
-            InputStream is = context.getAssets().open(FILE_NAME);
-            Scanner scanner = new Scanner(is, StandardCharsets.UTF_8.name());
-            String jsonAssets = scanner.useDelimiter("\\A").next();
-            scanner.close();
-
-            JSONArray assetArray = new JSONArray(jsonAssets);
-            boolean needsUpdate = false;
-
-            for (int i = 0; i < assetArray.length(); i++) {
-                JSONObject obj = assetArray.getJSONObject(i);
-                String aadhaar = obj.getString("aadhaar_id");
-
-                // Check if this asset user exists in internal storage
-                boolean exists = false;
-                for (User u : internalUsers) {
-                    if (u.getAadhaarId().equals(aadhaar)) {
-                        exists = true;
-                        break;
+        // Listen for data
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                cachedUsers.clear();
+                if (snapshot.exists()) {
+                    for (DataSnapshot child : snapshot.getChildren()) {
+                        try {
+                            User user = child.getValue(User.class);
+                            if (user != null) {
+                                cachedUsers.add(user);
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error parsing user: " + e.getMessage());
+                        }
                     }
-                }
-
-                if (!exists) {
-                    // Add missing user from assets to internal list
-                    internalUsers.add(new User(
-                            obj.getString("aadhaar_id"),
-                            obj.getString("name"),
-                            obj.getString("dob"),
-                            obj.optString("email", ""),
-                            obj.optString("mobile", ""),
-                            obj.optString("photo", ""),
-                            obj.optString("address", ""),
-                            obj.optString("city", ""),
-                            obj.optString("state", ""),
-                            obj.optString("pincode", ""),
-                            obj.optBoolean("eligible", true)));
-                    needsUpdate = true;
+                    isDataLoaded = true;
+                    Log.d(TAG, "Users loaded from Firebase: " + cachedUsers.size());
+                } else {
+                    // Firebase is empty, seed from assets
+                    Log.d(TAG, "Firebase empty. Seeding from assets...");
+                    seedFromAssets();
                 }
             }
 
-            if (needsUpdate) {
-                // Save the merged list back to internal storage
-                JSONArray updatedArray = new JSONArray();
-                for (User u : internalUsers) {
-                    JSONObject obj = new JSONObject();
-                    obj.put("aadhaar_id", u.getAadhaarId());
-                    obj.put("name", u.getName());
-                    obj.put("dob", u.getDob());
-                    obj.put("email", u.getEmail());
-                    obj.put("mobile", u.getMobile());
-                    obj.put("photo", u.getPhoto());
-                    obj.put("address", u.getAddress());
-                    obj.put("city", u.getCity());
-                    obj.put("state", u.getState());
-                    obj.put("pincode", u.getPincode());
-                    obj.put("eligible", u.isEligible());
-                    updatedArray.put(obj);
-                }
-                saveJsonToFile(updatedArray.toString());
-                Log.d("UserManager", "Synced new users from assets.");
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Database error: " + error.getMessage());
             }
-        } catch (Exception e) {
-            Log.e("UserManager", "Error syncing assets", e);
-        }
+        });
     }
 
-    private void saveJsonToFile(String json) {
-        try (FileOutputStream fos = context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE)) {
-            fos.write(json.getBytes());
-        } catch (IOException e) {
-            Log.e("UserManager", "Error saving JSON to file", e);
-        }
-    }
-
-    public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
+    private void seedFromAssets() {
         try {
-            FileInputStream fis = context.openFileInput(FILE_NAME);
-            Scanner scanner = new Scanner(fis, StandardCharsets.UTF_8.name());
+            InputStream is = context.getAssets().open(FILE_NAME);
+            Scanner scanner = new Scanner(is, StandardCharsets.UTF_8.name());
             String json = scanner.useDelimiter("\\A").next();
             scanner.close();
 
             JSONArray array = new JSONArray(json);
+            List<User> initialUsers = new ArrayList<>();
+
             for (int i = 0; i < array.length(); i++) {
                 JSONObject obj = array.getJSONObject(i);
-                users.add(new User(
+                User user = new User(
                         obj.getString("aadhaar_id"),
                         obj.getString("name"),
                         obj.getString("dob"),
@@ -144,98 +86,55 @@ public class UserManager {
                         obj.optString("city", ""),
                         obj.optString("state", ""),
                         obj.optString("pincode", ""),
-                        obj.optBoolean("eligible", true)));
+                        obj.optBoolean("eligible", true));
+
+                initialUsers.add(user);
+                // Upload individually (efficient enough for seeding)
+                databaseReference.child(user.getAadhaarId()).setValue(user);
             }
+            Log.d(TAG, "Seeded " + initialUsers.size() + " users to Firebase.");
+
         } catch (Exception e) {
-            Log.e("UserManager", "Error reading users", e);
+            Log.e(TAG, "Error seeding assets", e);
         }
-        return users;
+    }
+
+    public List<User> getAllUsers() {
+        return new ArrayList<>(cachedUsers);
     }
 
     public void updateUser(User updatedUser) {
-        List<User> users = getAllUsers();
-        JSONArray array = new JSONArray();
-        for (User u : users) {
-            JSONObject obj = new JSONObject();
-            try {
-                if (u.getAadhaarId().equals(updatedUser.getAadhaarId())) {
-                    // Update this user
-                    obj.put("aadhaar_id", updatedUser.getAadhaarId());
-                    obj.put("name", updatedUser.getName());
-                    obj.put("dob", updatedUser.getDob());
-                    obj.put("email", updatedUser.getEmail());
-                    obj.put("mobile", updatedUser.getMobile());
-                    obj.put("photo", updatedUser.getPhoto());
-                    obj.put("address", updatedUser.getAddress());
-                    obj.put("city", updatedUser.getCity());
-                    obj.put("state", updatedUser.getState());
-                    obj.put("pincode", updatedUser.getPincode());
-                    obj.put("eligible", updatedUser.isEligible());
-                } else {
-                    // Keep existing
-                    obj.put("aadhaar_id", u.getAadhaarId());
-                    obj.put("name", u.getName());
-                    obj.put("dob", u.getDob());
-                    obj.put("email", u.getEmail());
-                    obj.put("mobile", u.getMobile());
-                    obj.put("photo", u.getPhoto());
-                    obj.put("address", u.getAddress());
-                    obj.put("city", u.getCity());
-                    obj.put("state", u.getState());
-                    obj.put("pincode", u.getPincode());
-                    obj.put("eligible", u.isEligible());
-                }
-                array.put(obj);
-            } catch (JSONException e) {
-                e.printStackTrace();
+        // Optimistic update
+        for (int i = 0; i < cachedUsers.size(); i++) {
+            if (cachedUsers.get(i).getAadhaarId().equals(updatedUser.getAadhaarId())) {
+                cachedUsers.set(i, updatedUser);
+                break;
             }
         }
-        saveJsonToFile(array.toString());
+        databaseReference.child(updatedUser.getAadhaarId()).setValue(updatedUser);
     }
 
     public void addUser(User newUser) {
-        List<User> users = getAllUsers();
-
-        // Check if user with same Aadhaar ID already exists
-        for (User u : users) {
+        // Check if exists
+        for (User u : cachedUsers) {
             if (u.getAadhaarId().equals(newUser.getAadhaarId())) {
-                Log.w("UserManager", "User with Aadhaar ID " + newUser.getAadhaarId() + " already exists");
+                Log.w(TAG, "User already exists");
                 return;
             }
         }
-
-        users.add(newUser);
-
-        JSONArray array = new JSONArray();
-        for (User u : users) {
-            JSONObject obj = new JSONObject();
-            try {
-                obj.put("aadhaar_id", u.getAadhaarId());
-                obj.put("name", u.getName());
-                obj.put("dob", u.getDob());
-                obj.put("email", u.getEmail());
-                obj.put("mobile", u.getMobile());
-                obj.put("photo", u.getPhoto());
-                obj.put("address", u.getAddress());
-                obj.put("city", u.getCity());
-                obj.put("state", u.getState());
-                obj.put("pincode", u.getPincode());
-                obj.put("eligible", u.isEligible());
-                array.put(obj);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        saveJsonToFile(array.toString());
+        databaseReference.child(newUser.getAadhaarId()).setValue(newUser);
     }
 
     public User getUser(String aadhaar, String dob) {
-        List<User> users = getAllUsers();
-        for (User u : users) {
+        for (User u : cachedUsers) {
             if (u.getAadhaarId().equals(aadhaar) && u.getDob().equals(dob)) {
                 return u;
             }
         }
-        return null; // User not found
+        return null;
+    }
+
+    public boolean isDataLoaded() {
+        return isDataLoaded;
     }
 }

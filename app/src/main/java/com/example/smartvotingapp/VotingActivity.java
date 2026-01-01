@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.card.MaterialCardView;
 import java.util.List;
 
-public class VotingActivity extends AppCompatActivity {
+public class VotingActivity extends AppCompatActivity implements VoteManager.VoteUpdateListener {
 
     private TextView electionInfo, userInfo, tvSelectedOption;
     private Button voteButton;
@@ -28,13 +28,14 @@ public class VotingActivity extends AppCompatActivity {
     private VotingOptionAdapter adapter;
     private String selectedOptionId = null;
     private String selectedOptionName = null;
+    private VoteManager voteManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_voting);
 
-        electionInfo = findViewById(R.id.textViewElectionId); // Note: ID might be missing in new layout, check XML
+        electionInfo = findViewById(R.id.textViewElectionId);
         userInfo = findViewById(R.id.textViewUserInfo);
         voteButton = findViewById(R.id.voteButton);
         rvVotingOptions = findViewById(R.id.rvVotingOptions);
@@ -45,27 +46,18 @@ public class VotingActivity extends AppCompatActivity {
         String userName = getIntent().getStringExtra("user_name");
         aadhaarId = MainActivity.aadhaarId;
 
-        // electionInfo might be null if I removed it from XML, let's check or handle
-        // gracefully
         if (electionInfo != null)
             electionInfo.setText("Election ID: " + electionId);
-        userInfo.setText("Welcome " + userName + ", you are eligible to vote!");
+        userInfo.setText("Checking eligibility...");
 
         rvVotingOptions.setLayoutManager(new LinearLayoutManager(this));
 
-        VoteManager voteManager = new VoteManager(this);
+        voteManager = new VoteManager(this);
+        voteManager.addListener(this);
 
-        // Check if user has already voted
-        if (voteManager.hasUserVoted(aadhaarId, electionId)) {
-            userInfo.setText("You have already voted in this election!");
-            userInfo.setTextColor(android.graphics.Color.RED);
-            rvVotingOptions.setVisibility(View.GONE);
-            bottomBar.setVisibility(View.GONE);
-            return;
-        }
+        checkVoteStatus();
 
-        loadVotingOptions();
-
+        // Initial setup for click listener (won't work if hidden by checkVoteStatus)
         voteButton.setOnClickListener(v -> {
             if (selectedOptionId == null) {
                 Toast.makeText(this, "Please select an option", Toast.LENGTH_SHORT).show();
@@ -75,12 +67,47 @@ public class VotingActivity extends AppCompatActivity {
             // Record vote
             VoteRecord vote = new VoteRecord(aadhaarId, electionId, selectedOptionId, System.currentTimeMillis());
             voteManager.recordVote(vote);
+            // Result of this async call will come back via onVotesUpdated (or simple
+            // success log)
+            // But we should optimistically allow finish or wait for feedback
 
             Toast.makeText(VotingActivity.this,
-                    "✅ Vote recorded for " + selectedOptionName,
-                    Toast.LENGTH_LONG).show();
+                    "✅ Vote Submitted! updating...",
+                    Toast.LENGTH_SHORT).show();
+            // We can finish here, acts as optimistic UI
             finish();
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (voteManager != null) {
+            voteManager.removeListener(this);
+        }
+    }
+
+    @Override
+    public void onVotesUpdated() {
+        runOnUiThread(this::checkVoteStatus);
+    }
+
+    private void checkVoteStatus() {
+        if (voteManager.hasUserVoted(aadhaarId, electionId)) {
+            userInfo.setText("You have already voted in this election!");
+            userInfo.setTextColor(android.graphics.Color.RED);
+            rvVotingOptions.setVisibility(View.GONE);
+            bottomBar.setVisibility(View.GONE);
+        } else {
+            // Not voted yet, show options
+            userInfo.setText("You are eligible to vote!");
+            userInfo.setTextColor(getResources().getColor(android.R.color.black)); // Reset color
+            if (adapter == null) {
+                loadVotingOptions();
+            } else {
+                rvVotingOptions.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     private void loadVotingOptions() {

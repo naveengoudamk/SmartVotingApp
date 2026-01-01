@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-public class AdminHomeFragment extends Fragment {
+public class AdminHomeFragment extends Fragment implements NewsManager.NewsUpdateListener {
 
     private LinearLayout newsContainer;
     private NewsManager newsManager;
@@ -31,6 +31,8 @@ public class AdminHomeFragment extends Fragment {
             View view = inflater.inflate(R.layout.fragment_admin_home, container, false);
 
             newsManager = new NewsManager(getContext());
+            newsManager.addListener(this); // Add real-time listener
+
             newsContainer = view.findViewById(R.id.newsContainer);
             Button btnAddNews = view.findViewById(R.id.btnAddNews);
             Button btnViewFeedback = view.findViewById(R.id.btnViewFeedback);
@@ -58,9 +60,35 @@ public class AdminHomeFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (newsManager != null) {
+            newsManager.removeListener(this);
+        }
+    }
+
+    @Override
+    public void onNewsUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(this::loadNews);
+        }
+    }
+
     private void loadNews() {
+        if (newsContainer == null)
+            return;
         newsContainer.removeAllViews();
         List<News> newsList = newsManager.getAllNews();
+
+        if (newsList.isEmpty()) {
+            TextView emptyView = new TextView(getContext());
+            emptyView.setText("No news added yet. Click 'Add News' to create one.");
+            emptyView.setPadding(32, 32, 32, 32);
+            emptyView.setTextSize(16);
+            newsContainer.addView(emptyView);
+            return;
+        }
 
         for (News news : newsList) {
             View newsView = LayoutInflater.from(getContext()).inflate(R.layout.item_news_admin, newsContainer, false);
@@ -93,8 +121,15 @@ public class AdminHomeFragment extends Fragment {
 
             btnEdit.setOnClickListener(v -> showAddEditDialog(news));
             btnDelete.setOnClickListener(v -> {
-                newsManager.deleteNews(news.getId());
-                loadNews();
+                new AlertDialog.Builder(getContext())
+                        .setTitle("Delete News")
+                        .setMessage("Are you sure you want to delete this news?")
+                        .setPositiveButton("Delete", (dialog, which) -> {
+                            newsManager.deleteNews(news.getId());
+                            Toast.makeText(getContext(), "News deleted", Toast.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
             });
 
             newsContainer.addView(newsView);
@@ -135,6 +170,7 @@ public class AdminHomeFragment extends Fragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_news, null);
         builder.setView(view);
+        builder.setTitle(news == null ? "Add News" : "Edit News");
 
         EditText etTitle = view.findViewById(R.id.etTitle);
         EditText etDescription = view.findViewById(R.id.etDescription);
@@ -151,11 +187,6 @@ public class AdminHomeFragment extends Fragment {
             etDescription.setText(news.getDescription());
             etImageUrl.setText(news.getImageUrl());
             if (news.getImageUrl() != null && !news.getImageUrl().isEmpty()) {
-                // If it's a content URI, we can try to show it
-                // If it's a web URL, we can't easily show it in this simple ImageView without a
-                // library or thread
-                // For now, let's just show it if it parses as a URI we can read, otherwise
-                // ignore preview
                 try {
                     android.net.Uri uri = android.net.Uri.parse(news.getImageUrl());
                     if (uri.getScheme() != null
@@ -177,7 +208,7 @@ public class AdminHomeFragment extends Fragment {
             String imageUrl = etImageUrl.getText().toString().trim();
 
             if (title.isEmpty() || desc.isEmpty()) {
-                Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Please fill title and description", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -188,12 +219,13 @@ public class AdminHomeFragment extends Fragment {
                 // Add new
                 News newNews = new News(UUID.randomUUID().toString(), title, desc, date, timestamp, imageUrl);
                 newsManager.addNews(newNews);
+                Toast.makeText(getContext(), "News added successfully", Toast.LENGTH_SHORT).show();
             } else {
                 // Update existing
                 News updatedNews = new News(news.getId(), title, desc, date, timestamp, imageUrl);
                 newsManager.updateNews(updatedNews);
+                Toast.makeText(getContext(), "News updated successfully", Toast.LENGTH_SHORT).show();
             }
-            loadNews();
         });
 
         builder.setNegativeButton("Cancel", null);

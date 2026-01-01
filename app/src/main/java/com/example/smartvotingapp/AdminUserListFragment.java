@@ -14,7 +14,7 @@ import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 import java.util.List;
 
-public class AdminUserListFragment extends Fragment {
+public class AdminUserListFragment extends Fragment implements UserManager.UserUpdateListener {
 
     private LinearLayout userContainer;
     private UserManager userManager;
@@ -34,6 +34,8 @@ public class AdminUserListFragment extends Fragment {
             View view = inflater.inflate(R.layout.fragment_admin_user_list, container, false);
 
             userManager = new UserManager(getContext());
+            userManager.addListener(this); // Add real-time listener
+
             userContainer = view.findViewById(R.id.userContainer);
             Button btnAddUser = view.findViewById(R.id.btnAddUser);
 
@@ -49,14 +51,47 @@ public class AdminUserListFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (userManager != null) {
+            userManager.removeListener(this);
+        }
+    }
+
+    @Override
+    public void onUsersUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(this::loadUsers);
+        }
+    }
+
     private void loadUsers() {
+        if (userContainer == null)
+            return;
         userContainer.removeAllViews();
         List<User> users = userManager.getAllUsers();
 
-        if (users.isEmpty()) {
+        // Count filtered users
+        int visibleCount = 0;
+        for (User user : users) {
+            if (adminScope != null && !adminScope.isEmpty()) {
+                if (user.getState() == null || !user.getState().equalsIgnoreCase(adminScope)) {
+                    continue;
+                }
+            }
+            visibleCount++;
+        }
+
+        if (visibleCount == 0) {
             TextView empty = new TextView(getContext());
-            empty.setText("No users found.");
+            if (adminScope != null && !adminScope.isEmpty()) {
+                empty.setText("No users found in " + adminScope + " state.\nClick 'Add User' to create one.");
+            } else {
+                empty.setText("No users found.\nClick 'Add User' to create one.");
+            }
             empty.setPadding(32, 32, 32, 32);
+            empty.setTextSize(16);
             userContainer.addView(empty);
             return;
         }

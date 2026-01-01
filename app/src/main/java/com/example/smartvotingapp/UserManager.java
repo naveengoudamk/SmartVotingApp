@@ -25,7 +25,12 @@ public class UserManager {
     private Context context;
     private DatabaseReference databaseReference;
     private List<User> cachedUsers = new ArrayList<>();
+    private List<UserUpdateListener> listeners = new ArrayList<>();
     private boolean isDataLoaded = false;
+
+    public interface UserUpdateListener {
+        void onUsersUpdated();
+    }
 
     public UserManager(Context context) {
         this.context = context;
@@ -49,6 +54,7 @@ public class UserManager {
                     }
                     isDataLoaded = true;
                     Log.d(TAG, "Users loaded from Firebase: " + cachedUsers.size());
+                    notifyListeners();
                 } else {
                     // Firebase is empty, seed from assets
                     Log.d(TAG, "Firebase empty. Seeding from assets...");
@@ -61,6 +67,25 @@ public class UserManager {
                 Log.e(TAG, "Database error: " + error.getMessage());
             }
         });
+    }
+
+    public void addListener(UserUpdateListener listener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+        }
+        if (isDataLoaded) {
+            listener.onUsersUpdated();
+        }
+    }
+
+    public void removeListener(UserUpdateListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyListeners() {
+        for (UserUpdateListener listener : listeners) {
+            listener.onUsersUpdated();
+        }
     }
 
     private void seedFromAssets() {

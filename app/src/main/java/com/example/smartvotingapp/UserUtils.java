@@ -1,11 +1,8 @@
 package com.example.smartvotingapp;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -15,7 +12,17 @@ public class UserUtils {
 
     private static final String PREF_NAME = "UserSession";
     private static final String KEY_AADHAAR = "aadhaar_id";
+    private static final String KEY_DOB = "dob";
 
+    public static void saveUserSession(Context context, String aadhaarId, String dob) {
+        context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_AADHAAR, aadhaarId)
+                .putString(KEY_DOB, dob)
+                .apply();
+    }
+
+    // Backward compatibility - save just aadhaar
     public static void saveUserSession(Context context, String aadhaarId) {
         context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
                 .edit()
@@ -32,37 +39,29 @@ public class UserUtils {
 
     public static User getCurrentUser(Context context) {
         try {
-            String storedAadhaar = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-                    .getString(KEY_AADHAAR, null);
+            SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            String storedAadhaar = prefs.getString(KEY_AADHAAR, null);
+            String storedDob = prefs.getString(KEY_DOB, null);
 
-            if (storedAadhaar == null)
+            if (storedAadhaar == null) {
                 return null;
+            }
 
-            InputStream is = context.getAssets().open("aadhaar_data.json");
-            int size = is.available();
-            byte[] buffer = new byte[size];
-            is.read(buffer);
-            is.close();
-            String json = new String(buffer, "UTF-8");
+            // Get user from Firebase via UserManager
+            UserManager userManager = new UserManager(context);
 
-            JSONArray arr = new JSONArray(json);
-            for (int i = 0; i < arr.length(); i++) {
-                JSONObject obj = arr.getJSONObject(i);
-                if (obj.getString("aadhaar_id").equals(storedAadhaar)) {
-                    return new User(
-                            obj.getString("aadhaar_id"),
-                            obj.getString("name"),
-                            obj.getString("dob"),
-                            obj.getString("email"),
-                            obj.getString("mobile"),
-                            obj.getString("photo"),
-                            obj.getString("address"),
-                            obj.getString("city"),
-                            obj.getString("state"),
-                            obj.getString("pincode"),
-                            obj.getBoolean("eligible"));
+            // If we have DOB, use it for lookup
+            if (storedDob != null) {
+                return userManager.getUser(storedAadhaar, storedDob);
+            }
+
+            // Otherwise, search through all users (less efficient but works)
+            for (User user : userManager.getAllUsers()) {
+                if (user.getAadhaarId().equals(storedAadhaar)) {
+                    return user;
                 }
             }
+
             return null;
 
         } catch (Exception e) {
@@ -89,5 +88,9 @@ public class UserUtils {
             e.printStackTrace();
             return 0;
         }
+    }
+
+    public static boolean isEligibleToVote(String dob) {
+        return calculateAge(dob) >= 18;
     }
 }

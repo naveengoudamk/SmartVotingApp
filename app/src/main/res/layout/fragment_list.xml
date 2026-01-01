@@ -89,12 +89,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Leader: J.P. Nadda\nFounded: 1980"
+                        android:text="Leader: J.P. Nadda\nFounded: 1980\nHQ: New Delhi\nIdeology: Integral Humanism"
                         android:textSize="11sp"
                         android:textColor="#6B7280"
                         android:gravity="center"
                         android:paddingTop="4dp"
-                        android:lineSpacingExtra="2dp"/>
+                        android:lineSpacingExtra="3dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -140,12 +140,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Leader: Mallikarjun Kharge\nFounded: 1885"
+                        android:text="Leader: Mallikarjun Kharge\nFounded: 1885\nHQ: New Delhi\nIdeology: Social Liberalism"
                         android:textSize="11sp"
                         android:textColor="#6B7280"
                         android:gravity="center"
                         android:paddingTop="4dp"
-                        android:lineSpacingExtra="2dp"/>
+                        android:lineSpacingExtra="3dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -192,12 +192,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Leader: H.D. Deve Gowda\nFounded: 1999"
+                        android:text="Leader: H.D. Deve Gowda\nFounded: 1999\nHQ: Bengaluru\nIdeology: Secularism"
                         android:textSize="11sp"
                         android:textColor="#6B7280"
                         android:gravity="center"
                         android:paddingTop="4dp"
-                        android:lineSpacingExtra="2dp"/>
+                        android:lineSpacingExtra="3dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -244,12 +244,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Leader: Arvind Kejriwal\nFounded: 2012"
+                        android:text="Leader: Arvind Kejriwal\nFounded: 2012\nHQ: New Delhi\nIdeology: Populism"
                         android:textSize="11sp"
                         android:textColor="#6B7280"
                         android:gravity="center"
                         android:paddingTop="4dp"
-                        android:lineSpacingExtra="2dp"/>
+                        android:lineSpacingExtra="3dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -296,12 +296,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Leader: Mamata Banerjee\nFounded: 1998"
+                        android:text="Leader: Mamata Banerjee\nFounded: 1998\nHQ: Kolkata\nIdeology: Bengali Nationalism"
                         android:textSize="11sp"
                         android:textColor="#6B7280"
                         android:gravity="center"
                         android:paddingTop="4dp"
-                        android:lineSpacingExtra="2dp"/>
+                        android:lineSpacingExtra="3dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -348,12 +348,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Leader: M.K. Stalin\nFounded: 1949"
+                        android:text="Leader: M.K. Stalin\nFounded: 1949\nHQ: Chennai\nIdeology: Dravidian Nationalism"
                         android:textSize="11sp"
                         android:textColor="#6B7280"
                         android:gravity="center"
                         android:paddingTop="4dp"
-                        android:lineSpacingExtra="2dp"/>
+                        android:lineSpacingExtra="3dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -400,12 +400,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Leader: Edappadi K. Palaniswami\nFounded: 1972"
+                        android:text="Leader: Edappadi K. Palaniswami\nFounded: 1972\nHQ: Chennai\nIdeology: Dravidian Populism"
                         android:textSize="11sp"
                         android:textColor="#6B7280"
                         android:gravity="center"
                         android:paddingTop="4dp"
-                        android:lineSpacingExtra="2dp"/>
+                        android:lineSpacingExtra="3dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -452,12 +452,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Leader: Akhilesh Yadav\nFounded: 1992"
+                        android:text="Leader: Akhilesh Yadav\nFounded: 1992\nHQ: New Delhi\nIdeology: Democratic Socialism"
                         android:textSize="11sp"
                         android:textColor="#6B7280"
                         android:gravity="center"
                         android:paddingTop="4dp"
-                        android:lineSpacingExtra="2dp"/>
+                        android:lineSpacingExtra="3dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -504,12 +504,12 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Leader: Mayawati\nFounded: 1984"
+                        android:text="Leader: Mayawati\nFounded: 1984\nHQ: New Delhi\nIdeology: Social Equality"
                         android:textSize="11sp"
                         android:textColor="#6B7280"
                         android:gravity="center"
                         android:paddingTop="4dp"
-                        android:lineSpacingExtra="2dp"/>
+                        android:lineSpacingExtra="3dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

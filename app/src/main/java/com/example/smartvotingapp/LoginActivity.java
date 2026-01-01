@@ -205,7 +205,7 @@ public class LoginActivity extends AppCompatActivity {
             User user = userManager.getUser(aadhaar, dob);
 
             if (user != null) {
-                UserUtils.saveUserSession(LoginActivity.this, user.getAadhaarId(), user.getDob());
+                UserUtils.saveUserSession(LoginActivity.this, user);
 
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 intent.putExtra("aadhaar_id", user.getAadhaarId());

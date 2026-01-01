@@ -15,6 +15,30 @@ public class UserUtils {
     private static final String PREF_NAME = "UserSession";
     private static final String KEY_AADHAAR = "aadhaar_id";
     private static final String KEY_DOB = "dob";
+    private static final String KEY_NAME = "name";
+    private static final String KEY_EMAIL = "email";
+    private static final String KEY_MOBILE = "mobile";
+    private static final String KEY_ADDRESS = "address";
+    private static final String KEY_CITY = "city";
+    private static final String KEY_STATE = "state";
+    private static final String KEY_PINCODE = "pincode";
+    private static final String KEY_ELIGIBLE = "eligible";
+
+    public static void saveUserSession(Context context, User user) {
+        SharedPreferences.Editor editor = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit();
+        editor.putString(KEY_AADHAAR, user.getAadhaarId());
+        editor.putString(KEY_DOB, user.getDob());
+        editor.putString(KEY_NAME, user.getName());
+        editor.putString(KEY_EMAIL, user.getEmail());
+        editor.putString(KEY_MOBILE, user.getMobile());
+        editor.putString(KEY_ADDRESS, user.getAddress());
+        editor.putString(KEY_CITY, user.getCity());
+        editor.putString(KEY_STATE, user.getState());
+        editor.putString(KEY_PINCODE, user.getPincode());
+        editor.putBoolean(KEY_ELIGIBLE, user.isEligible());
+        editor.apply();
+        Log.d(TAG, "User session saved: " + user.getName());
+    }
 
     public static void saveUserSession(Context context, String aadhaarId, String dob) {
         context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -43,58 +67,33 @@ public class UserUtils {
         try {
             SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
             String storedAadhaar = prefs.getString(KEY_AADHAAR, null);
-            String storedDob = prefs.getString(KEY_DOB, null);
 
             if (storedAadhaar == null) {
                 Log.w(TAG, "No stored Aadhaar in session");
                 return null;
             }
 
-            Log.d(TAG, "Getting user from Firebase: " + storedAadhaar);
-
-            // Get user from Firebase via UserManager
-            UserManager userManager = new UserManager(context);
-
-            // Wait for data to load (with timeout)
-            int maxWaitTime = 5000; // 5 seconds max
-            int waitedTime = 0;
-            int sleepInterval = 100; // Check every 100ms
-
-            while (!userManager.isDataLoaded() && waitedTime < maxWaitTime) {
-                try {
-                    Thread.sleep(sleepInterval);
-                    waitedTime += sleepInterval;
-                } catch (InterruptedException e) {
-                    Log.e(TAG, "Sleep interrupted", e);
-                    break;
-                }
+            // Try to get from cached session first (fast)
+            String name = prefs.getString(KEY_NAME, null);
+            if (name != null) {
+                // We have full user data cached in SharedPreferences
+                User user = new User(
+                        storedAadhaar,
+                        name,
+                        prefs.getString(KEY_DOB, ""),
+                        prefs.getString(KEY_EMAIL, ""),
+                        prefs.getString(KEY_MOBILE, ""),
+                        "",
+                        prefs.getString(KEY_ADDRESS, ""),
+                        prefs.getString(KEY_CITY, ""),
+                        prefs.getString(KEY_STATE, ""),
+                        prefs.getString(KEY_PINCODE, ""),
+                        prefs.getBoolean(KEY_ELIGIBLE, false));
+                Log.d(TAG, "User loaded from cache: " + user.getName());
+                return user;
             }
 
-            if (!userManager.isDataLoaded()) {
-                Log.e(TAG, "Firebase data not loaded after " + maxWaitTime + "ms");
-                return null;
-            }
-
-            Log.d(TAG, "Firebase data loaded, searching for user...");
-
-            // If we have DOB, use it for lookup
-            if (storedDob != null) {
-                User user = userManager.getUser(storedAadhaar, storedDob);
-                if (user != null) {
-                    Log.d(TAG, "User found: " + user.getName());
-                    return user;
-                }
-            }
-
-            // Otherwise, search through all users (less efficient but works)
-            for (User user : userManager.getAllUsers()) {
-                if (user.getAadhaarId().equals(storedAadhaar)) {
-                    Log.d(TAG, "User found (without DOB match): " + user.getName());
-                    return user;
-                }
-            }
-
-            Log.w(TAG, "User not found in Firebase: " + storedAadhaar);
+            Log.w(TAG, "User not found in cache: " + storedAadhaar);
             return null;
 
         } catch (Exception e) {

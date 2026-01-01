@@ -136,18 +136,34 @@ public class UserManager {
                 break;
             }
         }
-        databaseReference.child(updatedUser.getAadhaarId()).setValue(updatedUser);
+
+        Log.d(TAG, "Updating user: " + updatedUser.getAadhaarId());
+        databaseReference.child(updatedUser.getAadhaarId()).setValue(updatedUser)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "✅ User updated successfully: " + updatedUser.getAadhaarId());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "❌ Failed to update user: " + e.getMessage(), e);
+                });
     }
 
     public void addUser(User newUser) {
         // Check if exists
         for (User u : cachedUsers) {
             if (u.getAadhaarId().equals(newUser.getAadhaarId())) {
-                Log.w(TAG, "User already exists");
+                Log.w(TAG, "User already exists: " + newUser.getAadhaarId());
                 return;
             }
         }
-        databaseReference.child(newUser.getAadhaarId()).setValue(newUser);
+
+        Log.d(TAG, "Adding new user: " + newUser.getAadhaarId() + ", name: " + newUser.getName());
+        databaseReference.child(newUser.getAadhaarId()).setValue(newUser)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "✅ User added successfully: " + newUser.getAadhaarId());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "❌ Failed to add user: " + e.getMessage(), e);
+                });
     }
 
     public User getUser(String aadhaar, String dob) {

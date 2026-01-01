@@ -29,34 +29,37 @@ public class NewsManager {
     public NewsManager(Context context) {
         this.context = context;
         databaseReference = FirebaseDatabase.getInstance().getReference("news");
+        Log.d(TAG, "NewsManager initialized, Firebase reference: " + databaseReference.toString());
 
         // Start listening
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Log.d(TAG, "onDataChange triggered, exists: " + snapshot.exists() + ", children: "
+                        + snapshot.getChildrenCount());
                 cachedNews.clear();
                 for (DataSnapshot child : snapshot.getChildren()) {
                     try {
                         News news = child.getValue(News.class);
                         if (news != null) {
                             cachedNews.add(news);
+                            Log.d(TAG, "Loaded news: " + news.getTitle());
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "Error parsing news: " + e.getMessage());
+                        Log.e(TAG, "Error parsing news: " + e.getMessage(), e);
                     }
                 }
-                // Sort by new to old (assuming timestamp helps or just order)
-                // If timestamp exists: (n1, n2) -> Long.compare(n2.getTimestamp(),
-                // n1.getTimestamp())
+                // Sort by new to old
                 cachedNews.sort((n1, n2) -> Long.compare(n2.getTimestamp(), n1.getTimestamp()));
 
                 isDataLoaded = true;
+                Log.d(TAG, "Total news loaded: " + cachedNews.size());
                 notifyListeners();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(TAG, "Database error: " + error.getMessage());
+                Log.e(TAG, "Database error: " + error.getMessage() + ", code: " + error.getCode());
             }
         });
     }
@@ -64,6 +67,7 @@ public class NewsManager {
     public void addListener(NewsUpdateListener listener) {
         if (!listeners.contains(listener)) {
             listeners.add(listener);
+            Log.d(TAG, "Listener added, total listeners: " + listeners.size());
         }
         if (isDataLoaded) {
             listener.onNewsUpdated();
@@ -72,9 +76,11 @@ public class NewsManager {
 
     public void removeListener(NewsUpdateListener listener) {
         listeners.remove(listener);
+        Log.d(TAG, "Listener removed, total listeners: " + listeners.size());
     }
 
     private void notifyListeners() {
+        Log.d(TAG, "Notifying " + listeners.size() + " listeners");
         for (NewsUpdateListener listener : listeners) {
             listener.onNewsUpdated();
         }
@@ -86,24 +92,47 @@ public class NewsManager {
 
     public void addNews(News news) {
         // Push to Firebase
-        // Use news ID as key or generate new one
         if (news.getId() == null || news.getId().isEmpty()) {
             String key = databaseReference.push().getKey();
             news = new News(key, news.getTitle(), news.getDescription(), news.getDate(), news.getTimestamp(),
                     news.getImageUrl());
         }
-        databaseReference.child(news.getId()).setValue(news);
+
+        final String newsId = news.getId();
+        Log.d(TAG, "Adding news with ID: " + newsId + ", title: " + news.getTitle());
+
+        databaseReference.child(news.getId()).setValue(news)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "✅ News added successfully: " + newsId);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "❌ Failed to add news: " + e.getMessage(), e);
+                });
     }
 
     public void updateNews(News news) {
         if (news.getId() != null) {
-            databaseReference.child(news.getId()).setValue(news);
+            Log.d(TAG, "Updating news with ID: " + news.getId());
+            databaseReference.child(news.getId()).setValue(news)
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "✅ News updated successfully: " + news.getId());
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "❌ Failed to update news: " + e.getMessage(), e);
+                    });
         }
     }
 
     public void deleteNews(String id) {
         if (id != null) {
-            databaseReference.child(id).removeValue();
+            Log.d(TAG, "Deleting news with ID: " + id);
+            databaseReference.child(id).removeValue()
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "✅ News deleted successfully: " + id);
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "❌ Failed to delete news: " + e.getMessage(), e);
+                    });
         }
     }
 }

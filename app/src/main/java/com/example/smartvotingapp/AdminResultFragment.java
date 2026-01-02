@@ -130,7 +130,7 @@ public class AdminResultFragment extends Fragment
             btnSetDate.setOnClickListener(v -> {
                 Calendar c = Calendar.getInstance();
                 new DatePickerDialog(getContext(), (dp, year, month, day) -> {
-                    String newDate = year + "-" + (month + 1) + "-" + day;
+                    String newDate = String.format(java.util.Locale.getDefault(), "%d-%02d-%02d", year, month + 1, day);
                     election.setResultDate(newDate);
                     electionManager.updateElection(election);
                     loadElections(); // Refresh
@@ -147,7 +147,8 @@ public class AdminResultFragment extends Fragment
                             election.setStatus("Results Announced");
                             // If no date set, set today
                             if (election.getResultDate() == null || election.getResultDate().isEmpty()) {
-                                String today = new java.text.SimpleDateFormat("yyyy-M-d", java.util.Locale.getDefault())
+                                String today = new java.text.SimpleDateFormat("yyyy-MM-dd",
+                                        java.util.Locale.getDefault())
                                         .format(new java.util.Date());
                                 election.setResultDate(today);
                             }

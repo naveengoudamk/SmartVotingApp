@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FFFFFFFF</color>
+    <color name="white">#FF111827</color> <!-- Inverted for dark mode logic if used directly, but unsafe. Better to use semantic names -->
+    
+    <!-- Brand Colors -->
+    <color name="primary">#60A5FA</color> <!-- Lighter blue for dark mode -->
+    <color name="primary_dark">#2563EB</color>
+    <color name="primary_light">#1E40AF</color>
+    <color name="accent">#FBBF24</color>
+    
+    <!-- Backgrounds -->
+    <color name="background_light">#111827</color> <!-- Dark background -->
+    <color name="surface_white">#1F2937</color> <!-- Dark surface card -->
+    
+    <!-- Text -->
+    <color name="text_primary">#F9FAFB</color> <!-- Almost white -->
+    <color name="text_secondary">#D1D5DB</color> <!-- Light grey -->
+    <color name="text_tertiary">#9CA3AF</color>
+    
+    <!-- Status -->
+    <color name="success">#34D399</color>
+    <color name="error">#F87171</color>
+    <color name="warning">#F59E0B</color>
+    
+    <!-- UI Elements -->
+    <color name="divider">#374151</color>
+</resources>

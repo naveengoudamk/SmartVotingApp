@@ -32,6 +32,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate started");
 
+        // Apply Day/Night mode based on preference
+        android.content.SharedPreferences prefs = getSharedPreferences("UserProfilePrefs", MODE_PRIVATE);
+        boolean isDarkMode = prefs.getBoolean("isDarkMode", false);
+        if (isDarkMode) {
+            androidx.appcompat.app.AppCompatDelegate
+                    .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            androidx.appcompat.app.AppCompatDelegate
+                    .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+        }
+
         try {
             setContentView(R.layout.activity_main);
             Log.d(TAG, "Layout inflated successfully");

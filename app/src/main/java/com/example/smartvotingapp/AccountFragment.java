@@ -80,6 +80,8 @@ public class AccountFragment extends Fragment {
             feedbackListContainer = view.findViewById(R.id.feedbackListContainer);
             tvNoFeedback = view.findViewById(R.id.tvNoFeedback);
             tvFeedbackBadge = view.findViewById(R.id.tvFeedbackBadge);
+            com.google.android.material.switchmaterial.SwitchMaterial switchDarkMode = view
+                    .findViewById(R.id.switchDarkMode);
 
             User user = UserUtils.getCurrentUser(getContext());
             if (user != null) {
@@ -99,6 +101,21 @@ public class AccountFragment extends Fragment {
             } else {
                 CustomAlert.showError(getContext(), "Error", "User data not found");
             }
+
+            // Dark Mode Logic
+            boolean isDarkMode = prefs.getBoolean("isDarkMode", false);
+            switchDarkMode.setChecked(isDarkMode);
+
+            switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                prefs.edit().putBoolean("isDarkMode", isChecked).apply();
+                if (isChecked) {
+                    androidx.appcompat.app.AppCompatDelegate
+                            .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
+                } else {
+                    androidx.appcompat.app.AppCompatDelegate
+                            .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+                }
+            });
 
             loadSavedProfileImage();
 

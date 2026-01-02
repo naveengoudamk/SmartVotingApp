@@ -62,7 +62,7 @@
                         android:layout_marginBottom="6dp"
                         app:cardCornerRadius="22dp"
                         app:cardElevation="8dp"
-                        app:cardBackgroundColor="#1E3A8A"
+                        app:cardBackgroundColor="?attr/colorPrimary"
                         app:strokeColor="#FFFFFF"
                         app:strokeWidth="2dp"
                         android:clickable="true"
@@ -84,7 +84,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="User Name"
-                    android:textColor="#111827"
+                    android:textColor="?android:textColorPrimary"
                     android:textSize="26sp"
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium"/>
@@ -95,7 +95,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:text="Aadhaar: XXXX-XXXX-XXXX"
-                    android:textColor="#6B7280"
+                    android:textColor="?android:textColorSecondary"
                     android:textSize="14sp"
                     android:background="@drawable/bg_status_active"
                     android:backgroundTint="#F3F4F6"
@@ -125,7 +125,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="#CCFFFFFF"
+                app:cardBackgroundColor="?attr/colorSurface"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="2dp"
                 app:strokeColor="#F3F4F6"
@@ -147,14 +147,14 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@android:drawable/ic_menu_my_calendar"
-                            app:tint="#1E3A8A"
+                            app:tint="?attr/colorPrimary"
                             android:layout_marginEnd="12dp"/>
                         
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Personal Details"
-                            android:textColor="#1E3A8A"
+                            android:textColor="?attr/colorPrimary"
                             android:textSize="18sp"
                             android:textStyle="bold" />
                     </LinearLayout>
@@ -170,7 +170,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Mobile Number"
-                            android:textColor="#9CA3AF"
+                            android:textColor="?android:textColorSecondary"
                             android:textSize="12sp"
                             android:textAllCaps="true"
                             android:letterSpacing="0.05"/>
@@ -180,7 +180,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="+91 9876543210"
-                            android:textColor="#374151"
+                            android:textColor="?android:textColorPrimary"
                             android:textSize="16sp"
                             android:layout_marginTop="4dp"
                             android:fontFamily="sans-serif-medium"/>
@@ -203,7 +203,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Email Address"
-                            android:textColor="#9CA3AF"
+                            android:textColor="?android:textColorSecondary"
                             android:textSize="12sp"
                             android:textAllCaps="true"
                             android:letterSpacing="0.05"/>
@@ -223,7 +223,7 @@
                                 android:background="@android:color/transparent"
                                 android:hint="Enter email"
                                 android:inputType="textEmailAddress"
-                                android:textColor="#374151"
+                                android:textColor="?android:textColorPrimary"
                                 android:textSize="16sp"
                                 android:fontFamily="sans-serif-medium"/>
 
@@ -232,7 +232,7 @@
                                 android:layout_width="32dp"
                                 android:layout_height="32dp"
                                 android:src="@android:drawable/ic_menu_save"
-                                app:tint="#1E3A8A"
+                                app:tint="?attr/colorPrimary"
                                 android:clickable="true"
                                 android:focusable="true"
                                 android:background="?attr/selectableItemBackgroundBorderless"
@@ -257,7 +257,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Address"
-                            android:textColor="#9CA3AF"
+                            android:textColor="?android:textColorSecondary"
                             android:textSize="12sp"
                             android:textAllCaps="true"
                             android:letterSpacing="0.05"/>
@@ -267,7 +267,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="123, Street Name"
-                            android:textColor="#374151"
+                            android:textColor="?android:textColorPrimary"
                             android:textSize="16sp"
                             android:layout_marginTop="4dp"
                             android:fontFamily="sans-serif-medium"/>
@@ -288,7 +288,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="City"
-                                android:textColor="#9CA3AF"
+                                android:textColor="?android:textColorSecondary"
                                 android:textSize="12sp"
                                 android:textAllCaps="true"
                                 android:letterSpacing="0.05"/>
@@ -298,7 +298,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="City Name"
-                                android:textColor="#374151"
+                                android:textColor="?android:textColorPrimary"
                                 android:textSize="16sp"
                                 android:layout_marginTop="4dp"
                                 android:fontFamily="sans-serif-medium"/>
@@ -314,7 +314,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Pincode"
-                                android:textColor="#9CA3AF"
+                                android:textColor="?android:textColorSecondary"
                                 android:textSize="12sp"
                                 android:textAllCaps="true"
                                 android:letterSpacing="0.05"/>
@@ -324,7 +324,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="560001"
-                                android:textColor="#374151"
+                                android:textColor="?android:textColorPrimary"
                                 android:textSize="16sp"
                                 android:layout_marginTop="4dp"
                                 android:fontFamily="sans-serif-medium"/>
@@ -340,7 +340,7 @@
                 android:id="@+id/cardStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="#CCFFFFFF"
+                app:cardBackgroundColor="?attr/colorSurface"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="2dp"
                 app:strokeColor="#F3F4F6"
@@ -372,7 +372,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Voting Eligibility"
-                            android:textColor="#9CA3AF"
+                            android:textColor="?android:textColorSecondary"
                             android:textSize="12sp"
                             android:textAllCaps="true"
                             android:letterSpacing="0.05"/>
@@ -392,13 +392,91 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Settings Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
+                app:strokeColor="#F3F4F6"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_menu_preferences"
+                            app:tint="?attr/colorPrimary"
+                            android:layout_marginEnd="12dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Settings"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Dark Mode"
+                                android:textColor="?android:textColorPrimary"
+                                android:textSize="16sp"
+                                android:fontFamily="sans-serif-medium"/>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Enable dark theme for the app"
+                                android:textColor="?android:textColorSecondary"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp"/>
+                        </LinearLayout>
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchDarkMode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Feedback Section -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardFeedback"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                app:cardBackgroundColor="#CCFFFFFF"
+                app:cardBackgroundColor="?attr/colorSurface"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="2dp"
                 app:strokeColor="#F3F4F6"
@@ -420,7 +498,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@android:drawable/ic_dialog_email"
-                            app:tint="#1E3A8A"
+                            app:tint="?attr/colorPrimary"
                             android:layout_marginEnd="12dp"/>
                         
                         <TextView
@@ -451,7 +529,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
                         android:text="Submit New Feedback"
-                        android:backgroundTint="#1E3A8A"
+                        android:backgroundTint="?attr/colorPrimary"
                         android:textColor="#FFFFFF"
                         android:textStyle="bold"
                         android:layout_marginBottom="16dp"

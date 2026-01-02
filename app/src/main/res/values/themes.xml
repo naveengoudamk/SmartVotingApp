@@ -15,8 +15,14 @@
         
         <!-- Transitions -->
         <item name="android:windowActivityTransitions">true</item>
-        <item name="android:windowEnterTransition">@android:transition/slide_right</item>
-        <item name="android:windowExitTransition">@android:transition/slide_left</item>
+        <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
+    </style>
+
+    <style name="WindowAnimationTransition">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
     </style>
 
     <style name="Theme.SmartVotingApp" parent="Base.Theme.SmartVotingApp" />

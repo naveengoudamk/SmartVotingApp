@@ -121,7 +121,7 @@ public class AdminPartyFragment extends Fragment {
 
             String logoPath = null;
             if (selectedImageUri != null) {
-                logoPath = saveImageToInternalStorage(selectedImageUri, name);
+                logoPath = convertImageToBase64(selectedImageUri);
             } else if (party != null && party.getLogoPath() != null) {
                 logoPath = party.getLogoPath();
             }
@@ -151,44 +151,56 @@ public class AdminPartyFragment extends Fragment {
         }
     }
 
-    private String saveImageToInternalStorage(Uri imageUri, String partyName) {
+    private String convertImageToBase64(Uri imageUri) {
         try {
             InputStream inputStream = getContext().getContentResolver().openInputStream(imageUri);
             Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
-            String filename = "party_logo_" + partyName.replaceAll("[^a-zA-Z0-9]", "_") + ".jpg";
-            File file = new File(getContext().getFilesDir(), filename);
+            // Resize if too big (max 500x500 to save space)
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+            float maxSz = 500f;
+            if (width > maxSz || height > maxSz) {
+                float ratio = Math.min(maxSz / width, maxSz / height);
+                width = (int) (width * ratio);
+                height = (int) (height * ratio);
+                bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+            }
 
-            FileOutputStream fos = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
-            fos.close();
-
-            return filename;
+            java.io.ByteArrayOutputStream byteArrayOutputStream = new java.io.ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);
+            byte[] byteArray = byteArrayOutputStream.toByteArray();
+            return "data:image/jpeg;base64,"
+                    + android.util.Base64.encodeToString(byteArray, android.util.Base64.NO_WRAP);
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(getContext(), "Error saving image", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Error converting image", Toast.LENGTH_SHORT).show();
             return null;
         }
     }
 
-    private void loadImageToView(String filename, ImageView imageView) {
-        if (filename == null)
+    private void loadImageToView(String path, ImageView imageView) {
+        if (path == null)
             return;
-
-        if (filename.startsWith("res:")) {
-            String resName = filename.substring(4);
-            int resId = getResources().getIdentifier(resName, "drawable", getContext().getPackageName());
-            if (resId != 0) {
-                imageView.setImageResource(resId);
-            }
-            return;
-        }
 
         try {
-            File file = new File(getContext().getFilesDir(), filename);
-            if (file.exists()) {
-                Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-                imageView.setImageBitmap(bitmap);
+            if (path.startsWith("data:")) {
+                String base64 = path.substring(path.indexOf(",") + 1);
+                byte[] decodedString = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                imageView.setImageBitmap(decodedByte);
+            } else if (path.startsWith("res:")) {
+                String resName = path.substring(4);
+                int resId = getResources().getIdentifier(resName, "drawable", getContext().getPackageName());
+                if (resId != 0)
+                    imageView.setImageResource(resId);
+            } else {
+                // Fallback for legacy local files
+                File file = new File(getContext().getFilesDir(), path);
+                if (file.exists()) {
+                    Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                    imageView.setImageBitmap(bitmap);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

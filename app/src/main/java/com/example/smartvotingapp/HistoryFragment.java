@@ -125,12 +125,21 @@ public class HistoryFragment extends Fragment {
                 }
             }
 
-            if (isDeclared && resultDate != null) {
+            // Override declared check with explicit status
+            if ("Results Announced".equalsIgnoreCase(election.getStatus())) {
+                isDeclared = true;
+            }
+
+            if (isDeclared) {
                 holder.tvStatusBadge.setText("Declared");
                 holder.tvStatusBadge.setTextColor(0xFF059669); // Green
                 holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_status_active); // Reuse green bg
-                holder.tvDate.setText("Results declared on: "
-                        + new SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(resultDate));
+                if (resultDate != null) {
+                    holder.tvDate.setText("Results declared on: "
+                            + new SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(resultDate));
+                } else {
+                    holder.tvDate.setText("Results declared");
+                }
 
                 holder.layoutResults.setVisibility(View.VISIBLE);
                 holder.layoutWaiting.setVisibility(View.GONE);
@@ -141,37 +150,80 @@ public class HistoryFragment extends Fragment {
 
                 if (options.isEmpty()) {
                     holder.tvResultSummary.setText("No candidates/options found.");
+                    holder.imgWinner.setVisibility(View.GONE);
                 } else {
                     StringBuilder sb = new StringBuilder();
-                    String winner = "N/A";
+                    String winnerName = "N/A";
+                    String winnerLogo = null;
                     int maxVotes = -1;
+                    boolean tie = false;
 
                     for (VotingOption option : options) {
                         int count = voteCounts.getOrDefault(option.getId(), 0);
                         if (count > maxVotes) {
                             maxVotes = count;
-                            winner = option.getOptionName();
+                            winnerName = option.getOptionName();
+                            winnerLogo = option.getLogoPath();
+                            tie = false;
+                        } else if (count == maxVotes) {
+                            tie = true;
                         }
                         sb.append("• ").append(option.getOptionName()).append(": ").append(count).append("\n");
                     }
 
-                    // Prepend Winner with Congratulations
-                    String summary = "🎉 Congratulations to " + winner + "!\n\n" +
-                            "🏆 Winner: " + winner + " (" + maxVotes + " votes)\n\n" +
-                            "Detailed Results:\n" + sb.toString();
-                    holder.tvResultSummary.setText(summary.trim());
+                    if (tie) {
+                        winnerName = "Tie";
+                        winnerLogo = null;
+                        holder.imgWinner.setVisibility(View.GONE);
+                        String summary = "🤝 It's a Tie! (" + maxVotes + " votes each)\n\n" +
+                                "Detailed Results:\n" + sb.toString();
+                        holder.tvResultSummary.setText(summary.trim());
+                    } else {
+                        // Display winner image if available
+                        if (winnerLogo != null) {
+                            holder.imgWinner.setVisibility(View.VISIBLE);
+                            try {
+                                if (winnerLogo.startsWith("data:")) {
+                                    String base64 = winnerLogo.substring(winnerLogo.indexOf(",") + 1);
+                                    byte[] decodedString = android.util.Base64.decode(base64,
+                                            android.util.Base64.DEFAULT);
+                                    android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory
+                                            .decodeByteArray(decodedString, 0, decodedString.length);
+                                    holder.imgWinner.setImageBitmap(decodedByte);
+                                } else {
+                                    // Try local/res fallback
+                                    File file = new File(holder.itemView.getContext().getFilesDir(), winnerLogo);
+                                    if (file.exists()) {
+                                        android.graphics.Bitmap bitmap = android.graphics.BitmapFactory
+                                                .decodeFile(file.getAbsolutePath());
+                                        holder.imgWinner.setImageBitmap(bitmap);
+                                    } else {
+                                        holder.imgWinner.setVisibility(View.GONE);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                holder.imgWinner.setVisibility(View.GONE);
+                            }
+                        } else {
+                            holder.imgWinner.setVisibility(View.GONE);
+                        }
+
+                        // Prepend Winner with Congratulations
+                        String summary = "🎉 Congratulations to " + winnerName + "!\n\n" +
+                                "🏆 Winner: " + winnerName + " (" + maxVotes + " votes)\n\n" +
+                                "Detailed Results:\n" + sb.toString();
+                        holder.tvResultSummary.setText(summary.trim());
+                    }
                 }
 
             } else {
                 holder.tvStatusBadge.setText("Pending");
                 holder.tvStatusBadge.setTextColor(0xFFD97706); // Amber/Orange
-                // We need an amber background, but for now reuse or tint
                 holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_status_active);
-                holder.tvStatusBadge.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFEF3C7)); // Light
-                                                                                                                    // Amber
+                holder.tvStatusBadge.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFEF3C7));
 
                 if (resultDate != null) {
-                    holder.tvDate.setText("Results on: "
+                    holder.tvDate.setText("Results Date: "
                             + new SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(resultDate));
                 } else {
                     holder.tvDate.setText("Results Date: To be announced");
@@ -190,6 +242,7 @@ public class HistoryFragment extends Fragment {
         static class ViewHolder extends RecyclerView.ViewHolder {
             TextView tvTitle, tvStatusBadge, tvDate, tvResultSummary;
             LinearLayout layoutResults, layoutWaiting;
+            android.widget.ImageView imgWinner;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -199,6 +252,7 @@ public class HistoryFragment extends Fragment {
                 tvResultSummary = itemView.findViewById(R.id.tvResultSummary);
                 layoutResults = itemView.findViewById(R.id.layoutResults);
                 layoutWaiting = itemView.findViewById(R.id.layoutWaiting);
+                imgWinner = itemView.findViewById(R.id.imgWinner);
             }
         }
     }

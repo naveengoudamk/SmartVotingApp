@@ -18,7 +18,7 @@
     <item
         android:id="@+id/nav_history"
         android:icon="@drawable/ic_history"
-        android:title="History" />
+        android:title="Result" />
 
     <item
         android:id="@+id/nav_account"

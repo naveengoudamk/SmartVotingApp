@@ -63,7 +63,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-            <!-- Results will be added here dynamically or text set -->
+            
+            <!-- Confetti/Trophy Image -->
+             <ImageView
+                android:id="@+id/imgWinner"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="12dp"
+                android:src="@drawable/ic_vote" 
+                android:visibility="gone"/>
+
             <TextView
                 android:id="@+id/tvResultSummary"
                 android:layout_width="match_parent"

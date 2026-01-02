@@ -7,6 +7,10 @@ public class VotingOption {
     private String description;
     private String logoPath;
 
+    // Default constructor required for Firebase
+    public VotingOption() {
+    }
+
     public VotingOption(String id, int electionId, String optionName, String description) {
         this(id, electionId, optionName, description, null);
     }

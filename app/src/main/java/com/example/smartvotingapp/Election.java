@@ -9,6 +9,10 @@ public class Election {
     private String stopDate;
     private String resultDate;
 
+    // Default constructor required for Firebase
+    public Election() {
+    }
+
     public Election(int id, String title, String state, int minAge, String status, String stopDate) {
         this(id, title, state, minAge, status, stopDate, null);
     }

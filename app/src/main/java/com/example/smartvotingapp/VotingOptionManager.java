@@ -2,28 +2,82 @@ package com.example.smartvotingapp;
 
 import android.content.Context;
 import android.util.Log;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import androidx.annotation.NonNull;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class VotingOptionManager {
-    private static final String FILE_NAME = "voting_options.json";
+    private static final String TAG = "VotingOptionManager";
     private Context context;
+    private DatabaseReference databaseReference;
+    private List<VotingOption> cachedOptions = new ArrayList<>();
+    private List<VotingOptionUpdateListener> listeners = new ArrayList<>();
+    private boolean isDataLoaded = false;
+
+    public interface VotingOptionUpdateListener {
+        void onVotingOptionsUpdated();
+    }
 
     public VotingOptionManager(Context context) {
         this.context = context;
+        databaseReference = FirebaseDatabase.getInstance().getReference("voting_options");
+
+        // Start listening for real-time updates
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                cachedOptions.clear();
+                for (DataSnapshot child : snapshot.getChildren()) {
+                    try {
+                        VotingOption option = child.getValue(VotingOption.class);
+                        if (option != null) {
+                            cachedOptions.add(option);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing voting option: " + e.getMessage());
+                    }
+                }
+                isDataLoaded = true;
+                notifyListeners();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Database error: " + error.getMessage());
+            }
+        });
+    }
+
+    public void addListener(VotingOptionUpdateListener listener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+        }
+        // If we already have data, notify immediately
+        if (isDataLoaded) {
+            listener.onVotingOptionsUpdated();
+        }
+    }
+
+    public void removeListener(VotingOptionUpdateListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyListeners() {
+        for (VotingOptionUpdateListener listener : listeners) {
+            listener.onVotingOptionsUpdated();
+        }
     }
 
     public List<VotingOption> getOptionsByElection(int electionId) {
         List<VotingOption> options = new ArrayList<>();
-        List<VotingOption> allOptions = getAllOptions();
-
-        for (VotingOption option : allOptions) {
+        for (VotingOption option : cachedOptions) {
             if (option.getElectionId() == electionId) {
                 options.add(option);
             }
@@ -32,78 +86,25 @@ public class VotingOptionManager {
     }
 
     public List<VotingOption> getAllOptions() {
-        List<VotingOption> options = new ArrayList<>();
-        File file = new File(context.getFilesDir(), FILE_NAME);
-        if (!file.exists())
-            return options;
-
-        try {
-            FileInputStream fis = context.openFileInput(FILE_NAME);
-            Scanner scanner = new Scanner(fis, StandardCharsets.UTF_8.name());
-            String json = scanner.useDelimiter("\\A").next();
-            scanner.close();
-
-            JSONArray array = new JSONArray(json);
-            for (int i = 0; i < array.length(); i++) {
-                JSONObject obj = array.getJSONObject(i);
-                options.add(new VotingOption(
-                        obj.getString("id"),
-                        obj.getInt("electionId"),
-                        obj.getString("optionName"),
-                        obj.optString("description", ""),
-                        obj.optString("logoPath", null)));
-            }
-        } catch (Exception e) {
-            Log.e("VotingOptionManager", "Error reading options", e);
-        }
-        return options;
+        return new ArrayList<>(cachedOptions);
     }
 
     public void addOption(VotingOption option) {
-        List<VotingOption> options = getAllOptions();
-        options.add(option);
-        saveOptions(options);
+        // Use option ID as the key
+        databaseReference.child(option.getId()).setValue(option)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Voting option added successfully"))
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to add voting option", e));
     }
 
     public void updateOption(VotingOption option) {
-        List<VotingOption> options = getAllOptions();
-        for (int i = 0; i < options.size(); i++) {
-            if (options.get(i).getId().equals(option.getId())) {
-                options.set(i, option);
-                break;
-            }
-        }
-        saveOptions(options);
+        databaseReference.child(option.getId()).setValue(option)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Voting option updated successfully"))
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to update voting option", e));
     }
 
     public void deleteOption(String optionId) {
-        List<VotingOption> options = getAllOptions();
-        options.removeIf(o -> o.getId().equals(optionId));
-        saveOptions(options);
-    }
-
-    private void saveOptions(List<VotingOption> options) {
-        JSONArray array = new JSONArray();
-        for (VotingOption option : options) {
-            JSONObject obj = new JSONObject();
-            try {
-                obj.put("id", option.getId());
-                obj.put("electionId", option.getElectionId());
-                obj.put("optionName", option.getOptionName());
-                obj.put("description", option.getDescription());
-                if (option.getLogoPath() != null) {
-                    obj.put("logoPath", option.getLogoPath());
-                }
-                array.put(obj);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try (FileOutputStream fos = context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE)) {
-            fos.write(array.toString().getBytes());
-        } catch (IOException e) {
-            Log.e("VotingOptionManager", "Error saving options", e);
-        }
+        databaseReference.child(optionId).removeValue()
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Voting option deleted successfully"))
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to delete voting option", e));
     }
 }

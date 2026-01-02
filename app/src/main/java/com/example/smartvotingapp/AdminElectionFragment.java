@@ -16,7 +16,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 
-public class AdminElectionFragment extends Fragment {
+public class AdminElectionFragment extends Fragment implements ElectionManager.ElectionUpdateListener {
 
     private LinearLayout electionContainer;
     private ElectionManager electionManager;
@@ -35,6 +35,8 @@ public class AdminElectionFragment extends Fragment {
             View view = inflater.inflate(R.layout.fragment_admin_election, container, false);
 
             electionManager = new ElectionManager(getContext());
+            electionManager.addListener(this);
+
             electionContainer = view.findViewById(R.id.electionContainer);
             Button btnAddElection = view.findViewById(R.id.btnAddElection);
 
@@ -47,6 +49,21 @@ public class AdminElectionFragment extends Fragment {
             e.printStackTrace();
             Toast.makeText(getContext(), "Error loading elections: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             return new View(getContext()); // Return dummy view to prevent crash
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (electionManager != null) {
+            electionManager.removeListener(this);
+        }
+    }
+
+    @Override
+    public void onElectionsUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(this::loadElections);
         }
     }
 

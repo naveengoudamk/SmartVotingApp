@@ -17,7 +17,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.card.MaterialCardView;
 import java.util.List;
 
-public class VotingActivity extends AppCompatActivity implements VoteManager.VoteUpdateListener {
+public class VotingActivity extends AppCompatActivity
+        implements VoteManager.VoteUpdateListener, VotingOptionManager.VotingOptionUpdateListener {
 
     private TextView electionInfo, userInfo, tvSelectedOption;
     private Button voteButton;
@@ -29,6 +30,7 @@ public class VotingActivity extends AppCompatActivity implements VoteManager.Vot
     private String selectedOptionId = null;
     private String selectedOptionName = null;
     private VoteManager voteManager;
+    private VotingOptionManager optionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +56,9 @@ public class VotingActivity extends AppCompatActivity implements VoteManager.Vot
 
         voteManager = new VoteManager(this);
         voteManager.addListener(this);
+
+        optionManager = new VotingOptionManager(this);
+        optionManager.addListener(this);
 
         checkVoteStatus();
 
@@ -85,11 +90,27 @@ public class VotingActivity extends AppCompatActivity implements VoteManager.Vot
         if (voteManager != null) {
             voteManager.removeListener(this);
         }
+        if (optionManager != null) {
+            optionManager.removeListener(this);
+        }
     }
 
     @Override
     public void onVotesUpdated() {
         runOnUiThread(this::checkVoteStatus);
+    }
+
+    @Override
+    public void onVotingOptionsUpdated() {
+        runOnUiThread(() -> {
+            if (adapter == null) {
+                loadVotingOptions();
+            } else {
+                // Refresh the adapter with new data
+                List<VotingOption> options = optionManager.getOptionsByElection(electionId);
+                adapter.updateOptions(options);
+            }
+        });
     }
 
     private void checkVoteStatus() {
@@ -111,7 +132,6 @@ public class VotingActivity extends AppCompatActivity implements VoteManager.Vot
     }
 
     private void loadVotingOptions() {
-        VotingOptionManager optionManager = new VotingOptionManager(this);
         List<VotingOption> options = optionManager.getOptionsByElection(electionId);
 
         if (options.isEmpty()) {
@@ -130,6 +150,12 @@ public class VotingActivity extends AppCompatActivity implements VoteManager.Vot
 
         public VotingOptionAdapter(List<VotingOption> options) {
             this.options = options;
+        }
+
+        public void updateOptions(List<VotingOption> newOptions) {
+            this.options = newOptions;
+            this.selectedPosition = -1; // Reset selection
+            notifyDataSetChanged();
         }
 
         @NonNull

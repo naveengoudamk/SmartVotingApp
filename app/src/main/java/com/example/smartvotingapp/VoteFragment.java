@@ -14,10 +14,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class VoteFragment extends Fragment {
+public class VoteFragment extends Fragment implements ElectionManager.ElectionUpdateListener {
 
     private RecyclerView recyclerView;
     private List<Election> electionList;
+    private ElectionAdapter adapter;
+    private ElectionManager electionManager;
 
     @Nullable
     @Override
@@ -29,10 +31,12 @@ public class VoteFragment extends Fragment {
             recyclerView = view.findViewById(R.id.electionRecyclerView);
             recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-            ElectionManager electionManager = new ElectionManager(getContext());
+            electionManager = new ElectionManager(getContext());
+            electionManager.addListener(this);
+
             electionList = electionManager.getAllElections();
 
-            ElectionAdapter adapter = new ElectionAdapter(electionList, this::checkEligibility);
+            adapter = new ElectionAdapter(electionList, this::checkEligibility);
             recyclerView.setAdapter(adapter);
 
             return view;
@@ -40,6 +44,27 @@ public class VoteFragment extends Fragment {
             e.printStackTrace();
             Toast.makeText(getContext(), "Error loading elections: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             return new View(getContext());
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (electionManager != null) {
+            electionManager.removeListener(this);
+        }
+    }
+
+    @Override
+    public void onElectionsUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                electionList.clear();
+                electionList.addAll(electionManager.getAllElections());
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
+            });
         }
     }
 

@@ -42,12 +42,21 @@ public class ElectionAdapter extends RecyclerView.Adapter<ElectionAdapter.ViewHo
         holder.status.setText(election.getStatus());
 
         // Style status based on value
+        // Style status based on value
         String status = election.getStatus().toLowerCase();
         if (status.equals("running") || status.equals("active") || status.equals("open")) {
             holder.status.setTextColor(0xFF059669); // Green
             holder.status.setBackgroundResource(R.drawable.bg_status_active);
             holder.btnVote.setEnabled(true);
             holder.btnVote.setAlpha(1.0f);
+            holder.btnVote.setText("Vote Now");
+        } else if (status.contains("result")) {
+            holder.status.setTextColor(0xFF2563EB); // Blue
+            holder.status.setBackgroundResource(R.drawable.bg_status_active);
+            holder.status.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFDBEAFE)); // Light Blue
+            holder.btnVote.setEnabled(false);
+            holder.btnVote.setAlpha(1.0f); // Keep visible
+            holder.btnVote.setText("Results Out");
         } else {
             holder.status.setTextColor(0xFFDC2626); // Red
             // Create a red background or just reuse/tint

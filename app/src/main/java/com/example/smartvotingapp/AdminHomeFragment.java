@@ -106,15 +106,29 @@ public class AdminHomeFragment extends Fragment implements NewsManager.NewsUpdat
 
             if (news.getImageUrl() != null && !news.getImageUrl().isEmpty()) {
                 imgNews.setVisibility(View.VISIBLE);
-                new Thread(() -> {
-                    try {
-                        java.io.InputStream in = new java.net.URL(news.getImageUrl()).openStream();
-                        android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in);
-                        newsView.post(() -> imgNews.setImageBitmap(bmp));
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                try {
+                    String url = news.getImageUrl();
+                    if (url.startsWith("data:")) {
+                        // Base64
+                        String base64 = url.substring(url.indexOf(",") + 1);
+                        byte[] decodedString = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
+                        android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory
+                                .decodeByteArray(decodedString, 0, decodedString.length);
+                        imgNews.setImageBitmap(decodedByte);
+                    } else {
+                        new Thread(() -> {
+                            try {
+                                java.io.InputStream in = new java.net.URL(url).openStream();
+                                android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in);
+                                newsView.post(() -> imgNews.setImageBitmap(bmp));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
                     }
-                }).start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             } else {
                 imgNews.setVisibility(View.GONE);
             }
@@ -147,20 +161,41 @@ public class AdminHomeFragment extends Fragment implements NewsManager.NewsUpdat
                 new androidx.activity.result.contract.ActivityResultContracts.GetContent(),
                 uri -> {
                     if (uri != null) {
-                        // Persist permission so we can read it later even after restart
                         try {
-                            getContext().getContentResolver().takePersistableUriPermission(uri,
-                                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            // Convert to Base64
+                            java.io.InputStream inputStream = getContext().getContentResolver().openInputStream(uri);
+                            android.graphics.Bitmap originalBitmap = android.graphics.BitmapFactory
+                                    .decodeStream(inputStream);
+
+                            // Resize if too big (max 800px width)
+                            int width = originalBitmap.getWidth();
+                            int height = originalBitmap.getHeight();
+                            float maxSz = 800f;
+                            if (width > maxSz) {
+                                float ratio = maxSz / width;
+                                width = (int) maxSz;
+                                height = (int) (height * ratio);
+                                originalBitmap = android.graphics.Bitmap.createScaledBitmap(originalBitmap, width,
+                                        height, true);
+                            }
+
+                            java.io.ByteArrayOutputStream byteArrayOutputStream = new java.io.ByteArrayOutputStream();
+                            originalBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60,
+                                    byteArrayOutputStream);
+                            byte[] byteArray = byteArrayOutputStream.toByteArray();
+                            String base64Image = "data:image/jpeg;base64,"
+                                    + android.util.Base64.encodeToString(byteArray, android.util.Base64.NO_WRAP);
+
+                            if (currentImageUrlInput != null) {
+                                currentImageUrlInput.setText(base64Image);
+                            }
+                            if (currentImagePreview != null) {
+                                currentImagePreview.setVisibility(View.VISIBLE);
+                                currentImagePreview.setImageBitmap(originalBitmap);
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
-                        }
-
-                        if (currentImageUrlInput != null) {
-                            currentImageUrlInput.setText(uri.toString());
-                        }
-                        if (currentImagePreview != null) {
-                            currentImagePreview.setVisibility(View.VISIBLE);
-                            currentImagePreview.setImageURI(uri);
+                            Toast.makeText(getContext(), "Failed to process image", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -188,11 +223,34 @@ public class AdminHomeFragment extends Fragment implements NewsManager.NewsUpdat
             etImageUrl.setText(news.getImageUrl());
             if (news.getImageUrl() != null && !news.getImageUrl().isEmpty()) {
                 try {
-                    android.net.Uri uri = android.net.Uri.parse(news.getImageUrl());
-                    if (uri.getScheme() != null
-                            && (uri.getScheme().equals("content") || uri.getScheme().equals("file"))) {
+                    String url = news.getImageUrl();
+                    if (url.startsWith("data:")) {
+                        String base64 = url.substring(url.indexOf(",") + 1);
+                        byte[] decodedString = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
+                        android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory
+                                .decodeByteArray(decodedString, 0, decodedString.length);
                         imgPreview.setVisibility(View.VISIBLE);
-                        imgPreview.setImageURI(uri);
+                        imgPreview.setImageBitmap(decodedByte);
+                    } else {
+                        android.net.Uri uri = android.net.Uri.parse(url);
+                        if (uri.getScheme() != null
+                                && (uri.getScheme().equals("content") || uri.getScheme().equals("file"))) {
+                            imgPreview.setVisibility(View.VISIBLE);
+                            imgPreview.setImageURI(uri);
+                        } else {
+                            // Try load URL
+                            new Thread(() -> {
+                                try {
+                                    java.io.InputStream in = new java.net.URL(url).openStream();
+                                    android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in);
+                                    imgPreview.post(() -> {
+                                        imgPreview.setVisibility(View.VISIBLE);
+                                        imgPreview.setImageBitmap(bmp);
+                                    });
+                                } catch (Exception e) {
+                                }
+                            }).start();
+                        }
                     }
                 } catch (Exception e) {
                     // ignore

@@ -119,21 +119,33 @@ public class HomeFragment extends Fragment implements SearchableFragment, NewsMa
             if (news.getImageUrl() != null && !news.getImageUrl().isEmpty()) {
                 imgNews.setVisibility(View.VISIBLE);
                 try {
-                    android.net.Uri uri = android.net.Uri.parse(news.getImageUrl());
-                    if (uri.getScheme() != null
-                            && (uri.getScheme().equals("content") || uri.getScheme().equals("file"))) {
-                        imgNews.setImageURI(uri);
+                    String url = news.getImageUrl();
+                    if (url.startsWith("data:")) {
+                        // Base64
+                        String base64 = url.substring(url.indexOf(",") + 1);
+                        byte[] decodedString = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
+                        android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory
+                                .decodeByteArray(decodedString, 0, decodedString.length);
+                        imgNews.setImageBitmap(decodedByte);
                     } else {
-                        new Thread(() -> {
-                            try {
-                                java.io.InputStream in = new java.net.URL(news.getImageUrl()).openStream();
-                                android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in);
-                                newsView.post(() -> imgNews.setImageBitmap(bmp));
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                newsView.post(() -> imgNews.setImageResource(R.drawable.ic_news_placeholder));
-                            }
-                        }).start();
+                        android.net.Uri uri = android.net.Uri.parse(url);
+                        if (uri.getScheme() != null
+                                && (uri.getScheme().equals("content") || uri.getScheme().equals("file"))) {
+                            // This is likely legacy/local only, might not work on other devices,
+                            // but keeping it for backward compat if needed (though now we use base64)
+                            imgNews.setImageURI(uri);
+                        } else {
+                            new Thread(() -> {
+                                try {
+                                    java.io.InputStream in = new java.net.URL(url).openStream();
+                                    android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in);
+                                    newsView.post(() -> imgNews.setImageBitmap(bmp));
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    newsView.post(() -> imgNews.setImageResource(R.drawable.ic_news_placeholder));
+                                }
+                            }).start();
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

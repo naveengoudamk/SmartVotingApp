@@ -109,6 +109,7 @@ public class AdminResultFragment extends Fragment
             TextView tvStatus = cardView.findViewById(R.id.tvStatus);
             TextView tvResultDate = cardView.findViewById(R.id.tvResultDate);
             Button btnSetDate = cardView.findViewById(R.id.btnSetDate);
+            Button btnAnnounce = cardView.findViewById(R.id.btnAnnounce);
             LinearLayout layoutCounts = cardView.findViewById(R.id.layoutCounts);
 
             tvTitle.setText(election.getTitle());
@@ -116,6 +117,15 @@ public class AdminResultFragment extends Fragment
 
             String date = election.getResultDate();
             tvResultDate.setText(date != null ? "Results Date: " + date : "Results Date: Not Set");
+
+            // Disable announce button if already announced
+            if ("Results Announced".equalsIgnoreCase(election.getStatus())) {
+                btnAnnounce.setText("Announced");
+                btnAnnounce.setEnabled(false);
+            } else {
+                btnAnnounce.setText("Announce");
+                btnAnnounce.setEnabled(true);
+            }
 
             btnSetDate.setOnClickListener(v -> {
                 Calendar c = Calendar.getInstance();
@@ -126,6 +136,27 @@ public class AdminResultFragment extends Fragment
                     loadElections(); // Refresh
                     Toast.makeText(getContext(), "Result date updated", Toast.LENGTH_SHORT).show();
                 }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
+            });
+
+            btnAnnounce.setOnClickListener(v -> {
+                new android.app.AlertDialog.Builder(getContext())
+                        .setTitle("Announce Results")
+                        .setMessage("Are you sure you want to announce the results for " + election.getTitle()
+                                + "? This will make the results visible to all users.")
+                        .setPositiveButton("Announce", (dialog, which) -> {
+                            election.setStatus("Results Announced");
+                            // If no date set, set today
+                            if (election.getResultDate() == null || election.getResultDate().isEmpty()) {
+                                String today = new java.text.SimpleDateFormat("yyyy-M-d", java.util.Locale.getDefault())
+                                        .format(new java.util.Date());
+                                election.setResultDate(today);
+                            }
+                            electionManager.updateElection(election);
+                            loadElections();
+                            Toast.makeText(getContext(), "Results announced successfully", Toast.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
             });
 
             // Populate Counts

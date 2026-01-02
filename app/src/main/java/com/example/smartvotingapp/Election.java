@@ -58,4 +58,8 @@ public class Election {
     public void setResultDate(String resultDate) {
         this.resultDate = resultDate;
     }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }

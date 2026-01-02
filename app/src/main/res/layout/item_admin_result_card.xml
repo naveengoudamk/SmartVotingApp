@@ -54,9 +54,20 @@
                 android:id="@+id/btnSetDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:padding="0dp"
+                android:minWidth="0dp"
                 android:text="Set Date"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:textColor="#1E3A8A"/>
+
+            <Button
+                android:id="@+id/btnAnnounce"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Announce"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="#DC2626"/>
         </LinearLayout>
 
         <View

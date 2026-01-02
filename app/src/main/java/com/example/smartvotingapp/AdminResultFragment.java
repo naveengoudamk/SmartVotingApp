@@ -15,7 +15,8 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
-public class AdminResultFragment extends Fragment implements VoteManager.VoteUpdateListener {
+public class AdminResultFragment extends Fragment
+        implements VoteManager.VoteUpdateListener, ElectionManager.ElectionUpdateListener {
 
     private LinearLayout resultsContainer;
     private ElectionManager electionManager;
@@ -37,6 +38,7 @@ public class AdminResultFragment extends Fragment implements VoteManager.VoteUpd
 
             resultsContainer = view.findViewById(R.id.resultsContainer);
             electionManager = new ElectionManager(getContext());
+            electionManager.addListener(this);
 
             voteManager = new VoteManager(getContext());
             voteManager.addListener(this);
@@ -59,10 +61,20 @@ public class AdminResultFragment extends Fragment implements VoteManager.VoteUpd
         if (voteManager != null) {
             voteManager.removeListener(this);
         }
+        if (electionManager != null) {
+            electionManager.removeListener(this);
+        }
     }
 
     @Override
     public void onVotesUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(this::loadElections);
+        }
+    }
+
+    @Override
+    public void onElectionsUpdated() {
         if (getActivity() != null) {
             getActivity().runOnUiThread(this::loadElections);
         }

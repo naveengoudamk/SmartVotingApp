@@ -115,7 +115,9 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
         EditText etTitle = view.findViewById(R.id.etTitle);
         EditText etState = view.findViewById(R.id.etState);
         EditText etMinAge = view.findViewById(R.id.etMinAge);
-        EditText etStatus = view.findViewById(R.id.etStatus);
+        android.widget.RadioGroup rgStatus = view.findViewById(R.id.rgStatus);
+        android.widget.RadioButton rbActive = view.findViewById(R.id.rbActive);
+        android.widget.RadioButton rbClosed = view.findViewById(R.id.rbClosed);
         EditText etStopDate = view.findViewById(R.id.etStopDate);
 
         etStopDate.setOnClickListener(v -> {
@@ -129,7 +131,16 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
             etTitle.setText(election.getTitle());
             etState.setText(election.getState());
             etMinAge.setText(String.valueOf(election.getMinAge()));
-            etStatus.setText(election.getStatus());
+
+            // Set status radio button
+            if (election.getStatus().equalsIgnoreCase("Active") ||
+                    election.getStatus().equalsIgnoreCase("Running") ||
+                    election.getStatus().equalsIgnoreCase("Open")) {
+                rbActive.setChecked(true);
+            } else {
+                rbClosed.setChecked(true);
+            }
+
             etStopDate.setText(election.getStopDate());
         } else {
             // New Election: Pre-fill and lock state if scoped
@@ -143,7 +154,7 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
             String title = etTitle.getText().toString().trim();
             String state = etState.getText().toString().trim();
             String minAgeStr = etMinAge.getText().toString().trim();
-            String status = etStatus.getText().toString().trim();
+            String status = rbActive.isChecked() ? "Active" : "Closed";
             String stopDate = etStopDate.getText().toString().trim();
 
             if (title.isEmpty() || state.isEmpty() || minAgeStr.isEmpty()) {
@@ -183,51 +194,68 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
 
         VotingOptionManager optionManager = new VotingOptionManager(getContext());
 
-        // Load and display options - use array wrapper for effectively final
-        final Runnable[] loadOptionsWrapper = new Runnable[1];
-        loadOptionsWrapper[0] = () -> {
-            optionsContainer.removeAllViews();
-            List<VotingOption> options = optionManager.getOptionsByElection(election.getId());
+        // Create listener for real-time updates
+        VotingOptionManager.VotingOptionUpdateListener optionListener = new VotingOptionManager.VotingOptionUpdateListener() {
+            @Override
+            public void onVotingOptionsUpdated() {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        optionsContainer.removeAllViews();
+                        List<VotingOption> options = optionManager.getOptionsByElection(election.getId());
 
-            if (options.isEmpty()) {
-                TextView emptyView = new TextView(getContext());
-                emptyView.setText("No voting options yet. Add some!");
-                emptyView.setPadding(20, 20, 20, 20);
-                optionsContainer.addView(emptyView);
-            } else {
-                for (VotingOption option : options) {
-                    View optionView = LayoutInflater.from(getContext()).inflate(
-                            R.layout.item_voting_option_admin, optionsContainer, false);
+                        if (options.isEmpty()) {
+                            TextView emptyView = new TextView(getContext());
+                            emptyView.setText("No voting options yet. Add some!");
+                            emptyView.setPadding(20, 20, 20, 20);
+                            optionsContainer.addView(emptyView);
+                        } else {
+                            for (VotingOption option : options) {
+                                View optionView = LayoutInflater.from(getContext()).inflate(
+                                        R.layout.item_voting_option_admin, optionsContainer, false);
 
-                    TextView tvOptionName = optionView.findViewById(R.id.tvOptionName);
-                    TextView tvOptionDescription = optionView.findViewById(R.id.tvOptionDescription);
-                    Button btnDelete = optionView.findViewById(R.id.btnDelete);
+                                TextView tvOptionName = optionView.findViewById(R.id.tvOptionName);
+                                TextView tvOptionDescription = optionView.findViewById(R.id.tvOptionDescription);
+                                Button btnDelete = optionView.findViewById(R.id.btnDelete);
+                                Button btnEdit = optionView.findViewById(R.id.btnEdit);
 
-                    tvOptionName.setText(option.getOptionName());
-                    tvOptionDescription.setText(option.getDescription());
+                                tvOptionName.setText(option.getOptionName());
+                                tvOptionDescription.setText(option.getDescription());
 
-                    btnDelete.setOnClickListener(v -> {
-                        optionManager.deleteOption(option.getId());
-                        loadOptionsWrapper[0].run();
+                                btnDelete.setOnClickListener(v -> {
+                                    optionManager.deleteOption(option.getId());
+                                });
+
+                                if (btnEdit != null) {
+                                    btnEdit.setOnClickListener(v -> {
+                                        showAddVotingOptionDialog(election, optionManager, option);
+                                    });
+                                }
+
+                                optionsContainer.addView(optionView);
+                            }
+                        }
                     });
-
-                    optionsContainer.addView(optionView);
                 }
             }
         };
 
-        loadOptionsWrapper[0].run();
+        optionManager.addListener(optionListener);
 
-        btnAddOption.setOnClickListener(v -> showAddVotingOptionDialog(election, optionManager, loadOptionsWrapper[0]));
+        btnAddOption.setOnClickListener(v -> showAddVotingOptionDialog(election, optionManager, null));
 
-        builder.setPositiveButton("Done", null);
-        builder.show();
+        AlertDialog dialog = builder.create();
+        dialog.setOnDismissListener(d -> optionManager.removeListener(optionListener));
+        dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Done", (d, which) -> {
+        });
+        dialog.show();
     }
 
-    private void showAddVotingOptionDialog(Election election, VotingOptionManager optionManager, Runnable onComplete) {
+    private void showAddVotingOptionDialog(Election election, VotingOptionManager optionManager,
+            VotingOption existingOption) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_voting_option, null);
         builder.setView(view);
+        builder.setTitle(existingOption == null ? "Add Voting Option" : "Edit Voting Option");
 
         // UI Elements
         android.widget.Spinner spinnerParties = view.findViewById(R.id.spinnerParties);
@@ -249,8 +277,15 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerParties.setAdapter(adapter);
 
-        // Handle Selection
+        // Pre-fill if editing
         final String[] selectedLogoPath = { null };
+        if (existingOption != null) {
+            etOptionName.setText(existingOption.getOptionName());
+            etOptionDescription.setText(existingOption.getDescription());
+            selectedLogoPath[0] = existingOption.getLogoPath();
+        }
+
+        // Handle Selection
         spinnerParties.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
@@ -258,12 +293,12 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
                     Party selectedParty = parties.get(position - 1);
                     // Set Party Name in Description field
                     etOptionDescription.setText(selectedParty.getName());
-                    // Clear Candidate Name for user input
-                    // etOptionName.setText(""); // Optional: keep empty or pre-fill
                     selectedLogoPath[0] = selectedParty.getLogoPath();
                 } else {
-                    etOptionDescription.setText("");
-                    selectedLogoPath[0] = null;
+                    if (existingOption == null) {
+                        etOptionDescription.setText("");
+                        selectedLogoPath[0] = null;
+                    }
                 }
             }
 
@@ -272,7 +307,7 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
             }
         });
 
-        builder.setPositiveButton("Add", (dialog, which) -> {
+        builder.setPositiveButton(existingOption == null ? "Add" : "Update", (dialog, which) -> {
             String candidateName = etOptionName.getText().toString().trim();
             String partyName = etOptionDescription.getText().toString().trim();
 
@@ -286,12 +321,18 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
                 return;
             }
 
-            String id = java.util.UUID.randomUUID().toString();
-            // Option Name = Candidate Name
-            // Description = Party Name
-            VotingOption option = new VotingOption(id, election.getId(), candidateName, partyName, selectedLogoPath[0]);
-            optionManager.addOption(option);
-            onComplete.run();
+            if (existingOption == null) {
+                // Add new option
+                String id = java.util.UUID.randomUUID().toString();
+                VotingOption option = new VotingOption(id, election.getId(), candidateName, partyName,
+                        selectedLogoPath[0]);
+                optionManager.addOption(option);
+            } else {
+                // Update existing option
+                VotingOption updatedOption = new VotingOption(existingOption.getId(), election.getId(), candidateName,
+                        partyName, selectedLogoPath[0]);
+                optionManager.updateOption(updatedOption);
+            }
         });
 
         builder.setNegativeButton("Cancel", null);

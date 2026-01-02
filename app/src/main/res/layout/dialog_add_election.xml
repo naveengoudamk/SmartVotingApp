@@ -39,12 +39,38 @@
             android:inputType="number"
             android:layout_marginBottom="8dp"/>
 
-        <EditText
-            android:id="@+id/etStatus"
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Status (Active/Closed)"
-            android:layout_marginBottom="8dp"/>
+            android:text="Status:"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp"/>
+
+        <RadioGroup
+            android:id="@+id/rgStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <RadioButton
+                android:id="@+id/rbActive"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Active"
+                android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/rbClosed"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Closed"/>
+        </RadioGroup>
+
 
         <TextView
             android:layout_width="match_parent"

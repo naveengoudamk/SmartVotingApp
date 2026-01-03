@@ -43,11 +43,13 @@ public class AdminPartyFragment extends Fragment implements PartyManager.PartyUp
         View view = inflater.inflate(R.layout.fragment_admin_party, container, false);
 
         partyManager = new PartyManager(getContext());
-        partyManager.addListener(this);
 
         partyContainer = view.findViewById(R.id.partyContainer);
         Button btnAddParty = view.findViewById(R.id.btnAddParty);
         Button btnResetParties = view.findViewById(R.id.btnResetParties);
+
+        // Add listener AFTER views are initialized to avoid NPE in callback
+        partyManager.addListener(this);
 
         btnAddParty.setOnClickListener(v -> showAddEditDialog(null));
 

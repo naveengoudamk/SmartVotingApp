@@ -17,7 +17,7 @@ import com.google.android.material.card.MaterialCardView;
 import java.io.File;
 import java.util.List;
 
-public class ListFragment extends Fragment implements SearchableFragment {
+public class ListFragment extends Fragment implements SearchableFragment, PartyManager.PartyUpdateListener {
 
     private GridLayout gridParties;
     private PartyManager partyManager;
@@ -34,6 +34,7 @@ public class ListFragment extends Fragment implements SearchableFragment {
 
             gridParties = view.findViewById(R.id.gridParties);
             partyManager = new PartyManager(getContext());
+            partyManager.addListener(this);
 
             allParties = partyManager.getAllParties();
             loadParties(allParties);
@@ -48,9 +49,30 @@ public class ListFragment extends Fragment implements SearchableFragment {
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (partyManager != null) {
+            partyManager.removeListener(this);
+        }
+    }
+
+    @Override
+    public void onPartiesUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                allParties = partyManager.getAllParties();
+                // Pass current query if we were filtering, but for now just reload all or reset
+                // Ideally we should keep track of search query but simple reload is fine
+                loadParties(allParties);
+            });
+        }
+    }
+
+    @Override
     public void onSearch(String query) {
-        if (allParties == null)
-            return;
+        if (allParties == null) {
+            allParties = partyManager.getAllParties();
+        }
 
         if (query == null || query.isEmpty()) {
             loadParties(allParties);
@@ -71,6 +93,9 @@ public class ListFragment extends Fragment implements SearchableFragment {
 
     private void loadParties(List<Party> parties) {
         gridParties.removeAllViews();
+        if (parties == null)
+            return;
+
         for (Party party : parties) {
             createPartyCard(party);
         }
@@ -116,26 +141,30 @@ public class ListFragment extends Fragment implements SearchableFragment {
         if (filename == null)
             return;
 
-        if (filename.startsWith("res:")) {
-            String resName = filename.substring(4);
-            int resId = getResources().getIdentifier(resName, "drawable", getContext().getPackageName());
-            if (resId != 0) {
-                imageView.setImageResource(resId);
-            } else {
-                // Fallback if resource not found
-                imageView.setImageResource(R.drawable.ic_bjp);
-            }
-            return;
-        }
-
         try {
+            if (filename.startsWith("data:")) {
+                // Base64 Image
+                String base64 = filename.substring(filename.indexOf(",") + 1);
+                byte[] decodedString = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                imageView.setImageBitmap(decodedByte);
+                return;
+            } else if (filename.startsWith("res:")) {
+                String resName = filename.substring(4);
+                int resId = getResources().getIdentifier(resName, "drawable", getContext().getPackageName());
+                if (resId != 0) {
+                    imageView.setImageResource(resId);
+                } else {
+                    imageView.setImageResource(R.drawable.ic_bjp);
+                }
+                return;
+            }
+
             File file = new File(getContext().getFilesDir(), filename);
             if (file.exists()) {
                 Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
                 imageView.setImageBitmap(bitmap);
             } else {
-                // Try to load from drawable if it matches a known party code/name (optional
-                // fallback logic)
                 imageView.setImageResource(R.drawable.ic_bjp);
             }
         } catch (Exception e) {

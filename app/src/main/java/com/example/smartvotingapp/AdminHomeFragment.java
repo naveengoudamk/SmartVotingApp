@@ -153,6 +153,7 @@ public class AdminHomeFragment extends Fragment implements NewsManager.NewsUpdat
     private androidx.activity.result.ActivityResultLauncher<String> pickImageLauncher;
     private EditText currentImageUrlInput;
     private android.widget.ImageView currentImagePreview;
+    private String tempBase64Image;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -186,8 +187,12 @@ public class AdminHomeFragment extends Fragment implements NewsManager.NewsUpdat
                             String base64Image = "data:image/jpeg;base64,"
                                     + android.util.Base64.encodeToString(byteArray, android.util.Base64.NO_WRAP);
 
+                            // Store internally, don't put in EditText
+                            tempBase64Image = base64Image;
+
                             if (currentImageUrlInput != null) {
-                                currentImageUrlInput.setText(base64Image);
+                                currentImageUrlInput.setText(""); // Clear URL input
+                                currentImageUrlInput.setHint("Image selected from gallery");
                             }
                             if (currentImagePreview != null) {
                                 currentImagePreview.setVisibility(View.VISIBLE);
@@ -202,6 +207,7 @@ public class AdminHomeFragment extends Fragment implements NewsManager.NewsUpdat
     }
 
     private void showAddEditDialog(News news) {
+        tempBase64Image = null; // Reset
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_news, null);
         builder.setView(view);
@@ -220,50 +226,65 @@ public class AdminHomeFragment extends Fragment implements NewsManager.NewsUpdat
         if (news != null) {
             etTitle.setText(news.getTitle());
             etDescription.setText(news.getDescription());
-            etImageUrl.setText(news.getImageUrl());
+
             if (news.getImageUrl() != null && !news.getImageUrl().isEmpty()) {
-                try {
-                    String url = news.getImageUrl();
-                    if (url.startsWith("data:")) {
+                String url = news.getImageUrl();
+                if (url.startsWith("data:")) {
+                    tempBase64Image = url;
+                    etImageUrl.setHint("Stored image (Base64)");
+
+                    // Show preview
+                    try {
                         String base64 = url.substring(url.indexOf(",") + 1);
                         byte[] decodedString = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
                         android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory
                                 .decodeByteArray(decodedString, 0, decodedString.length);
                         imgPreview.setVisibility(View.VISIBLE);
                         imgPreview.setImageBitmap(decodedByte);
-                    } else {
-                        android.net.Uri uri = android.net.Uri.parse(url);
-                        if (uri.getScheme() != null
-                                && (uri.getScheme().equals("content") || uri.getScheme().equals("file"))) {
-                            imgPreview.setVisibility(View.VISIBLE);
-                            imgPreview.setImageURI(uri);
-                        } else {
-                            // Try load URL
-                            new Thread(() -> {
-                                try {
-                                    java.io.InputStream in = new java.net.URL(url).openStream();
-                                    android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in);
-                                    imgPreview.post(() -> {
-                                        imgPreview.setVisibility(View.VISIBLE);
-                                        imgPreview.setImageBitmap(bmp);
-                                    });
-                                } catch (Exception e) {
-                                }
-                            }).start();
-                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    // ignore
+                } else {
+                    etImageUrl.setText(url);
+                    // Load URL preview
+                    new Thread(() -> {
+                        try {
+                            java.io.InputStream in = new java.net.URL(url).openStream();
+                            android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in);
+                            imgPreview.post(() -> {
+                                imgPreview.setVisibility(View.VISIBLE);
+                                imgPreview.setImageBitmap(bmp);
+                            });
+                        } catch (Exception e) {
+                        }
+                    }).start();
                 }
             }
         }
 
         btnPickImage.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
 
+        // If user manually types, clear tempBase64Image
+        etImageUrl.addTextChangedListener(new android.text.TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.length() > 0)
+                    tempBase64Image = null;
+            }
+
+            public void afterTextChanged(android.text.Editable s) {
+            }
+        });
+
         builder.setPositiveButton("Save", (dialog, which) -> {
             String title = etTitle.getText().toString().trim();
             String desc = etDescription.getText().toString().trim();
-            String imageUrl = etImageUrl.getText().toString().trim();
+            String typedUrl = etImageUrl.getText().toString().trim();
+
+            // Prioritize tempBase64Image if active, else typed URL
+            String finalImageUrl = (tempBase64Image != null) ? tempBase64Image : typedUrl;
 
             if (title.isEmpty() || desc.isEmpty()) {
                 Toast.makeText(getContext(), "Please fill title and description", Toast.LENGTH_SHORT).show();
@@ -275,12 +296,12 @@ public class AdminHomeFragment extends Fragment implements NewsManager.NewsUpdat
 
             if (news == null) {
                 // Add new
-                News newNews = new News(UUID.randomUUID().toString(), title, desc, date, timestamp, imageUrl);
+                News newNews = new News(UUID.randomUUID().toString(), title, desc, date, timestamp, finalImageUrl);
                 newsManager.addNews(newNews);
                 Toast.makeText(getContext(), "News added successfully", Toast.LENGTH_SHORT).show();
             } else {
                 // Update existing
-                News updatedNews = new News(news.getId(), title, desc, date, timestamp, imageUrl);
+                News updatedNews = new News(news.getId(), title, desc, date, timestamp, finalImageUrl);
                 newsManager.updateNews(updatedNews);
                 Toast.makeText(getContext(), "News updated successfully", Toast.LENGTH_SHORT).show();
             }

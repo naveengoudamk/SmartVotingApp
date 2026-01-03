@@ -74,7 +74,7 @@ public class PartyManager {
         defaults.add(new Party("1", "Bharatiya Janata Party (BJP)", "Lotus",
                 "The Bharatiya Janata Party is one of two major political parties in India.", "res:ic_bjp"));
         defaults.add(new Party("2", "Indian National Congress (INC)", "Hand",
-                "The Indian National Congress is a political party in India with widespread roots.", "res:img_inc"));
+                "The Indian National Congress is a political party in India with widespread roots.", "res:ic_inc"));
         defaults.add(new Party("3", "Aam Aadmi Party (AAP)", "Broom",
                 "The Aam Aadmi Party is a political party in India that was founded in November 2012.", "res:ic_aap"));
         defaults.add(new Party("4", "Trinamool Congress (TMC)", "Flowers & Grass",
@@ -92,11 +92,52 @@ public class PartyManager {
         defaults.add(new Party("8", "Bahujan Samaj Party (BSP)", "Elephant",
                 "The Bahujan Samaj Party is a national level political party in India that was formed to represent the Bahujans.",
                 "res:ic_bsp"));
+        defaults.add(new Party("9", "Communist Party of India (CPI)", "Ears of Corn and Sickle",
+                "The Communist Party of India is the oldest communist party in India.", "res:ic_cpi"));
+        defaults.add(new Party("10", "CPI(M)", "Hammer, Sickle and Star",
+                "The Communist Party of India (Marxist) is a communist political party in India.", "res:ic_cpim"));
+        defaults.add(new Party("11", "Nationalist Congress Party (NCP)", "Clock",
+                "The Nationalist Congress Party is one of the eight national parties in India.", "res:ic_ncp"));
+        defaults.add(new Party("12", "Rashtriya Janata Dal (RJD)", "Hurricane Lamp",
+                "The Rashtriya Janata Dal is an Indian political party, based in the state of Bihar.", "res:ic_rjd"));
+        defaults.add(new Party("13", "Janata Dal (United) (JDU)", "Arrow",
+                "Janata Dal (United) is an Indian political party with political presence mainly in Bihar.",
+                "res:ic_jdu"));
+        defaults.add(new Party("14", "Telugu Desam Party (TDP)", "Bicycle",
+                "The Telugu Desam Party is a regional political party active in the southern states of Andhra Pradesh and Telangana.",
+                "res:ic_tdp"));
+        defaults.add(new Party("15", "YSR Congress Party (YSRCP)", "Ceiling Fan",
+                "Yuvajana Sramika Rythu Congress Party is an Indian regional political party in the state of Andhra Pradesh.",
+                "res:ic_ysrcp"));
+        defaults.add(new Party("16", "Biju Janata Dal (BJD)", "Conch",
+                "Biju Janata Dal is an Indian regional political party with significant influence in the state of Odisha.",
+                "res:ic_bjd"));
+        defaults.add(new Party("17", "Jharkhand Mukti Morcha (JMM)", "Bow and Arrow",
+                "Jharkhand Mukti Morcha is a state political party in the Indian state of Jharkhand.", "res:ic_jmm"));
+        defaults.add(new Party("18", "Shiromani Akali Dal (SAD)", "Scales",
+                "Shiromani Akali Dal is a centre-right Sikh-centric state political party in Punjab, India.",
+                "res:ic_sad"));
+        defaults.add(new Party("19", "Janata Dal (Secular) (JDS)", "Lady Farmer",
+                "Janata Dal (Secular) is an Indian political party led by former Prime Minister H. D. Deve Gowda.",
+                "res:ic_jds"));
 
         for (Party p : defaults) {
             // Push with custom ID if possible or use the default ID as key
             databaseReference.child(p.getId()).setValue(p);
         }
+    }
+
+    /**
+     * Erases all existing parties and resets to the default list.
+     */
+    public void resetToDefaults() {
+        databaseReference.removeValue((error, ref) -> {
+            if (error == null) {
+                seedDefaultParties();
+            } else {
+                Log.e(TAG, "Failed to reset parties: " + error.getMessage());
+            }
+        });
     }
 
     public void addListener(PartyUpdateListener listener) {

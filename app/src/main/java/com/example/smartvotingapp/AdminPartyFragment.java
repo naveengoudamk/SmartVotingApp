@@ -25,7 +25,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
-public class AdminPartyFragment extends Fragment {
+public class AdminPartyFragment extends Fragment implements PartyManager.PartyUpdateListener {
 
     private LinearLayout partyContainer;
     private PartyManager partyManager;
@@ -43,14 +43,46 @@ public class AdminPartyFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_admin_party, container, false);
 
         partyManager = new PartyManager(getContext());
+        partyManager.addListener(this);
+
         partyContainer = view.findViewById(R.id.partyContainer);
         Button btnAddParty = view.findViewById(R.id.btnAddParty);
+        Button btnResetParties = view.findViewById(R.id.btnResetParties);
 
         btnAddParty.setOnClickListener(v -> showAddEditDialog(null));
+
+        if (btnResetParties != null) {
+            btnResetParties.setOnClickListener(v -> {
+                new AlertDialog.Builder(getContext())
+                        .setTitle("Reset Parties")
+                        .setMessage("Are you sure you want to erase all parties and reset to defaults?")
+                        .setPositiveButton("Reset", (d, w) -> {
+                            partyManager.resetToDefaults();
+                            Toast.makeText(getContext(), "Resetting parties...", Toast.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            });
+        }
 
         loadParties();
 
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (partyManager != null) {
+            partyManager.removeListener(this);
+        }
+    }
+
+    @Override
+    public void onPartiesUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(this::loadParties);
+        }
     }
 
     private void loadParties() {
@@ -63,16 +95,21 @@ public class AdminPartyFragment extends Fragment {
 
             TextView name = partyView.findViewById(R.id.tvPartyName);
             TextView symbol = partyView.findViewById(R.id.tvPartySymbol);
+            ImageView logo = partyView.findViewById(R.id.ivPartyLogo);
             Button btnEdit = partyView.findViewById(R.id.btnEdit);
             Button btnDelete = partyView.findViewById(R.id.btnDelete);
 
             name.setText(party.getName());
             symbol.setText("Symbol: " + party.getSymbol());
 
+            if (party.getLogoPath() != null) {
+                loadImageToView(party.getLogoPath(), logo);
+            }
+
             btnEdit.setOnClickListener(v -> showAddEditDialog(party));
             btnDelete.setOnClickListener(v -> {
                 partyManager.deleteParty(party.getId());
-                loadParties();
+                // loadParties(); // Handled by listener
             });
 
             partyContainer.addView(partyView);

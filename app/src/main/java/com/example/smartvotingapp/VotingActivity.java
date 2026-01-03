@@ -175,7 +175,13 @@ public class VotingActivity extends AppCompatActivity
             // Load Logo
             if (option.getLogoPath() != null) {
                 try {
-                    if (option.getLogoPath().startsWith("res:")) {
+                    if (option.getLogoPath().startsWith("data:")) {
+                        String base64 = option.getLogoPath().substring(option.getLogoPath().indexOf(",") + 1);
+                        byte[] decodedString = android.util.Base64.decode(base64, android.util.Base64.DEFAULT);
+                        android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory
+                                .decodeByteArray(decodedString, 0, decodedString.length);
+                        holder.imgPartyLogo.setImageBitmap(decodedByte);
+                    } else if (option.getLogoPath().startsWith("res:")) {
                         String resName = option.getLogoPath().substring(4);
                         int resId = getResources().getIdentifier(resName, "drawable", getPackageName());
                         if (resId != 0) {

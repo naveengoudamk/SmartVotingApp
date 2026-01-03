@@ -29,13 +29,54 @@ public class AdminPartyFragment extends Fragment implements PartyManager.PartyUp
 
     private LinearLayout partyContainer;
     private PartyManager partyManager;
-    private static final int REQUEST_IMAGE_PICK = 200;
-
-    private Uri selectedImageUri;
+    private androidx.activity.result.ActivityResultLauncher<String> pickImageLauncher;
     private ImageView currentLogoPreview;
-    private Party editingParty;
+    private String tempBase64Image;
 
     public AdminPartyFragment() {
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        pickImageLauncher = registerForActivityResult(
+                new androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        try {
+                            // Convert to Base64
+                            InputStream inputStream = getContext().getContentResolver().openInputStream(uri);
+                            Bitmap originalBitmap = BitmapFactory.decodeStream(inputStream);
+
+                            // Resize if too big (max 500x500 for logos)
+                            int width = originalBitmap.getWidth();
+                            int height = originalBitmap.getHeight();
+                            float maxSz = 500f;
+                            if (width > maxSz || height > maxSz) {
+                                float ratio = Math.min(maxSz / width, maxSz / height);
+                                width = (int) (width * ratio);
+                                height = (int) (height * ratio);
+                                originalBitmap = Bitmap.createScaledBitmap(originalBitmap, width, height, true);
+                            }
+
+                            java.io.ByteArrayOutputStream byteArrayOutputStream = new java.io.ByteArrayOutputStream();
+                            originalBitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
+                            byte[] byteArray = byteArrayOutputStream.toByteArray();
+                            String base64Image = "data:image/jpeg;base64,"
+                                    + android.util.Base64.encodeToString(byteArray, android.util.Base64.NO_WRAP);
+
+                            // Store internally
+                            tempBase64Image = base64Image;
+
+                            if (currentLogoPreview != null) {
+                                currentLogoPreview.setImageBitmap(originalBitmap);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(getContext(), "Failed to process image", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
     }
 
     @Override
@@ -43,10 +84,8 @@ public class AdminPartyFragment extends Fragment implements PartyManager.PartyUp
         View view = inflater.inflate(R.layout.fragment_admin_party, container, false);
 
         partyManager = new PartyManager(getContext());
-
         partyContainer = view.findViewById(R.id.partyContainer);
         Button btnAddParty = view.findViewById(R.id.btnAddParty);
-        // btnResetParties removed
 
         // Add listener AFTER views are initialized to avoid NPE in callback
         partyManager.addListener(this);
@@ -105,9 +144,7 @@ public class AdminPartyFragment extends Fragment implements PartyManager.PartyUp
     }
 
     private void showAddEditDialog(Party party) {
-        editingParty = party;
-        selectedImageUri = null;
-
+        tempBase64Image = null; // Reset
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_party, null);
         builder.setView(view);
@@ -125,14 +162,16 @@ public class AdminPartyFragment extends Fragment implements PartyManager.PartyUp
 
             // Load existing logo if available
             if (party.getLogoPath() != null) {
+                // If it's a Base64 string, set it as temp default so we don't lose it on save
+                // unless replaced
+                if (party.getLogoPath().startsWith("data:")) {
+                    tempBase64Image = party.getLogoPath();
+                }
                 loadImageToView(party.getLogoPath(), currentLogoPreview);
             }
         }
 
-        btnSelectLogo.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            startActivityForResult(intent, REQUEST_IMAGE_PICK);
-        });
+        btnSelectLogo.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
 
         builder.setPositiveButton("Save", (dialog, which) -> {
             String name = etName.getText().toString().trim();
@@ -144,10 +183,10 @@ public class AdminPartyFragment extends Fragment implements PartyManager.PartyUp
                 return;
             }
 
-            String logoPath = null;
-            if (selectedImageUri != null) {
-                logoPath = convertImageToBase64(selectedImageUri);
-            } else if (party != null && party.getLogoPath() != null) {
+            // Use tempBase64Image if set (new pick or existing base64), else fall back to
+            // existing path (res: or file path)
+            String logoPath = tempBase64Image;
+            if (logoPath == null && party != null) {
                 logoPath = party.getLogoPath();
             }
 
@@ -158,50 +197,11 @@ public class AdminPartyFragment extends Fragment implements PartyManager.PartyUp
                 Party updatedParty = new Party(party.getId(), name, symbol, description, logoPath);
                 partyManager.updateParty(updatedParty);
             }
-            loadParties();
+            // loadParties(); // Handled by listener
         });
 
         builder.setNegativeButton("Cancel", null);
         builder.show();
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_PICK && resultCode == Activity.RESULT_OK && data != null) {
-            selectedImageUri = data.getData();
-            if (currentLogoPreview != null && selectedImageUri != null) {
-                currentLogoPreview.setImageURI(selectedImageUri);
-            }
-        }
-    }
-
-    private String convertImageToBase64(Uri imageUri) {
-        try {
-            InputStream inputStream = getContext().getContentResolver().openInputStream(imageUri);
-            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-
-            // Resize if too big (max 500x500 to save space)
-            int width = bitmap.getWidth();
-            int height = bitmap.getHeight();
-            float maxSz = 500f;
-            if (width > maxSz || height > maxSz) {
-                float ratio = Math.min(maxSz / width, maxSz / height);
-                width = (int) (width * ratio);
-                height = (int) (height * ratio);
-                bitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
-            }
-
-            java.io.ByteArrayOutputStream byteArrayOutputStream = new java.io.ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);
-            byte[] byteArray = byteArrayOutputStream.toByteArray();
-            return "data:image/jpeg;base64,"
-                    + android.util.Base64.encodeToString(byteArray, android.util.Base64.NO_WRAP);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(getContext(), "Error converting image", Toast.LENGTH_SHORT).show();
-            return null;
-        }
     }
 
     private void loadImageToView(String path, ImageView imageView) {

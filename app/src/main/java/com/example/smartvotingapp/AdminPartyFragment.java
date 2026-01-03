@@ -46,26 +46,12 @@ public class AdminPartyFragment extends Fragment implements PartyManager.PartyUp
 
         partyContainer = view.findViewById(R.id.partyContainer);
         Button btnAddParty = view.findViewById(R.id.btnAddParty);
-        Button btnResetParties = view.findViewById(R.id.btnResetParties);
+        // btnResetParties removed
 
         // Add listener AFTER views are initialized to avoid NPE in callback
         partyManager.addListener(this);
 
         btnAddParty.setOnClickListener(v -> showAddEditDialog(null));
-
-        if (btnResetParties != null) {
-            btnResetParties.setOnClickListener(v -> {
-                new AlertDialog.Builder(getContext())
-                        .setTitle("Reset Parties")
-                        .setMessage("Are you sure you want to erase all parties and reset to defaults?")
-                        .setPositiveButton("Reset", (d, w) -> {
-                            partyManager.resetToDefaults();
-                            Toast.makeText(getContext(), "Resetting parties...", Toast.LENGTH_SHORT).show();
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .show();
-            });
-        }
 
         loadParties();
 

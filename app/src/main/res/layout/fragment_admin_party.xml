@@ -13,32 +13,14 @@
         android:textStyle="bold"
         android:layout_marginBottom="16dp"/>
 
-    <LinearLayout
+    <Button
+        android:id="@+id/btnAddParty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
-
-        <Button
-            android:id="@+id/btnAddParty"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Add Party"
-            android:backgroundTint="#1E3A8A"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="8dp"/>
-
-        <Button
-            android:id="@+id/btnResetParties"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Reset to Defaults"
-            android:backgroundTint="#B91C1C"
-            android:textColor="#FFFFFF"
-            android:layout_marginStart="8dp"/>
-    </LinearLayout>
+        android:text="Add Party"
+        android:backgroundTint="#1E3A8A"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp"/>
 
     <ScrollView
         android:layout_width="match_parent"

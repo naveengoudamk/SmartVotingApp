@@ -1,29 +1,75 @@
+
 package com.example.smartvotingapp;
 
 import android.content.Context;
 import android.util.Log;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+
+import androidx.annotation.NonNull;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class PartyManager {
-    private static final String FILE_NAME = "parties.json";
+    private static final String TAG = "PartyManager";
     private Context context;
+    private DatabaseReference databaseReference;
+    private List<Party> cachedParties = new ArrayList<>();
+    private List<PartyUpdateListener> listeners = new ArrayList<>();
+
+    public interface PartyUpdateListener {
+        void onPartiesUpdated();
+    }
 
     public PartyManager(Context context) {
         this.context = context;
-        seedDefaultParties();
+        databaseReference = FirebaseDatabase.getInstance().getReference("parties");
+
+        // Listen for updates
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                cachedParties.clear();
+                for (DataSnapshot child : snapshot.getChildren()) {
+                    try {
+                        Party party = child.getValue(Party.class);
+                        if (party != null) {
+                            cachedParties.add(party);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing party", e);
+                    }
+                }
+                notifyListeners();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Database error: " + error.getMessage());
+            }
+        });
+
+        // Seed if empty (one-time check usually, but safely ignored if data exists)
+        // We will do a single check to seed defaults if absolutely nothing exists
+        seedDefaultsIfNeeded();
+    }
+
+    private void seedDefaultsIfNeeded() {
+        // Minimal check to avoid overwriting or duplicating on every restart
+        // Real logic is handled by onDataChange, but for initial seed:
+        databaseReference.get().addOnSuccessListener(snapshot -> {
+            if (!snapshot.exists() || snapshot.getChildrenCount() == 0) {
+                seedDefaultParties();
+            }
+        });
     }
 
     private void seedDefaultParties() {
-        List<Party> existingParties = getAllParties();
-        boolean changed = false;
-
         List<Party> defaults = new ArrayList<>();
         defaults.add(new Party("1", "Bharatiya Janata Party (BJP)", "Lotus",
                 "The Bharatiya Janata Party is one of two major political parties in India.", "res:ic_bjp"));
@@ -47,107 +93,50 @@ public class PartyManager {
                 "The Bahujan Samaj Party is a national level political party in India that was formed to represent the Bahujans.",
                 "res:ic_bsp"));
 
-        for (Party def : defaults) {
-            boolean exists = false;
-            for (Party p : existingParties) {
-                if (p.getName().equalsIgnoreCase(def.getName())) {
-                    exists = true;
-                    break;
-                }
-            }
-            if (!exists) {
-                Party partyToAdd = def;
-                final String defId = def.getId();
-                boolean idExists = existingParties.stream().anyMatch(p -> p.getId().equals(defId));
-                if (idExists) {
-                    // If ID exists but name doesn't, it's a conflict. Let's give a new ID to the
-                    // default party being added.
-                    partyToAdd = new Party(java.util.UUID.randomUUID().toString(), def.getName(), def.getSymbol(),
-                            def.getDescription(), def.getLogoPath());
-                }
-                existingParties.add(partyToAdd);
-                changed = true;
-            }
+        for (Party p : defaults) {
+            // Push with custom ID if possible or use the default ID as key
+            databaseReference.child(p.getId()).setValue(p);
         }
+    }
 
-        if (changed) {
-            saveParties(existingParties);
+    public void addListener(PartyUpdateListener listener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
+            listener.onPartiesUpdated();
+        }
+    }
+
+    public void removeListener(PartyUpdateListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyListeners() {
+        for (PartyUpdateListener listener : listeners) {
+            listener.onPartiesUpdated();
         }
     }
 
     public List<Party> getAllParties() {
-        List<Party> parties = new ArrayList<>();
-        File file = new File(context.getFilesDir(), FILE_NAME);
-        if (!file.exists())
-            return parties;
-
-        try {
-            FileInputStream fis = context.openFileInput(FILE_NAME);
-            Scanner scanner = new Scanner(fis, StandardCharsets.UTF_8.name());
-            String json = scanner.useDelimiter("\\A").next();
-            scanner.close();
-
-            JSONArray array = new JSONArray(json);
-            for (int i = 0; i < array.length(); i++) {
-                JSONObject obj = array.getJSONObject(i);
-                parties.add(new Party(
-                        obj.getString("id"),
-                        obj.getString("name"),
-                        obj.optString("symbol", ""),
-                        obj.optString("description", ""),
-                        obj.optString("logoPath", null)));
-            }
-        } catch (Exception e) {
-            Log.e("PartyManager", "Error reading parties", e);
-        }
-        return parties;
+        return new ArrayList<>(cachedParties);
     }
 
     public void addParty(Party party) {
-        List<Party> parties = getAllParties();
-        parties.add(party);
-        saveParties(parties);
+        if (party.getId() == null || party.getId().isEmpty()) {
+            String key = databaseReference.push().getKey();
+            party = new Party(key, party.getName(), party.getSymbol(), party.getDescription(), party.getLogoPath());
+        }
+        databaseReference.child(party.getId()).setValue(party);
     }
 
     public void updateParty(Party party) {
-        List<Party> parties = getAllParties();
-        for (int i = 0; i < parties.size(); i++) {
-            if (parties.get(i).getId().equals(party.getId())) {
-                parties.set(i, party);
-                break;
-            }
+        if (party.getId() != null) {
+            databaseReference.child(party.getId()).setValue(party);
         }
-        saveParties(parties);
     }
 
     public void deleteParty(String id) {
-        List<Party> parties = getAllParties();
-        parties.removeIf(p -> p.getId().equals(id));
-        saveParties(parties);
-    }
-
-    private void saveParties(List<Party> parties) {
-        JSONArray array = new JSONArray();
-        for (Party p : parties) {
-            JSONObject obj = new JSONObject();
-            try {
-                obj.put("id", p.getId());
-                obj.put("name", p.getName());
-                obj.put("symbol", p.getSymbol());
-                obj.put("description", p.getDescription());
-                if (p.getLogoPath() != null) {
-                    obj.put("logoPath", p.getLogoPath());
-                }
-                array.put(obj);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try (FileOutputStream fos = context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE)) {
-            fos.write(array.toString().getBytes());
-        } catch (IOException e) {
-            Log.e("PartyManager", "Error saving parties", e);
+        if (id != null) {
+            databaseReference.child(id).removeValue();
         }
     }
 }

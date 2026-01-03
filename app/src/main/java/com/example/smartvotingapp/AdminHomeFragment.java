@@ -167,10 +167,10 @@ public class AdminHomeFragment extends Fragment implements NewsManager.NewsUpdat
                             android.graphics.Bitmap originalBitmap = android.graphics.BitmapFactory
                                     .decodeStream(inputStream);
 
-                            // Resize if too big (max 800px width)
+                            // Resize if too big (max 1200px width)
                             int width = originalBitmap.getWidth();
                             int height = originalBitmap.getHeight();
-                            float maxSz = 800f;
+                            float maxSz = 1200f;
                             if (width > maxSz) {
                                 float ratio = maxSz / width;
                                 width = (int) maxSz;
@@ -180,7 +180,7 @@ public class AdminHomeFragment extends Fragment implements NewsManager.NewsUpdat
                             }
 
                             java.io.ByteArrayOutputStream byteArrayOutputStream = new java.io.ByteArrayOutputStream();
-                            originalBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60,
+                            originalBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90,
                                     byteArrayOutputStream);
                             byte[] byteArray = byteArrayOutputStream.toByteArray();
                             String base64Image = "data:image/jpeg;base64,"

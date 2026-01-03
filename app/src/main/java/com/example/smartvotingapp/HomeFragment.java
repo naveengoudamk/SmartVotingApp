@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
@@ -97,10 +98,43 @@ public class HomeFragment extends Fragment implements SearchableFragment, NewsMa
         newsContainer.removeAllViews();
 
         if (newsList.isEmpty()) {
-            TextView emptyView = new TextView(getContext());
-            emptyView.setText("Loading news or no news available...");
-            emptyView.setPadding(20, 20, 20, 20);
-            newsContainer.addView(emptyView);
+            // Create a nice empty state view
+            LinearLayout emptyState = new LinearLayout(getContext());
+            emptyState.setOrientation(LinearLayout.VERTICAL);
+            emptyState.setGravity(android.view.Gravity.CENTER);
+            emptyState.setPadding(40, 80, 40, 80);
+
+            ImageView emptyIcon = new ImageView(getContext());
+            emptyIcon.setImageResource(R.drawable.ic_news_placeholder);
+            emptyIcon.setAlpha(0.3f);
+            LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(200, 200);
+            iconParams.gravity = android.view.Gravity.CENTER;
+            emptyIcon.setLayoutParams(iconParams);
+
+            TextView emptyTitle = new TextView(getContext());
+            emptyTitle.setText("No News Yet");
+            emptyTitle.setTextSize(20);
+            emptyTitle.setTextColor(0xFF374151);
+            emptyTitle.setTypeface(null, android.graphics.Typeface.BOLD);
+            emptyTitle.setGravity(android.view.Gravity.CENTER);
+            LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            titleParams.setMargins(0, 24, 0, 8);
+            emptyTitle.setLayoutParams(titleParams);
+
+            TextView emptyDesc = new TextView(getContext());
+            emptyDesc.setText("Check back later for election updates and news");
+            emptyDesc.setTextSize(14);
+            emptyDesc.setTextColor(0xFF6B7280);
+            emptyDesc.setGravity(android.view.Gravity.CENTER);
+            LinearLayout.LayoutParams descParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            emptyDesc.setLayoutParams(descParams);
+
+            emptyState.addView(emptyIcon);
+            emptyState.addView(emptyTitle);
+            emptyState.addView(emptyDesc);
+            newsContainer.addView(emptyState);
             return;
         }
 

@@ -187,14 +187,15 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
         builder.setView(view);
 
         TextView tvElectionTitle = view.findViewById(R.id.tvElectionTitle);
-        Button btnAddOption = view.findViewById(R.id.btnAddOption);
         LinearLayout optionsContainer = view.findViewById(R.id.optionsContainer);
+        LinearLayout partiesContainer = view.findViewById(R.id.partiesContainer);
 
         tvElectionTitle.setText("Manage Options: " + election.getTitle());
 
         VotingOptionManager optionManager = new VotingOptionManager(getContext());
+        PartyManager partyManager = new PartyManager(getContext());
 
-        // Create listener for real-time updates
+        // Create listener for real-time voting options updates
         VotingOptionManager.VotingOptionUpdateListener optionListener = new VotingOptionManager.VotingOptionUpdateListener() {
             @Override
             public void onVotingOptionsUpdated() {
@@ -205,8 +206,9 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
 
                         if (options.isEmpty()) {
                             TextView emptyView = new TextView(getContext());
-                            emptyView.setText("No voting options yet. Add some!");
+                            emptyView.setText("No voting options yet.\nSelect parties from right →");
                             emptyView.setPadding(20, 20, 20, 20);
+                            emptyView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                             optionsContainer.addView(emptyView);
                         } else {
                             for (VotingOption option : options) {
@@ -239,15 +241,88 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
             }
         };
 
-        optionManager.addListener(optionListener);
+        // Create listener for real-time party updates
+        PartyManager.PartyUpdateListener partyListener = new PartyManager.PartyUpdateListener() {
+            @Override
+            public void onPartiesUpdated() {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        partiesContainer.removeAllViews();
+                        List<Party> parties = partyManager.getAllParties();
 
-        btnAddOption.setOnClickListener(v -> showAddVotingOptionDialog(election, optionManager, null));
+                        if (parties.isEmpty()) {
+                            TextView emptyView = new TextView(getContext());
+                            emptyView.setText("No parties available.\nAdd parties in Parties tab");
+                            emptyView.setPadding(20, 20, 20, 20);
+                            emptyView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                            partiesContainer.addView(emptyView);
+                        } else {
+                            for (Party party : parties) {
+                                View partyView = LayoutInflater.from(getContext()).inflate(
+                                        R.layout.item_party_selectable, partiesContainer, false);
+
+                                TextView tvPartyName = partyView.findViewById(R.id.tvPartyName);
+                                TextView tvPartySymbol = partyView.findViewById(R.id.tvPartySymbol);
+
+                                tvPartyName.setText(party.getName());
+                                tvPartySymbol.setText(party.getSymbol() != null ? party.getSymbol() : "");
+
+                                // Click to add this party as a voting option
+                                partyView.setOnClickListener(v -> {
+                                    showAddCandidateForPartyDialog(election, optionManager, party);
+                                });
+
+                                partiesContainer.addView(partyView);
+                            }
+                        }
+                    });
+                }
+            }
+        };
+
+        optionManager.addListener(optionListener);
+        partyManager.addListener(partyListener);
 
         AlertDialog dialog = builder.create();
-        dialog.setOnDismissListener(d -> optionManager.removeListener(optionListener));
+        dialog.setOnDismissListener(d -> {
+            optionManager.removeListener(optionListener);
+            partyManager.removeListener(partyListener);
+        });
         dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Done", (d, which) -> {
         });
         dialog.show();
+    }
+
+    // New method to add candidate for selected party
+    private void showAddCandidateForPartyDialog(Election election, VotingOptionManager optionManager, Party party) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Add Candidate for " + party.getName());
+
+        View view = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_list_item_1, null);
+        EditText etCandidateName = new EditText(getContext());
+        etCandidateName.setHint("Enter candidate name");
+        etCandidateName.setPadding(40, 40, 40, 40);
+        builder.setView(etCandidateName);
+
+        builder.setPositiveButton("Add", (dialog, which) -> {
+            String candidateName = etCandidateName.getText().toString().trim();
+
+            if (candidateName.isEmpty()) {
+                Toast.makeText(getContext(), "Please enter candidate name", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Create voting option with party details
+            String id = java.util.UUID.randomUUID().toString();
+            VotingOption option = new VotingOption(id, election.getId(), candidateName,
+                    party.getName(), party.getLogoPath());
+            optionManager.addOption(option);
+            Toast.makeText(getContext(), "Added " + candidateName + " (" + party.getName() + ")",
+                    Toast.LENGTH_SHORT).show();
+        });
+
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
     }
 
     private void showAddVotingOptionDialog(Election election, VotingOptionManager optionManager,

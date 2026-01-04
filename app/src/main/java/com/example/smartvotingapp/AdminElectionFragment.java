@@ -262,80 +262,167 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
         EditText etOptionName = view.findViewById(R.id.etOptionName);
         EditText etOptionDescription = view.findViewById(R.id.etOptionDescription);
 
-        // Load Parties
+        // Initialize Party Manager
         PartyManager partyManager = new PartyManager(getContext());
-        List<Party> parties = partyManager.getAllParties();
 
-        List<String> partyNames = new java.util.ArrayList<>();
-        partyNames.add("Select a Party (Optional)");
-        for (Party p : parties) {
-            partyNames.add(p.getName());
-        }
+        // Create lists for party data
+        final List<Party> parties = new java.util.ArrayList<>();
+        final List<String> partyNames = new java.util.ArrayList<>();
 
-        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(getContext(),
-                android.R.layout.simple_spinner_item, partyNames);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Create adapter with custom layout
+        final android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(getContext(),
+                R.layout.spinner_party_item, partyNames);
+        adapter.setDropDownViewResource(R.layout.spinner_party_item);
         spinnerParties.setAdapter(adapter);
+
+        // Function to load parties
+        final Runnable loadParties = () -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    parties.clear();
+                    partyNames.clear();
+
+                    partyNames.add("-- Select a Party --");
+
+                    List<Party> allParties = partyManager.getAllParties();
+                    if (allParties != null && !allParties.isEmpty()) {
+                        parties.addAll(allParties);
+                        for (Party p : allParties) {
+                            String displayName = p.getName();
+                            if (p.getSymbol() != null && !p.getSymbol().isEmpty()) {
+                                displayName = p.getSymbol() + " " + p.getName();
+                            }
+                            partyNames.add(displayName);
+                        }
+                    } else {
+                        partyNames.add("No parties available - Add parties in Parties fragment");
+                    }
+
+                    adapter.notifyDataSetChanged();
+                });
+            }
+        };
+
+        // Load parties initially
+        loadParties.run();
+
+        // Add listener for real-time party updates
+        PartyManager.PartyUpdateListener partyListener = loadParties::run;
+        partyManager.addListener(partyListener);
 
         // Pre-fill if editing
         final String[] selectedLogoPath = { null };
+        final String[] selectedPartyId = { null };
+
         if (existingOption != null) {
             etOptionName.setText(existingOption.getOptionName());
             etOptionDescription.setText(existingOption.getDescription());
             selectedLogoPath[0] = existingOption.getLogoPath();
+
+            // Try to find and select the matching party
+            String existingPartyName = existingOption.getDescription();
+            if (existingPartyName != null && !existingPartyName.isEmpty()) {
+                for (int i = 0; i < parties.size(); i++) {
+                    if (parties.get(i).getName().equals(existingPartyName)) {
+                        spinnerParties.setSelection(i + 1); // +1 because of "Select a Party" at index 0
+                        selectedPartyId[0] = parties.get(i).getId();
+                        break;
+                    }
+                }
+            }
         }
 
-        // Handle Selection
+        // Handle Party Selection
         spinnerParties.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
-                if (position > 0) {
+                if (position > 0 && position <= parties.size()) {
+                    // Valid party selected
                     Party selectedParty = parties.get(position - 1);
-                    // Set Party Name in Description field
+
+                    // Auto-fill party name in description field
                     etOptionDescription.setText(selectedParty.getName());
                     selectedLogoPath[0] = selectedParty.getLogoPath();
+                    selectedPartyId[0] = selectedParty.getId();
+
+                    // Show a subtle confirmation
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(),
+                                "Selected: " + selectedParty.getName(),
+                                Toast.LENGTH_SHORT).show();
+                    }
                 } else {
+                    // "Select a Party" or invalid option selected
                     if (existingOption == null) {
                         etOptionDescription.setText("");
                         selectedLogoPath[0] = null;
+                        selectedPartyId[0] = null;
                     }
                 }
             }
 
             @Override
             public void onNothingSelected(android.widget.AdapterView<?> parent) {
+                // Do nothing
             }
         });
 
-        builder.setPositiveButton(existingOption == null ? "Add" : "Update", (dialog, which) -> {
+        // Set up buttons before creating dialog
+        builder.setPositiveButton(existingOption == null ? "Add" : "Update", null); // Set to null initially
+        builder.setNegativeButton("Cancel", (d, which) -> {
+            // Remove listener when dialog is cancelled
+            partyManager.removeListener(partyListener);
+        });
+
+        // Create the dialog
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Override the positive button to prevent auto-dismiss on validation errors
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             String candidateName = etOptionName.getText().toString().trim();
             String partyName = etOptionDescription.getText().toString().trim();
 
+            // Validation
             if (candidateName.isEmpty()) {
-                Toast.makeText(getContext(), "Candidate name is required", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Please enter candidate name", Toast.LENGTH_SHORT).show();
+                etOptionName.requestFocus();
                 return;
             }
 
             if (partyName.isEmpty()) {
-                Toast.makeText(getContext(), "Please select a party", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Please select a party from the dropdown", Toast.LENGTH_SHORT).show();
                 return;
             }
 
+            // Check if a valid party was selected
+            if (selectedPartyId[0] == null) {
+                Toast.makeText(getContext(), "Please select a valid party from the list", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Save the voting option
             if (existingOption == null) {
                 // Add new option
                 String id = java.util.UUID.randomUUID().toString();
                 VotingOption option = new VotingOption(id, election.getId(), candidateName, partyName,
                         selectedLogoPath[0]);
                 optionManager.addOption(option);
+                Toast.makeText(getContext(), "Voting option added successfully", Toast.LENGTH_SHORT).show();
             } else {
                 // Update existing option
                 VotingOption updatedOption = new VotingOption(existingOption.getId(), election.getId(), candidateName,
                         partyName, selectedLogoPath[0]);
                 optionManager.updateOption(updatedOption);
+                Toast.makeText(getContext(), "Voting option updated successfully", Toast.LENGTH_SHORT).show();
             }
+
+            // Remove listener and dismiss dialog
+            partyManager.removeListener(partyListener);
+            dialog.dismiss();
         });
 
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+        // Remove listener when dialog is dismissed
+        dialog.setOnDismissListener(d -> partyManager.removeListener(partyListener));
     }
 }

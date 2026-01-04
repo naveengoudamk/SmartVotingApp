@@ -229,7 +229,7 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
 
                                 if (btnEdit != null) {
                                     btnEdit.setOnClickListener(v -> {
-                                        showAddVotingOptionDialog(election, optionManager, option);
+                                        showAddVotingOptionDialog(election, optionManager, partyManager, option);
                                     });
                                 }
 
@@ -326,7 +326,7 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
     }
 
     private void showAddVotingOptionDialog(Election election, VotingOptionManager optionManager,
-            VotingOption existingOption) {
+            PartyManager partyManager, VotingOption existingOption) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_voting_option, null);
         builder.setView(view);
@@ -336,9 +336,6 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
         android.widget.Spinner spinnerParties = view.findViewById(R.id.spinnerParties);
         EditText etOptionName = view.findViewById(R.id.etOptionName);
         EditText etOptionDescription = view.findViewById(R.id.etOptionDescription);
-
-        // Initialize Party Manager
-        PartyManager partyManager = new PartyManager(getContext());
 
         // Create lists for party data
         final List<Party> parties = new java.util.ArrayList<>();
@@ -382,7 +379,9 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
         loadParties.run();
 
         // Add listener for real-time party updates
-        PartyManager.PartyUpdateListener partyListener = loadParties::run;
+        PartyManager.PartyUpdateListener partyListener = () -> {
+            loadParties.run();
+        };
         partyManager.addListener(partyListener);
 
         // Pre-fill if editing
@@ -394,12 +393,17 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
             etOptionDescription.setText(existingOption.getDescription());
             selectedLogoPath[0] = existingOption.getLogoPath();
 
-            // Try to find and select the matching party
+            // Try to find and select the matching party by name
             String existingPartyName = existingOption.getDescription();
             if (existingPartyName != null && !existingPartyName.isEmpty()) {
+                // Determine selection index
+                // Note: parties list might update async, but since we passed partyManager with
+                // data,
+                // loadParties.run() populated 'parties' list synchronously on UI thread if data
+                // was ready.
                 for (int i = 0; i < parties.size(); i++) {
                     if (parties.get(i).getName().equals(existingPartyName)) {
-                        spinnerParties.setSelection(i + 1); // +1 because of "Select a Party" at index 0
+                        spinnerParties.setSelection(i + 1); // +1 because of header
                         selectedPartyId[0] = parties.get(i).getId();
                         break;
                     }
@@ -415,19 +419,16 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
                     // Valid party selected
                     Party selectedParty = parties.get(position - 1);
 
-                    // Auto-fill party name in description field
+                    // Auto-fill details
                     etOptionDescription.setText(selectedParty.getName());
                     selectedLogoPath[0] = selectedParty.getLogoPath();
                     selectedPartyId[0] = selectedParty.getId();
 
-                    // Show a subtle confirmation
                     if (getContext() != null) {
-                        Toast.makeText(getContext(),
-                                "Selected: " + selectedParty.getName(),
-                                Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Selected: " + selectedParty.getName(), Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    // "Select a Party" or invalid option selected
+                    // Invalid/Header selected
                     if (existingOption == null) {
                         etOptionDescription.setText("");
                         selectedLogoPath[0] = null;
@@ -438,66 +439,71 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
 
             @Override
             public void onNothingSelected(android.widget.AdapterView<?> parent) {
-                // Do nothing
             }
         });
 
-        // Set up buttons before creating dialog
-        builder.setPositiveButton(existingOption == null ? "Add" : "Update", null); // Set to null initially
+        // Set buttons - Positive is null initially to override later
+        builder.setPositiveButton(existingOption == null ? "Add" : "Update", null);
         builder.setNegativeButton("Cancel", (d, which) -> {
-            // Remove listener when dialog is cancelled
             partyManager.removeListener(partyListener);
         });
 
-        // Create the dialog
-        final AlertDialog dialog = builder.create();
+        AlertDialog dialog = builder.create();
+        dialog.setOnDismissListener(d -> partyManager.removeListener(partyListener));
         dialog.show();
 
-        // Override the positive button to prevent auto-dismiss on validation errors
+        // Override Positive Button to prevent auto-dismiss on error
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             String candidateName = etOptionName.getText().toString().trim();
             String partyName = etOptionDescription.getText().toString().trim();
 
-            // Validation
             if (candidateName.isEmpty()) {
-                Toast.makeText(getContext(), "Please enter candidate name", Toast.LENGTH_SHORT).show();
-                etOptionName.requestFocus();
+                Toast.makeText(getContext(), "Candidate name is required", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (partyName.isEmpty()) {
-                Toast.makeText(getContext(), "Please select a party from the dropdown", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Please select a party", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Check if a valid party was selected
-            if (selectedPartyId[0] == null) {
-                Toast.makeText(getContext(), "Please select a valid party from the list", Toast.LENGTH_SHORT).show();
-                return;
+            // Only enforce strictly selected party if it's not an edit or if logic demands
+            // it.
+            // For now, if partyName is filled but selectedPartyId is null, it might be
+            // manual entry (if enabled)
+            // but we disabled manual entry. So valid selection is required.
+            if (selectedPartyId[0] == null && existingOption == null) {
+                // Try to see if partyName matches any loaded party (in case of re-selection
+                // logic weirdness)
+                boolean matchFound = false;
+                for (Party p : parties) {
+                    if (p.getName().equalsIgnoreCase(partyName)) {
+                        selectedLogoPath[0] = p.getLogoPath();
+                        matchFound = true;
+                        break;
+                    }
+                }
+                if (!matchFound) {
+                    Toast.makeText(getContext(), "Please select a valid party from the list", Toast.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
             }
 
-            // Save the voting option
             if (existingOption == null) {
-                // Add new option
                 String id = java.util.UUID.randomUUID().toString();
                 VotingOption option = new VotingOption(id, election.getId(), candidateName, partyName,
                         selectedLogoPath[0]);
                 optionManager.addOption(option);
-                Toast.makeText(getContext(), "Voting option added successfully", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Voting option added", Toast.LENGTH_SHORT).show();
             } else {
-                // Update existing option
                 VotingOption updatedOption = new VotingOption(existingOption.getId(), election.getId(), candidateName,
                         partyName, selectedLogoPath[0]);
                 optionManager.updateOption(updatedOption);
-                Toast.makeText(getContext(), "Voting option updated successfully", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Voting option updated", Toast.LENGTH_SHORT).show();
             }
 
-            // Remove listener and dismiss dialog
-            partyManager.removeListener(partyListener);
             dialog.dismiss();
         });
-
-        // Remove listener when dialog is dismissed
-        dialog.setOnDismissListener(d -> partyManager.removeListener(partyListener));
     }
 }

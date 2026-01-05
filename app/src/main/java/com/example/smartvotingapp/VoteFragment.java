@@ -14,12 +14,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class VoteFragment extends Fragment implements ElectionManager.ElectionUpdateListener {
+public class VoteFragment extends Fragment
+        implements ElectionManager.ElectionUpdateListener, VoteManager.VoteUpdateListener {
 
     private RecyclerView recyclerView;
     private List<Election> electionList;
     private ElectionAdapter adapter;
     private ElectionManager electionManager;
+    private VoteManager voteManager;
 
     @Nullable
     @Override
@@ -34,9 +36,15 @@ public class VoteFragment extends Fragment implements ElectionManager.ElectionUp
             electionManager = new ElectionManager(getContext());
             electionManager.addListener(this);
 
+            voteManager = new VoteManager(getContext());
+            voteManager.addListener(this);
+
             electionList = electionManager.getAllElections();
 
-            adapter = new ElectionAdapter(electionList, this::checkEligibility);
+            User user = UserUtils.getCurrentUser(getContext());
+            String userId = user != null ? user.getAadhaarId() : null;
+
+            adapter = new ElectionAdapter(electionList, voteManager, userId, this::checkEligibility);
             recyclerView.setAdapter(adapter);
 
             return view;
@@ -53,6 +61,9 @@ public class VoteFragment extends Fragment implements ElectionManager.ElectionUp
         if (electionManager != null) {
             electionManager.removeListener(this);
         }
+        if (voteManager != null) {
+            voteManager.removeListener(this);
+        }
     }
 
     @Override
@@ -61,6 +72,17 @@ public class VoteFragment extends Fragment implements ElectionManager.ElectionUp
             getActivity().runOnUiThread(() -> {
                 electionList.clear();
                 electionList.addAll(electionManager.getAllElections());
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onVotesUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
                 if (adapter != null) {
                     adapter.notifyDataSetChanged();
                 }
@@ -103,6 +125,16 @@ public class VoteFragment extends Fragment implements ElectionManager.ElectionUp
             CustomAlert.showError(getContext(), "Not Eligible",
                     "This election is for residents of " + electionState + " only.\nYour registered state is "
                             + userState + ".");
+            return;
+        }
+
+        // Double check if voted (just in case)
+        if (voteManager.hasUserVoted(user.getAadhaarId(), election.getId())) {
+            new androidx.appcompat.app.AlertDialog.Builder(getContext())
+                    .setTitle("Election ID: " + election.getId())
+                    .setMessage("You have already voted in this election!")
+                    .setPositiveButton("OK", null)
+                    .show();
             return;
         }
 

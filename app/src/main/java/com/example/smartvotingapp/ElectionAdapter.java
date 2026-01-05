@@ -14,13 +14,18 @@ public class ElectionAdapter extends RecyclerView.Adapter<ElectionAdapter.ViewHo
 
     private List<Election> elections;
     private OnElectionClickListener listener;
+    private VoteManager voteManager;
+    private String currentUserId;
 
     public interface OnElectionClickListener {
         void onElectionClick(Election election);
     }
 
-    public ElectionAdapter(List<Election> elections, OnElectionClickListener listener) {
+    public ElectionAdapter(List<Election> elections, VoteManager voteManager, String userId,
+            OnElectionClickListener listener) {
         this.elections = elections;
+        this.voteManager = voteManager;
+        this.currentUserId = userId;
         this.listener = listener;
     }
 
@@ -42,43 +47,65 @@ public class ElectionAdapter extends RecyclerView.Adapter<ElectionAdapter.ViewHo
         holder.status.setText(election.getStatus());
 
         // Style status based on value
-        // Style status based on value
         String status = election.getStatus().toLowerCase();
-        if (status.equals("running") || status.equals("active") || status.equals("open")) {
+
+        // Default click listener for normal 'Vote Now'
+        android.view.View.OnClickListener voteClickListener = v -> {
+            if (listener != null) {
+                listener.onElectionClick(election);
+            }
+        };
+
+        if (status.contains("result")) {
+            holder.status.setTextColor(0xFF2563EB); // Blue
+            holder.status.setBackgroundResource(R.drawable.bg_status_active); // Consider specialized bg
+            holder.status.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFDBEAFE)); // Light Blue
+            holder.btnVote.setEnabled(false);
+            holder.btnVote.setAlpha(1.0f);
+            holder.btnVote.setText("Results Out");
+            holder.btnVote.setOnClickListener(null); // No action
+        } else if (status.equals("closed")) {
+            holder.status.setTextColor(0xFFDC2626); // Red
+            holder.status.setBackgroundResource(R.drawable.bg_status_active);
+            holder.status.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFEE2E2)); // Light Red
+            holder.btnVote.setEnabled(false);
+            holder.btnVote.setAlpha(0.5f);
+            holder.btnVote.setText("Closed");
+            holder.btnVote.setOnClickListener(null);
+        } else if (voteManager != null && currentUserId != null
+                && voteManager.hasUserVoted(currentUserId, election.getId())) {
+            // USER HAS ALREADY VOTED
+            holder.status.setTextColor(0xFF059669); // Green (or keep as is)
+            holder.status.setBackgroundResource(R.drawable.bg_status_active);
+
+            holder.btnVote.setEnabled(true);
+            holder.btnVote.setAlpha(1.0f);
+            holder.btnVote.setText("Vote Recorded");
+            // holder.btnVote.setBackgroundTintList(...) // Optionally change color to
+            // something distinctive
+
+            holder.btnVote.setOnClickListener(v -> {
+                new androidx.appcompat.app.AlertDialog.Builder(holder.itemView.getContext())
+                        .setTitle("Election ID: " + election.getId())
+                        .setMessage("You have already voted in this election!")
+                        .setPositiveButton("OK", null)
+                        .show();
+            });
+        } else {
+            // Running/Active and NOT voted
             holder.status.setTextColor(0xFF059669); // Green
             holder.status.setBackgroundResource(R.drawable.bg_status_active);
             holder.btnVote.setEnabled(true);
             holder.btnVote.setAlpha(1.0f);
             holder.btnVote.setText("Vote Now");
-        } else if (status.contains("result")) {
-            holder.status.setTextColor(0xFF2563EB); // Blue
-            holder.status.setBackgroundResource(R.drawable.bg_status_active);
-            holder.status.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFDBEAFE)); // Light Blue
-            holder.btnVote.setEnabled(false);
-            holder.btnVote.setAlpha(1.0f); // Keep visible
-            holder.btnVote.setText("Results Out");
-        } else {
-            holder.status.setTextColor(0xFFDC2626); // Red
-            // Create a red background or just reuse/tint
-            holder.status.setBackgroundResource(R.drawable.bg_status_active); // Ideally different bg
-            holder.status.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFEE2E2)); // Light Red
-            holder.btnVote.setEnabled(false);
-            holder.btnVote.setAlpha(0.5f);
-            holder.btnVote.setText("Closed");
+            holder.btnVote.setOnClickListener(voteClickListener);
         }
 
-        holder.btnVote.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onElectionClick(election);
-            }
-        });
-
-        // Also make the whole card clickable
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null && holder.btnVote.isEnabled()) {
-                listener.onElectionClick(election);
-            }
-        });
+        // Also make the whole card clickable acts as 'Vote Now' only if eligible?
+        // If voted, card click should generally do nothing or show same popup?
+        // Let's stick to btnVote handling specific actions.
+        // If we want card click to work:
+        holder.itemView.setOnClickListener(v -> holder.btnVote.performClick());
     }
 
     @Override

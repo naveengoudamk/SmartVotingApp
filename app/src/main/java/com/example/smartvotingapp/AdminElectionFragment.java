@@ -188,12 +188,83 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
 
         TextView tvElectionTitle = view.findViewById(R.id.tvElectionTitle);
         LinearLayout optionsContainer = view.findViewById(R.id.optionsContainer);
-        LinearLayout partiesContainer = view.findViewById(R.id.partiesContainer);
+
+        // New Inline Add Form Views
+        android.widget.Spinner spinnerNewParty = view.findViewById(R.id.spinnerNewParty);
+        EditText etNewCandidateName = view.findViewById(R.id.etNewCandidateName);
+        EditText etNewPartyName = view.findViewById(R.id.etNewPartyName);
+        Button btnQuickAdd = view.findViewById(R.id.btnQuickAdd);
 
         tvElectionTitle.setText("Manage Options: " + election.getTitle());
 
         VotingOptionManager optionManager = new VotingOptionManager(getContext());
         PartyManager partyManager = new PartyManager(getContext());
+
+        // Setup Spinner
+        final List<Party> parties = new java.util.ArrayList<>();
+        final List<String> partyNames = new java.util.ArrayList<>();
+        final android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(getContext(),
+                android.R.layout.simple_spinner_item, partyNames);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerNewParty.setAdapter(adapter);
+
+        // Spinner Selection Logic
+        final String[] selectedLogoPath = { null };
+        spinnerNewParty.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                if (position > 0 && position <= parties.size()) {
+                    Party selectedParty = parties.get(position - 1);
+                    etNewPartyName.setText(selectedParty.getName());
+                    selectedLogoPath[0] = selectedParty.getLogoPath();
+                } else {
+                    // "Select Party" selected
+                    // Don't clear manually entered text if user is just switching back
+                    if (selectedLogoPath[0] != null) { // Only clear if we previously selected a party
+                        etNewPartyName.setText("");
+                        selectedLogoPath[0] = null;
+                    }
+                }
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+            }
+        });
+
+        // Quick Add Button Logic
+        btnQuickAdd.setOnClickListener(v -> {
+            String candidateName = etNewCandidateName.getText().toString().trim();
+            String partyName = etNewPartyName.getText().toString().trim();
+
+            if (candidateName.isEmpty()) {
+                Toast.makeText(getContext(), "Candidate name is required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (partyName.isEmpty()) {
+                Toast.makeText(getContext(), "Party name is required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String id = java.util.UUID.randomUUID().toString();
+            VotingOption option = new VotingOption(id, election.getId(), candidateName, partyName, selectedLogoPath[0]);
+            optionManager.addOption(option);
+
+            // Reset form
+            etNewCandidateName.setText("");
+            if (spinnerNewParty.getSelectedItemPosition() > 0) {
+                // Keep party selected? User might want to add multiple candidates for same
+                // party?
+                // Or reset? Let's reset for clarity.
+                spinnerNewParty.setSelection(0);
+                etNewPartyName.setText("");
+            } else {
+                etNewPartyName.setText("");
+            }
+            selectedLogoPath[0] = null;
+
+            Toast.makeText(getContext(), "Option Added", Toast.LENGTH_SHORT).show();
+        });
 
         // Create listener for real-time voting options updates
         VotingOptionManager.VotingOptionUpdateListener optionListener = new VotingOptionManager.VotingOptionUpdateListener() {
@@ -206,7 +277,7 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
 
                         if (options.isEmpty()) {
                             TextView emptyView = new TextView(getContext());
-                            emptyView.setText("No voting options yet.\nSelect parties from right →");
+                            emptyView.setText("No options added yet.");
                             emptyView.setPadding(20, 20, 20, 20);
                             emptyView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                             optionsContainer.addView(emptyView);
@@ -224,7 +295,14 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
                                 tvOptionDescription.setText(option.getDescription());
 
                                 btnDelete.setOnClickListener(v -> {
-                                    optionManager.deleteOption(option.getId());
+                                    new AlertDialog.Builder(getContext())
+                                            .setTitle("Delete Option")
+                                            .setMessage(
+                                                    "Are you sure you want to delete " + option.getOptionName() + "?")
+                                            .setPositiveButton("Delete",
+                                                    (d, w) -> optionManager.deleteOption(option.getId()))
+                                            .setNegativeButton("Cancel", null)
+                                            .show();
                                 });
 
                                 if (btnEdit != null) {
@@ -242,41 +320,20 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
         };
 
         // Create listener for real-time party updates
-        PartyManager.PartyUpdateListener partyListener = new PartyManager.PartyUpdateListener() {
-            @Override
-            public void onPartiesUpdated() {
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> {
-                        partiesContainer.removeAllViews();
-                        List<Party> parties = partyManager.getAllParties();
-
-                        if (parties.isEmpty()) {
-                            TextView emptyView = new TextView(getContext());
-                            emptyView.setText("No parties available.\nAdd parties in Parties tab");
-                            emptyView.setPadding(20, 20, 20, 20);
-                            emptyView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                            partiesContainer.addView(emptyView);
-                        } else {
-                            for (Party party : parties) {
-                                View partyView = LayoutInflater.from(getContext()).inflate(
-                                        R.layout.item_party_selectable, partiesContainer, false);
-
-                                TextView tvPartyName = partyView.findViewById(R.id.tvPartyName);
-                                TextView tvPartySymbol = partyView.findViewById(R.id.tvPartySymbol);
-
-                                tvPartyName.setText(party.getName());
-                                tvPartySymbol.setText(party.getSymbol() != null ? party.getSymbol() : "");
-
-                                // Click to add this party as a voting option
-                                partyView.setOnClickListener(v -> {
-                                    showAddCandidateForPartyDialog(election, optionManager, party);
-                                });
-
-                                partiesContainer.addView(partyView);
-                            }
-                        }
-                    });
-                }
+        PartyManager.PartyUpdateListener partyListener = () -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    parties.clear();
+                    partyNames.clear();
+                    partyNames.add("Select Party (Optional)");
+                    List<Party> loaded = partyManager.getAllParties();
+                    if (loaded != null) {
+                        parties.addAll(loaded);
+                        for (Party p : loaded)
+                            partyNames.add(p.getName());
+                    }
+                    adapter.notifyDataSetChanged();
+                });
             }
         };
 
@@ -291,38 +348,6 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
         dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Done", (d, which) -> {
         });
         dialog.show();
-    }
-
-    // New method to add candidate for selected party
-    private void showAddCandidateForPartyDialog(Election election, VotingOptionManager optionManager, Party party) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Add Candidate for " + party.getName());
-
-        View view = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_list_item_1, null);
-        EditText etCandidateName = new EditText(getContext());
-        etCandidateName.setHint("Enter candidate name");
-        etCandidateName.setPadding(40, 40, 40, 40);
-        builder.setView(etCandidateName);
-
-        builder.setPositiveButton("Add", (dialog, which) -> {
-            String candidateName = etCandidateName.getText().toString().trim();
-
-            if (candidateName.isEmpty()) {
-                Toast.makeText(getContext(), "Please enter candidate name", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // Create voting option with party details
-            String id = java.util.UUID.randomUUID().toString();
-            VotingOption option = new VotingOption(id, election.getId(), candidateName,
-                    party.getName(), party.getLogoPath());
-            optionManager.addOption(option);
-            Toast.makeText(getContext(), "Added " + candidateName + " (" + party.getName() + ")",
-                    Toast.LENGTH_SHORT).show();
-        });
-
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
     }
 
     private void showAddVotingOptionDialog(Election election, VotingOptionManager optionManager,

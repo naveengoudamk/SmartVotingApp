@@ -1,16 +1,19 @@
 package com.example.smartvotingapp;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import java.io.*;
+
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,7 +23,14 @@ import java.util.Map;
 
 public class HistoryFragment extends Fragment {
 
-    private RecyclerView rvHistory;
+    private RecyclerView rvHistory, rvWinnerSummary;
+    private ElectionManager electionManager;
+    private VoteManager voteManager;
+    private VotingOptionManager optionManager;
+    private List<Election> electionList = new ArrayList<>();
+    private List<WinnerSummary> winnerList = new ArrayList<>();
+    private HistoryAdapter historyAdapter;
+    private WinnerSummaryAdapter winnerAdapter;
 
     public HistoryFragment() {
     }
@@ -33,48 +43,225 @@ public class HistoryFragment extends Fragment {
             rvHistory = view.findViewById(R.id.rvHistory);
             rvHistory.setLayoutManager(new LinearLayoutManager(getContext()));
 
-            loadHistory();
+            rvWinnerSummary = view.findViewById(R.id.rvWinnerSummary);
+            rvWinnerSummary
+                    .setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+
+            electionManager = new ElectionManager(getContext());
+            voteManager = new VoteManager(getContext());
+            optionManager = new VotingOptionManager(getContext());
+
+            // Initialize Adapters
+            historyAdapter = new HistoryAdapter(electionList, getContext(), voteManager, optionManager);
+            rvHistory.setAdapter(historyAdapter);
+
+            winnerAdapter = new WinnerSummaryAdapter(winnerList);
+            rvWinnerSummary.setAdapter(winnerAdapter);
+
+            // Listeners to refresh data
+            Runnable refreshRunnable = () -> {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(this::updateData);
+                }
+            };
+
+            electionManager.addListener(new ElectionManager.ElectionUpdateListener() {
+                @Override
+                public void onElectionsUpdated() {
+                    refreshRunnable.run();
+                }
+            });
+            voteManager.addListener(() -> refreshRunnable.run());
+            optionManager.addListener(new VotingOptionManager.VotingOptionUpdateListener() {
+                @Override
+                public void onVotingOptionsUpdated() {
+                    refreshRunnable.run();
+                }
+            });
+
+            // Initial load check
+            updateData();
 
             return view;
         } catch (Exception e) {
             e.printStackTrace();
-            android.widget.Toast.makeText(getContext(), "Error loading history: " + e.getMessage(),
+            android.widget.Toast.makeText(getContext(), "Error: " + e.getMessage(),
                     android.widget.Toast.LENGTH_SHORT).show();
             return new View(getContext());
         }
     }
 
-    private void loadHistory() {
-        ElectionManager electionManager = new ElectionManager(getContext());
-        List<Election> elections = electionManager.getAllElections();
+    private void updateData() {
+        if (!isAdded())
+            return;
+        electionList.clear();
+        electionList.addAll(electionManager.getAllElections());
+        historyAdapter.notifyDataSetChanged();
 
-        HistoryAdapter adapter = new HistoryAdapter(elections, getContext());
-        rvHistory.setAdapter(adapter);
-    }
+        // Calculate Winners for Top Bar
+        winnerList.clear();
+        for (Election election : electionList) {
+            if (isElectionDeclared(election)) {
+                WinnerSummary winner = calculateWinner(election);
+                if (winner != null) {
+                    winnerList.add(winner);
+                }
+            }
+        }
+        winnerAdapter.notifyDataSetChanged();
 
-    private String readFile(String filename) {
-        File file = new File(getContext().getFilesDir(), filename);
-        if (!file.exists())
-            return null;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            return reader.readLine();
-        } catch (IOException e) {
-            return null;
+        if (winnerList.isEmpty()) {
+            rvWinnerSummary.setVisibility(View.GONE);
+        } else {
+            rvWinnerSummary.setVisibility(View.VISIBLE);
         }
     }
 
-    // Inner Adapter Class
-    private static class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder> {
+    private boolean isElectionDeclared(Election election) {
+        // Date check logic
+        String resultDateStr = election.getResultDate();
+        if ("Results Announced".equalsIgnoreCase(election.getStatus()))
+            return true;
 
+        if (resultDateStr != null && !resultDateStr.isEmpty()) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                Date resultDate = sdf.parse(resultDateStr);
+
+                java.util.Calendar today = java.util.Calendar.getInstance();
+                today.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                today.set(java.util.Calendar.MINUTE, 0);
+                today.set(java.util.Calendar.SECOND, 0);
+                today.set(java.util.Calendar.MILLISECOND, 0);
+
+                java.util.Calendar resultCal = java.util.Calendar.getInstance();
+                resultCal.setTime(resultDate);
+                resultCal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                resultCal.set(java.util.Calendar.MINUTE, 0);
+                resultCal.set(java.util.Calendar.SECOND, 0);
+                resultCal.set(java.util.Calendar.MILLISECOND, 0);
+
+                if (!today.before(resultCal))
+                    return true;
+            } catch (Exception e) {
+            }
+        }
+        return false;
+    }
+
+    private WinnerSummary calculateWinner(Election election) {
+        Map<String, Integer> voteCounts = voteManager.getVoteCountsByElection(election.getId());
+        List<VotingOption> options = optionManager.getOptionsByElection(election.getId());
+
+        if (options.isEmpty())
+            return null;
+
+        String winnerParty = "";
+        String logoPath = null;
+        int maxVotes = -1;
+        boolean tie = false;
+
+        for (VotingOption option : options) {
+            int count = voteCounts.getOrDefault(option.getId(), 0);
+            if (count > maxVotes) {
+                maxVotes = count;
+                winnerParty = option.getDescription();
+                logoPath = option.getLogoPath();
+                tie = false;
+            } else if (count == maxVotes) {
+                tie = true;
+            }
+        }
+
+        if (maxVotes > 0 && !tie) {
+            return new WinnerSummary(election.getState(), winnerParty, logoPath);
+        }
+        return null;
+    }
+
+    private static class WinnerSummary {
+        String state, party, logo;
+
+        public WinnerSummary(String state, String party, String logo) {
+            this.state = state;
+            this.party = party;
+            this.logo = logo;
+        }
+    }
+
+    private static class WinnerSummaryAdapter extends RecyclerView.Adapter<WinnerSummaryAdapter.ViewHolder> {
+        List<WinnerSummary> list;
+
+        public WinnerSummaryAdapter(List<WinnerSummary> list) {
+            this.list = list;
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_winner_summary, parent, false);
+            return new ViewHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            WinnerSummary w = list.get(position);
+            holder.tvState.setText(w.state);
+            holder.tvParty.setText(w.party);
+
+            if (w.logo != null) {
+                try {
+                    File file = new File(holder.itemView.getContext().getFilesDir(), w.logo); // Assume filename
+                    if (file.exists()) {
+                        android.graphics.Bitmap bitmap = android.graphics.BitmapFactory
+                                .decodeFile(file.getAbsolutePath());
+                        holder.imgLogo.setImageBitmap(bitmap);
+                    } else {
+                        // Try as absolute path
+                        file = new File(w.logo);
+                        if (file.exists()) {
+                            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory
+                                    .decodeFile(file.getAbsolutePath());
+                            holder.imgLogo.setImageBitmap(bitmap);
+                        } else {
+                            holder.imgLogo.setImageResource(R.drawable.ic_vote);
+                        }
+                    }
+                } catch (Exception e) {
+                    holder.imgLogo.setImageResource(R.drawable.ic_vote);
+                }
+            } else {
+                holder.imgLogo.setImageResource(R.drawable.ic_vote);
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return list.size();
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView tvState, tvParty;
+            android.widget.ImageView imgLogo;
+
+            public ViewHolder(View v) {
+                super(v);
+                tvState = v.findViewById(R.id.tvState);
+                tvParty = v.findViewById(R.id.tvWinnerParty);
+                imgLogo = v.findViewById(R.id.imgWinnerLogo);
+            }
+        }
+    }
+
+    private static class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder> {
         private List<Election> elections;
         private VoteManager voteManager;
         private VotingOptionManager optionManager;
 
-        public HistoryAdapter(List<Election> elections, android.content.Context context) {
+        public HistoryAdapter(List<Election> elections, android.content.Context context, VoteManager vm,
+                VotingOptionManager vom) {
             this.elections = elections;
-            this.voteManager = new VoteManager(context);
-            this.optionManager = new VotingOptionManager(context);
+            this.voteManager = vm;
+            this.optionManager = vom;
         }
 
         @NonNull
@@ -91,8 +278,6 @@ public class HistoryFragment extends Fragment {
             holder.tvTitle.setText(election.getTitle());
 
             boolean isDeclared = false;
-
-            // Check if this election has a result date set
             String resultDateStr = election.getResultDate();
             Date resultDate = null;
 
@@ -100,15 +285,12 @@ public class HistoryFragment extends Fragment {
                 try {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                     resultDate = sdf.parse(resultDateStr);
-
-                    // Get today's date at midnight for proper comparison
                     java.util.Calendar today = java.util.Calendar.getInstance();
                     today.set(java.util.Calendar.HOUR_OF_DAY, 0);
                     today.set(java.util.Calendar.MINUTE, 0);
                     today.set(java.util.Calendar.SECOND, 0);
                     today.set(java.util.Calendar.MILLISECOND, 0);
 
-                    // Get result date at midnight
                     java.util.Calendar resultCal = java.util.Calendar.getInstance();
                     resultCal.setTime(resultDate);
                     resultCal.set(java.util.Calendar.HOUR_OF_DAY, 0);
@@ -116,121 +298,86 @@ public class HistoryFragment extends Fragment {
                     resultCal.set(java.util.Calendar.SECOND, 0);
                     resultCal.set(java.util.Calendar.MILLISECOND, 0);
 
-                    // Results are declared if today is on or after the result date
-                    if (!today.before(resultCal)) {
+                    if (!today.before(resultCal))
                         isDeclared = true;
-                    }
                 } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
-
-            // Override declared check with explicit status
-            if ("Results Announced".equalsIgnoreCase(election.getStatus())) {
+            if ("Results Announced".equalsIgnoreCase(election.getStatus()))
                 isDeclared = true;
-            }
 
             if (isDeclared) {
                 holder.tvStatusBadge.setText("Declared");
-                holder.tvStatusBadge.setTextColor(0xFF059669); // Green
-                holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_status_active); // Reuse green bg
-                if (resultDate != null) {
-                    holder.tvDate.setText("Results declared on: "
-                            + new SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(resultDate));
-                } else {
-                    holder.tvDate.setText("Results declared");
-                }
+                holder.tvStatusBadge.setTextColor(0xFF059669);
+                holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_status_active);
+                holder.tvDate.setText("Results declared" + (resultDate != null ? " on: " + resultDateStr : ""));
 
                 holder.layoutResults.setVisibility(View.VISIBLE);
                 holder.layoutWaiting.setVisibility(View.GONE);
 
-                // Calculate and show results
+                holder.confettiView.setVisibility(View.VISIBLE);
+                holder.confettiView.startAnimation();
+
                 Map<String, Integer> voteCounts = voteManager.getVoteCountsByElection(election.getId());
                 List<VotingOption> options = optionManager.getOptionsByElection(election.getId());
 
                 if (options.isEmpty()) {
-                    holder.tvResultSummary.setText("No candidates/options found.");
+                    holder.tvResultSummary.setText("No candidates.");
                     holder.imgWinner.setVisibility(View.GONE);
                 } else {
-                    StringBuilder sb = new StringBuilder();
-                    String winnerName = "N/A";
-                    String winnerLogo = null;
-                    int maxVotes = -1;
+                    int max = -1;
+                    String winner = "";
+                    String logo = null;
                     boolean tie = false;
+                    StringBuilder sb = new StringBuilder();
 
-                    for (VotingOption option : options) {
-                        int count = voteCounts.getOrDefault(option.getId(), 0);
-                        if (count > maxVotes) {
-                            maxVotes = count;
-                            winnerName = option.getOptionName();
-                            winnerLogo = option.getLogoPath();
+                    for (VotingOption opt : options) {
+                        int c = voteCounts.getOrDefault(opt.getId(), 0);
+                        if (c > max) {
+                            max = c;
+                            winner = opt.getOptionName();
+                            logo = opt.getLogoPath();
                             tie = false;
-                        } else if (count == maxVotes) {
+                        } else if (c == max)
                             tie = true;
-                        }
-                        sb.append("• ").append(option.getOptionName()).append(": ").append(count).append("\n");
+                        sb.append("• ").append(opt.getOptionName()).append(": ").append(c).append("\n");
                     }
 
                     if (tie) {
-                        winnerName = "Tie";
-                        winnerLogo = null;
+                        holder.tvResultSummary.setText("It's a tie! (" + max + " votes)\n\n" + sb.toString());
                         holder.imgWinner.setVisibility(View.GONE);
-                        String summary = "🤝 It's a Tie! (" + maxVotes + " votes each)\n\n" +
-                                "Detailed Results:\n" + sb.toString();
-                        holder.tvResultSummary.setText(summary.trim());
                     } else {
-                        // Display winner image if available
-                        if (winnerLogo != null) {
-                            holder.imgWinner.setVisibility(View.VISIBLE);
+                        holder.tvResultSummary.setText("🎉 Congratulations " + winner + "!\nWinner: " + winner + " ("
+                                + max + " votes)\n\n" + sb.toString());
+                        if (logo != null) {
                             try {
-                                if (winnerLogo.startsWith("data:")) {
-                                    String base64 = winnerLogo.substring(winnerLogo.indexOf(",") + 1);
-                                    byte[] decodedString = android.util.Base64.decode(base64,
-                                            android.util.Base64.DEFAULT);
-                                    android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory
-                                            .decodeByteArray(decodedString, 0, decodedString.length);
-                                    holder.imgWinner.setImageBitmap(decodedByte);
+                                File file = new File(holder.itemView.getContext().getFilesDir(), logo);
+                                if (file.exists()) {
+                                    holder.imgWinner.setImageBitmap(
+                                            android.graphics.BitmapFactory.decodeFile(file.getAbsolutePath()));
                                 } else {
-                                    // Try local/res fallback
-                                    File file = new File(holder.itemView.getContext().getFilesDir(), winnerLogo);
-                                    if (file.exists()) {
-                                        android.graphics.Bitmap bitmap = android.graphics.BitmapFactory
-                                                .decodeFile(file.getAbsolutePath());
-                                        holder.imgWinner.setImageBitmap(bitmap);
-                                    } else {
-                                        holder.imgWinner.setVisibility(View.GONE);
-                                    }
+                                    holder.imgWinner.setImageResource(R.drawable.ic_vote);
                                 }
                             } catch (Exception e) {
-                                holder.imgWinner.setVisibility(View.GONE);
+                                holder.imgWinner.setImageResource(R.drawable.ic_vote);
                             }
+                            holder.imgWinner.setVisibility(View.VISIBLE);
                         } else {
                             holder.imgWinner.setVisibility(View.GONE);
                         }
-
-                        // Prepend Winner with Congratulations
-                        String summary = "🎉 Congratulations to " + winnerName + "!\n\n" +
-                                "🏆 Winner: " + winnerName + " (" + maxVotes + " votes)\n\n" +
-                                "Detailed Results:\n" + sb.toString();
-                        holder.tvResultSummary.setText(summary.trim());
                     }
                 }
 
             } else {
                 holder.tvStatusBadge.setText("Pending");
-                holder.tvStatusBadge.setTextColor(0xFFD97706); // Amber/Orange
+                holder.tvStatusBadge.setTextColor(0xFFD97706);
                 holder.tvStatusBadge.setBackgroundResource(R.drawable.bg_status_active);
-                holder.tvStatusBadge.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFEF3C7));
-
-                if (resultDate != null) {
-                    holder.tvDate.setText("Results Date: "
-                            + new SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(resultDate));
-                } else {
-                    holder.tvDate.setText("Results Date: To be announced");
-                }
+                holder.tvDate.setText("Result Date: " + (resultDateStr != null ? resultDateStr : "TBA"));
 
                 holder.layoutResults.setVisibility(View.GONE);
                 holder.layoutWaiting.setVisibility(View.VISIBLE);
+                holder.confettiView.setVisibility(View.GONE);
+                holder.confettiView.stopAnimation();
             }
         }
 
@@ -243,6 +390,7 @@ public class HistoryFragment extends Fragment {
             TextView tvTitle, tvStatusBadge, tvDate, tvResultSummary;
             LinearLayout layoutResults, layoutWaiting;
             android.widget.ImageView imgWinner;
+            SimpleConfettiView confettiView;
 
             public ViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -253,6 +401,7 @@ public class HistoryFragment extends Fragment {
                 layoutResults = itemView.findViewById(R.id.layoutResults);
                 layoutWaiting = itemView.findViewById(R.id.layoutWaiting);
                 imgWinner = itemView.findViewById(R.id.imgWinner);
+                confettiView = itemView.findViewById(R.id.confettiView);
             }
         }
     }

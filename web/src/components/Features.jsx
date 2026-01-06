@@ -36,9 +36,9 @@ const Features = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {features.map((f, i) => (
-                        <div key={i} className="p-6 rounded-2xl bg-[var(--color-bg)] border border-slate-700/50 hover:border-emerald-500/50 transition-all duration-300 hover:-translate-y-1">
-                            <div className="text-4xl mb-4">{f.icon}</div>
-                            <h3 className="text-xl font-bold mb-2">{f.title}</h3>
+                        <div key={i} className="p-6 rounded-2xl bg-[var(--color-bg)] border border-slate-700/50 hover:border-emerald-500/50 transition-all duration-300 hover:-translate-y-1 text-center group">
+                            <div className="text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300">{f.icon}</div>
+                            <h3 className="text-xl font-bold mb-2 group-hover:text-emerald-400 transition-colors">{f.title}</h3>
                             <p className="text-[var(--color-text-dim)] text-sm">{f.desc}</p>
                         </div>
                     ))}

@@ -22,6 +22,17 @@ public class GovernmentLoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Enforce Day/Night mode
+        android.content.SharedPreferences prefs = getSharedPreferences("UserProfilePrefs", MODE_PRIVATE);
+        boolean isDarkMode = prefs.getBoolean("isDarkMode", false);
+        if (isDarkMode) {
+            androidx.appcompat.app.AppCompatDelegate
+                    .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            androidx.appcompat.app.AppCompatDelegate
+                    .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_government_login); // ✅ Ensure layout name matches the XML
 
@@ -42,7 +53,8 @@ public class GovernmentLoginActivity extends AppCompatActivity {
                     startActivity(intent);
                 } catch (Exception e) {
                     Log.e(TAG, "Error launching AdminDashboardActivity", e);
-                    Toast.makeText(this, "Error launching Admin Dashboard:\n" + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Error launching Admin Dashboard:\n" + e.getMessage(), Toast.LENGTH_LONG)
+                            .show();
                 }
 
             } else {

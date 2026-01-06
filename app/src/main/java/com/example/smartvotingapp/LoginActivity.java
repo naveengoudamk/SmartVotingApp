@@ -241,8 +241,9 @@ public class LoginActivity extends AppCompatActivity {
         if (otp == null)
             return;
 
-        String title = "Demo OTP";
-        String message = "Your OTP is:\n\n" + otp + "\n\nValid for 2 minutes.";
+        String title = "Verification Code";
+        String message = otp
+                + " is your One Time Password (OTP) for SmartVoting App. Valid for 2 minutes.\n\nDo not share this code with anyone.";
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(title);
@@ -303,8 +304,9 @@ public class LoginActivity extends AppCompatActivity {
                                 PendingIntent.FLAG_IMMUTABLE
                         : PendingIntent.FLAG_UPDATE_CURRENT);
 
-        String title = "Your SmartVoting OTP";
-        String text = "Your OTP is: " + otp + " (valid 2 minutes)";
+        String title = "SmartVoting Verification";
+        String text = otp
+                + " is your verification code for SmartVoting App. Valid for 2 minutes. Do not share this code with anyone.";
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)

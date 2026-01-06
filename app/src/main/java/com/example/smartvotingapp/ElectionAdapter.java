@@ -12,6 +12,11 @@ import java.util.List;
 
 public class ElectionAdapter extends RecyclerView.Adapter<ElectionAdapter.ViewHolder> {
 
+    private boolean isMultiSelectMode = false;
+    private java.util.HashSet<Integer> selectedElectionIds = new java.util.HashSet<>();
+    private OnSelectionChangeListener selectionChangeListener;
+
+    // Valid fields that were missing
     private List<Election> elections;
     private OnElectionClickListener listener;
     private VoteManager voteManager;
@@ -27,6 +32,36 @@ public class ElectionAdapter extends RecyclerView.Adapter<ElectionAdapter.ViewHo
         this.voteManager = voteManager;
         this.currentUserId = userId;
         this.listener = listener;
+    }
+
+    public interface OnSelectionChangeListener {
+        void onSelectionChanged(int count);
+    }
+
+    public void setOnSelectionChangeListener(OnSelectionChangeListener listener) {
+        this.selectionChangeListener = listener;
+    }
+
+    public void setMultiSelectMode(boolean enabled) {
+        this.isMultiSelectMode = enabled;
+        if (!enabled) {
+            selectedElectionIds.clear();
+        }
+        notifyDataSetChanged();
+    }
+
+    public boolean isMultiSelectMode() {
+        return isMultiSelectMode;
+    }
+
+    public java.util.ArrayList<Election> getSelectedElections() {
+        java.util.ArrayList<Election> selected = new java.util.ArrayList<>();
+        for (Election e : elections) {
+            if (selectedElectionIds.contains(e.getId())) {
+                selected.add(e);
+            }
+        }
+        return selected;
     }
 
     @NonNull
@@ -46,7 +81,44 @@ public class ElectionAdapter extends RecyclerView.Adapter<ElectionAdapter.ViewHo
         holder.date.setText(election.getStopDate());
         holder.status.setText(election.getStatus());
 
-        // Style status based on value
+        // Multi-Select Logic
+        if (isMultiSelectMode) {
+            holder.checkBox.setVisibility(View.VISIBLE);
+            holder.checkBox.setChecked(selectedElectionIds.contains(election.getId()));
+
+            // Disable individual vote button in multi-select mode to avoid confusion
+            holder.btnVote.setEnabled(false);
+            holder.btnVote.setAlpha(0.3f);
+
+            holder.checkBox.setOnClickListener(v -> {
+                if (selectedElectionIds.contains(election.getId())) {
+                    selectedElectionIds.remove(election.getId());
+                } else {
+                    selectedElectionIds.add(election.getId());
+                }
+                if (selectionChangeListener != null) {
+                    selectionChangeListener.onSelectionChanged(selectedElectionIds.size());
+                }
+            });
+
+            holder.itemView.setOnClickListener(v -> holder.checkBox.performClick());
+        } else {
+            holder.checkBox.setVisibility(View.GONE);
+            // Restore normal click listener
+            holder.itemView.setOnClickListener(null);
+            holder.itemView.setLongClickable(true);
+            holder.itemView.setOnLongClickListener(v -> {
+                setMultiSelectMode(true);
+                selectedElectionIds.add(election.getId()); // Select the one long-pressed
+                if (selectionChangeListener != null) {
+                    selectionChangeListener.onSelectionChanged(selectedElectionIds.size());
+                }
+                return true;
+            });
+        }
+
+        // Style status based on value (Only apply visual styles here, button logic
+        // handled above/below)
         String status = election.getStatus().toLowerCase();
 
         // Default click listener for normal 'Vote Now'
@@ -60,52 +132,50 @@ public class ElectionAdapter extends RecyclerView.Adapter<ElectionAdapter.ViewHo
             holder.status.setTextColor(0xFF2563EB); // Blue
             holder.status.setBackgroundResource(R.drawable.bg_status_active); // Consider specialized bg
             holder.status.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFDBEAFE)); // Light Blue
-            holder.btnVote.setEnabled(false);
-            holder.btnVote.setAlpha(1.0f);
-            holder.btnVote.setText("Results Out");
-            holder.btnVote.setOnClickListener(null); // No action
+            if (!isMultiSelectMode) {
+                holder.btnVote.setEnabled(false);
+                holder.btnVote.setAlpha(1.0f);
+                holder.btnVote.setText("Results Out");
+            }
         } else if (status.equals("closed")) {
             holder.status.setTextColor(0xFFDC2626); // Red
             holder.status.setBackgroundResource(R.drawable.bg_status_active);
             holder.status.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFEE2E2)); // Light Red
-            holder.btnVote.setEnabled(false);
-            holder.btnVote.setAlpha(0.5f);
-            holder.btnVote.setText("Closed");
-            holder.btnVote.setOnClickListener(null);
+            if (!isMultiSelectMode) {
+                holder.btnVote.setEnabled(false);
+                holder.btnVote.setAlpha(0.5f);
+                holder.btnVote.setText("Closed");
+            }
         } else if (voteManager != null && currentUserId != null
                 && voteManager.hasUserVoted(currentUserId, election.getId())) {
             // USER HAS ALREADY VOTED
             holder.status.setTextColor(0xFF059669); // Green (or keep as is)
             holder.status.setBackgroundResource(R.drawable.bg_status_active);
 
-            holder.btnVote.setEnabled(true);
-            holder.btnVote.setAlpha(1.0f);
-            holder.btnVote.setText("Vote Recorded");
-            // holder.btnVote.setBackgroundTintList(...) // Optionally change color to
-            // something distinctive
+            if (!isMultiSelectMode) {
+                holder.btnVote.setEnabled(true);
+                holder.btnVote.setAlpha(1.0f);
+                holder.btnVote.setText("Vote Recorded");
 
-            holder.btnVote.setOnClickListener(v -> {
-                new androidx.appcompat.app.AlertDialog.Builder(holder.itemView.getContext())
-                        .setTitle("Election ID: " + election.getId())
-                        .setMessage("You have already voted in this election!")
-                        .setPositiveButton("OK", null)
-                        .show();
-            });
+                holder.btnVote.setOnClickListener(v -> {
+                    new androidx.appcompat.app.AlertDialog.Builder(holder.itemView.getContext())
+                            .setTitle("Election ID: " + election.getId())
+                            .setMessage("You have already voted in this election!")
+                            .setPositiveButton("OK", null)
+                            .show();
+                });
+            }
         } else {
             // Running/Active and NOT voted
             holder.status.setTextColor(0xFF059669); // Green
             holder.status.setBackgroundResource(R.drawable.bg_status_active);
-            holder.btnVote.setEnabled(true);
-            holder.btnVote.setAlpha(1.0f);
-            holder.btnVote.setText("Vote Now");
-            holder.btnVote.setOnClickListener(voteClickListener);
+            if (!isMultiSelectMode) {
+                holder.btnVote.setEnabled(true);
+                holder.btnVote.setAlpha(1.0f);
+                holder.btnVote.setText("Vote Now");
+                holder.btnVote.setOnClickListener(voteClickListener);
+            }
         }
-
-        // Also make the whole card clickable acts as 'Vote Now' only if eligible?
-        // If voted, card click should generally do nothing or show same popup?
-        // Let's stick to btnVote handling specific actions.
-        // If we want card click to work:
-        holder.itemView.setOnClickListener(v -> holder.btnVote.performClick());
     }
 
     @Override
@@ -116,6 +186,7 @@ public class ElectionAdapter extends RecyclerView.Adapter<ElectionAdapter.ViewHo
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView title, status, state, minAge, date;
         android.widget.Button btnVote;
+        android.widget.CheckBox checkBox;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -125,6 +196,7 @@ public class ElectionAdapter extends RecyclerView.Adapter<ElectionAdapter.ViewHo
             minAge = itemView.findViewById(R.id.tvMinAge);
             date = itemView.findViewById(R.id.tvDate);
             btnVote = itemView.findViewById(R.id.btnVote);
+            checkBox = itemView.findViewById(R.id.cbSelect);
         }
     }
 }

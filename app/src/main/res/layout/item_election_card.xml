@@ -23,6 +23,15 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
+            <CheckBox
+                android:id="@+id/cbSelect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:layout_marginEnd="8dp"/>
+
             <TextView
                 android:id="@+id/tvElectionTitle"
                 android:layout_width="0dp"

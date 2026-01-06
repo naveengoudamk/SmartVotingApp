@@ -77,11 +77,27 @@ public class VotingActivity extends AppCompatActivity
             // But we should optimistically allow finish or wait for feedback
 
             Toast.makeText(VotingActivity.this,
-                    "✅ Vote Submitted! updating...",
+                    "✅ Vote Submitted!",
                     Toast.LENGTH_SHORT).show();
-            // We can finish here, acts as optimistic UI
-            finish();
+            proceedToNextOrFinish();
         });
+    }
+
+    private void proceedToNextOrFinish() {
+        java.util.ArrayList<Integer> nextIds = getIntent().getIntegerArrayListExtra("next_election_ids");
+        if (nextIds != null && !nextIds.isEmpty()) {
+            int nextId = nextIds.remove(0);
+
+            // Show transition message
+            Toast.makeText(this, "Loading next election in batch...", Toast.LENGTH_SHORT).show();
+
+            android.content.Intent intent = new android.content.Intent(this, VotingActivity.class);
+            intent.putExtra("election_id", nextId);
+            intent.putExtra("user_name", getIntent().getStringExtra("user_name"));
+            intent.putExtra("next_election_ids", nextIds);
+            startActivity(intent);
+        }
+        finish();
     }
 
     @Override

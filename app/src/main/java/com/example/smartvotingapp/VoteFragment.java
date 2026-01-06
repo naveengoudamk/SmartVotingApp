@@ -45,7 +45,23 @@ public class VoteFragment extends Fragment
             String userId = user != null ? user.getAadhaarId() : null;
 
             adapter = new ElectionAdapter(electionList, voteManager, userId, this::checkEligibility);
+            adapter.setOnSelectionChangeListener(count -> {
+                if (count > 0) {
+                    btnBatchVote.setVisibility(View.VISIBLE);
+                    btnBatchVote.setText("Vote (" + count + ")");
+                } else {
+                    btnBatchVote.setVisibility(View.GONE);
+                    // Automatically exit multi-select mode if 0 (optional, but good UX)
+                    if (adapter.isMultiSelectMode()) {
+                        // adapter.setMultiSelectMode(false); // Can be annoying if user just unchecks
+                        // all to recheck different ones
+                    }
+                }
+            });
             recyclerView.setAdapter(adapter);
+
+            btnBatchVote = view.findViewById(R.id.btnBatchVote);
+            btnBatchVote.setOnClickListener(v -> startBatchVoting());
 
             return view;
         } catch (Exception e) {
@@ -54,6 +70,51 @@ public class VoteFragment extends Fragment
             return new View(getContext());
         }
     }
+
+    private com.google.android.material.button.MaterialButton btnBatchVote;
+
+    private void startBatchVoting() {
+        List<Election> selected = adapter.getSelectedElections();
+        java.util.ArrayList<Integer> eligibleIds = new java.util.ArrayList<>();
+        User user = UserUtils.getCurrentUser(getContext());
+
+        if (user == null)
+            return;
+
+        for (Election election : selected) {
+            // Re-use logic or duplicate simple checks for batch
+            int age = UserUtils.calculateAge(user.getDob());
+            String status = election.getStatus().toLowerCase();
+
+            // Check basic eligibility
+            if ((status.equals("running") || status.equals("active") || status.equals("open"))
+                    && age >= election.getMinAge()
+                    && user.getState().trim().equalsIgnoreCase(election.getState().trim())
+                    && !voteManager.hasUserVoted(user.getAadhaarId(), election.getId())) {
+
+                eligibleIds.add(election.getId());
+            }
+        }
+
+        if (eligibleIds.isEmpty()) {
+            CustomAlert.showWarning(getContext(), "No Eligible Elections",
+                    "None of the selected elections are currently open for you to vote in.");
+            return;
+        }
+
+        // Start chain
+        int firstId = eligibleIds.remove(0);
+        Intent intent = new Intent(getContext(), VotingActivity.class);
+        intent.putExtra("election_id", firstId);
+        intent.putExtra("user_name", user.getName());
+        intent.putExtra("next_election_ids", eligibleIds); // Pass ArrayList
+        startActivity(intent);
+
+        // Reset selection
+        adapter.setMultiSelectMode(false);
+    }
+
+    // Maintain existing methods...
 
     @Override
     public void onDestroyView() {
@@ -96,6 +157,19 @@ public class VoteFragment extends Fragment
         if (user == null) {
             CustomAlert.showError(getContext(), "Error", "User data not found!");
             return;
+        }
+
+        if (adapter.isMultiSelectMode()) {
+            // In multi-select mode, clicking an item should just toggle it
+            // This requires modifying the Adapter's bind logic to call this listener?
+            // Actually Adapter handles click for selection internally if isMultiSelectMode
+            // is true.
+            // So this listener is only called for regular "Vote Now" clicks.
+            // But we should double check Adapter logic.
+            // Adapter says: if isMultiSelectMode ->
+            // holder.itemView.setOnClickListener(toggle)
+            // else -> holder.btnVote.setOnClickListener(listener)
+            // So this method is only called by the Button in single mode.
         }
 
         int age = UserUtils.calculateAge(user.getDob());

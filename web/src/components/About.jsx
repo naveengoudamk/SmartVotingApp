@@ -11,7 +11,7 @@ const About = () => {
             <div className="container relative z-10">
 
                 {/* Header - Strictly Centered */}
-                <div className="text-center max-w-4xl mx-auto mb-16">
+                <div className="text-center max-w-6xl mx-auto mb-16">
                     <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">About The Project</h2>
                     <div className="h-1.5 w-24 bg-gradient-to-r from-emerald-400 to-blue-500 mx-auto rounded-full mb-8"></div>
 
@@ -79,7 +79,7 @@ const About = () => {
                 </div>
 
                 {/* Academic Guidance - Centered Grid */}
-                <div className="max-w-4xl mx-auto text-center">
+                <div className="max-w-6xl mx-auto text-center">
                     <h3 className="text-sm font-bold uppercase tracking-widest text-emerald-500 mb-8 opacity-80">Under The Guidance Of</h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

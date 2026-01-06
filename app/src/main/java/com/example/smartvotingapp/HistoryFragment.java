@@ -318,6 +318,12 @@ public class HistoryFragment extends Fragment {
                 holder.confettiView.setVisibility(View.VISIBLE);
                 holder.confettiView.startAnimation();
 
+                // Stop animation after 2 seconds
+                holder.confettiView.postDelayed(() -> {
+                    holder.confettiView.stopAnimation();
+                    holder.confettiView.setVisibility(View.GONE);
+                }, 2000);
+
                 Map<String, Integer> voteCounts = voteManager.getVoteCountsByElection(election.getId());
                 List<VotingOption> options = optionManager.getOptionsByElection(election.getId());
 

@@ -360,15 +360,29 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Check for app updates on login screen
+     * Check for app updates on login screen with timeout
      */
     private void checkForUpdatesOnLogin() {
         com.google.firebase.database.DatabaseReference updateRef = com.google.firebase.database.FirebaseDatabase
                 .getInstance().getReference("app_version");
 
+        // Set a timeout to prevent blocking login if Firebase is slow
+        final boolean[] checkCompleted = { false };
+
+        new android.os.Handler().postDelayed(() -> {
+            if (!checkCompleted[0]) {
+                Log.w(TAG, "Update check timed out - allowing normal login");
+                checkCompleted[0] = true;
+            }
+        }, 5000); // 5 second timeout
+
         updateRef.addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
             @Override
             public void onDataChange(com.google.firebase.database.DataSnapshot dataSnapshot) {
+                if (checkCompleted[0])
+                    return; // Timeout already occurred
+                checkCompleted[0] = true;
+
                 try {
                     if (dataSnapshot.exists()) {
                         Integer latestVersionCode = dataSnapshot.child("version_code").getValue(Integer.class);
@@ -380,21 +394,31 @@ public class LoginActivity extends AppCompatActivity {
 
                             if (latestVersionCode > currentVersionCode) {
                                 // Update required - show dialog
+                                Log.d(TAG, "Update available: " + latestVersionName);
                                 showUpdateRequiredDialog(
                                         latestVersionName != null ? latestVersionName : "New Version",
                                         updateMessage != null ? updateMessage
                                                 : "A new version is available. Please update to continue.");
+                            } else {
+                                Log.d(TAG, "App is up to date");
                             }
                         }
+                    } else {
+                        Log.w(TAG, "No app_version data in Firebase");
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Error checking for update", e);
+                    // Don't block login on error
                 }
             }
 
             @Override
             public void onCancelled(com.google.firebase.database.DatabaseError databaseError) {
-                Log.e(TAG, "Update check cancelled", databaseError.toException());
+                if (checkCompleted[0])
+                    return;
+                checkCompleted[0] = true;
+                Log.e(TAG, "Update check cancelled: " + databaseError.getMessage());
+                // Don't block login on error
             }
         });
     }

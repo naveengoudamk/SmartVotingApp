@@ -92,34 +92,47 @@ public class AppUpdateChecker {
     }
 
     /**
-     * Show update dialog to user
+     * Show update dialog to user - BLOCKING until user updates
      */
     private void showUpdateDialog(String versionName, String message, boolean forceUpdate) {
+        // Always force update for any new version
+        forceUpdate = true;
+
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("🚀 Update Available");
+        builder.setTitle("🚀 Update Required");
         builder.setMessage(
-                message + "\n\nNew Version: " + versionName + "\nCurrent Version: " + getCurrentVersionName());
-        builder.setCancelable(!forceUpdate);
+                message + "\n\n" +
+                        "New Version: " + versionName + "\n" +
+                        "Current Version: " + getCurrentVersionName() + "\n\n" +
+                        "⚠️ You must update to continue using the app.");
+
+        // Make dialog non-cancelable
+        builder.setCancelable(false);
 
         builder.setPositiveButton("Update Now", (dialog, which) -> {
             // Redirect to web download page
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(DOWNLOAD_URL));
             context.startActivity(browserIntent);
 
-            if (forceUpdate) {
-                // Close the app if force update is required
-                if (context instanceof android.app.Activity) {
-                    ((android.app.Activity) context).finish();
-                }
+            // Close the app - user must manually install update
+            if (context instanceof android.app.Activity) {
+                ((android.app.Activity) context).finishAffinity();
+                System.exit(0);
             }
         });
 
-        if (!forceUpdate) {
-            builder.setNegativeButton("Later", (dialog, which) -> dialog.dismiss());
-        }
+        // No "Later" button - user MUST update
 
         AlertDialog dialog = builder.create();
-        dialog.show();
+
+        // Prevent dialog from being dismissed by back button or outside touch
+        dialog.setCanceledOnTouchOutside(false);
+
+        try {
+            dialog.show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing update dialog", e);
+        }
     }
 
     /**

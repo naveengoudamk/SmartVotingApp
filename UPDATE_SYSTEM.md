@@ -25,9 +25,24 @@ app_version/
 ```
 
 **When an update is available:**
-- A dialog is shown to the user
-- User can click "Update Now" to be redirected to the web download page
-- If `force_update` is true, the user must update to continue using the app
+- A **BLOCKING** dialog is shown to the user
+- User **CANNOT dismiss** the dialog (no back button, no outside touch)
+- User **MUST click "Update Now"** to proceed
+- Browser opens to the web download page
+- App **automatically closes** after redirecting
+- User must **manually download and install** the new APK
+- **All updates are force updates** - no "Later" option
+
+**Update Flow:**
+1. User opens app
+2. Update check runs
+3. If new version exists → Blocking dialog appears
+4. User clicks "Update Now"
+5. Browser opens to download page
+6. App closes completely
+7. User downloads new APK
+8. User manually installs update
+9. User can now use the updated app
 
 ### 2. APK Sync to Web
 

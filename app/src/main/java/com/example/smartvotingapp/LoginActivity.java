@@ -76,6 +76,9 @@ public class LoginActivity extends AppCompatActivity {
         otpArea = findViewById(R.id.otpArea);
         otpTimerText = findViewById(R.id.otpTimerText);
 
+        // Check for app updates BEFORE allowing login
+        checkForUpdatesOnLogin();
+
         // Initially hide OTP area and disable the Login button (must verify OTP first)
         showOtpArea(false);
         otpVerified = false;
@@ -354,6 +357,119 @@ public class LoginActivity extends AppCompatActivity {
                 setLoginButtonEnabled(false);
             }
         }.start();
+    }
+
+    /**
+     * Check for app updates on login screen
+     */
+    private void checkForUpdatesOnLogin() {
+        com.google.firebase.database.DatabaseReference updateRef = com.google.firebase.database.FirebaseDatabase
+                .getInstance().getReference("app_version");
+
+        updateRef.addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
+            @Override
+            public void onDataChange(com.google.firebase.database.DataSnapshot dataSnapshot) {
+                try {
+                    if (dataSnapshot.exists()) {
+                        Integer latestVersionCode = dataSnapshot.child("version_code").getValue(Integer.class);
+                        String latestVersionName = dataSnapshot.child("version_name").getValue(String.class);
+                        String updateMessage = dataSnapshot.child("update_message").getValue(String.class);
+
+                        if (latestVersionCode != null) {
+                            int currentVersionCode = getCurrentVersionCode();
+
+                            if (latestVersionCode > currentVersionCode) {
+                                // Update required - show dialog
+                                showUpdateRequiredDialog(
+                                        latestVersionName != null ? latestVersionName : "New Version",
+                                        updateMessage != null ? updateMessage
+                                                : "A new version is available. Please update to continue.");
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error checking for update", e);
+                }
+            }
+
+            @Override
+            public void onCancelled(com.google.firebase.database.DatabaseError databaseError) {
+                Log.e(TAG, "Update check cancelled", databaseError.toException());
+            }
+        });
+    }
+
+    /**
+     * Show update required dialog with Update Now and Go Back buttons
+     */
+    private void showUpdateRequiredDialog(String versionName, String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("🚀 Update Required");
+        builder.setMessage(
+                message + "\n\n" +
+                        "New Version: " + versionName + "\n" +
+                        "Current Version: " + getCurrentVersionName() + "\n\n" +
+                        "Please update to continue using the app.");
+
+        // Make dialog non-cancelable
+        builder.setCancelable(false);
+
+        // Update Now button
+        builder.setPositiveButton("Update Now", (dialog, which) -> {
+            // Open web link
+            android.content.Intent browserIntent = new android.content.Intent(
+                    android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://smart-voting-app-web.vercel.app/#features"));
+            startActivity(browserIntent);
+
+            // Close the app
+            finish();
+            System.exit(0);
+        });
+
+        // Go Back button
+        builder.setNegativeButton("Go Back", (dialog, which) -> {
+            // Close the app
+            finish();
+            System.exit(0);
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+
+        try {
+            dialog.show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing update dialog", e);
+        }
+    }
+
+    /**
+     * Get current app version code
+     */
+    private int getCurrentVersionCode() {
+        try {
+            android.content.pm.PackageInfo packageInfo = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0);
+            return packageInfo.versionCode;
+        } catch (android.content.pm.PackageManager.NameNotFoundException e) {
+            Log.e(TAG, "Error getting version code", e);
+            return 0;
+        }
+    }
+
+    /**
+     * Get current app version name
+     */
+    private String getCurrentVersionName() {
+        try {
+            android.content.pm.PackageInfo packageInfo = getPackageManager()
+                    .getPackageInfo(getPackageName(), 0);
+            return packageInfo.versionName;
+        } catch (android.content.pm.PackageManager.NameNotFoundException e) {
+            Log.e(TAG, "Error getting version name", e);
+            return "Unknown";
+        }
     }
 
     @Override

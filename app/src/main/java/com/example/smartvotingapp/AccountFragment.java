@@ -350,6 +350,7 @@ public class AccountFragment extends Fragment {
                     user.getAadhaarId(),
                     user.getName(),
                     user.getAadhaarId(),
+                    user.getCity(), // Using city as state for filtering
                     title,
                     description,
                     "pending",

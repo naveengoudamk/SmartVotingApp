@@ -5,6 +5,7 @@ public class Feedback {
     private String userId;
     private String userName;
     private String userAadhaar;
+    private String userState; // Added for state-based filtering
     private String title;
     private String description;
     private String status; // "pending", "in_progress", "resolved"
@@ -16,12 +17,13 @@ public class Feedback {
     }
 
     public Feedback(String id, String userId, String userName, String userAadhaar,
-            String title, String description, String status,
+            String userState, String title, String description, String status,
             String adminResponse, long timestamp, long resolvedTimestamp) {
         this.id = id;
         this.userId = userId;
         this.userName = userName;
         this.userAadhaar = userAadhaar;
+        this.userState = userState;
         this.title = title;
         this.description = description;
         this.status = status;
@@ -45,6 +47,10 @@ public class Feedback {
 
     public String getUserAadhaar() {
         return userAadhaar;
+    }
+
+    public String getUserState() {
+        return userState;
     }
 
     public String getTitle() {
@@ -86,6 +92,10 @@ public class Feedback {
 
     public void setUserAadhaar(String userAadhaar) {
         this.userAadhaar = userAadhaar;
+    }
+
+    public void setUserState(String userState) {
+        this.userState = userState;
     }
 
     public void setTitle(String title) {

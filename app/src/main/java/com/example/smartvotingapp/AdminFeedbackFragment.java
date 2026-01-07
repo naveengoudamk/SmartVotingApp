@@ -1,6 +1,8 @@
 package com.example.smartvotingapp;
 
 import android.app.AlertDialog;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,9 +22,10 @@ public class AdminFeedbackFragment extends Fragment {
 
     private LinearLayout feedbackContainer;
     private LinearLayout layoutEmptyState;
-    private FeedbackManager feedbackManager;
+    private FirebaseFeedbackManager feedbackManager;
     private Button btnFilterAll, btnFilterPending, btnFilterResolved;
     private String currentFilter = "all";
+    private String adminState; // State of the logged-in admin
 
     public AdminFeedbackFragment() {
     }
@@ -31,13 +34,17 @@ public class AdminFeedbackFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_admin_feedback, container, false);
 
-        feedbackManager = new FeedbackManager(getContext());
+        feedbackManager = new FirebaseFeedbackManager(getContext());
         feedbackContainer = view.findViewById(R.id.feedbackContainer);
         layoutEmptyState = view.findViewById(R.id.layoutEmptyState);
 
         btnFilterAll = view.findViewById(R.id.btnFilterAll);
         btnFilterPending = view.findViewById(R.id.btnFilterPending);
         btnFilterResolved = view.findViewById(R.id.btnFilterResolved);
+
+        // Get admin state from login data
+        SharedPreferences prefs = getContext().getSharedPreferences("AdminSession", Context.MODE_PRIVATE);
+        adminState = prefs.getString("admin_state", "");
 
         setupFilterButtons();
         loadFeedback();
@@ -95,74 +102,115 @@ public class AdminFeedbackFragment extends Fragment {
 
     private void loadFeedback() {
         feedbackContainer.removeAllViews();
-        List<Feedback> feedbackList = feedbackManager.getAllFeedback();
 
-        // Filter based on current filter
-        feedbackList.removeIf(feedback -> {
-            if (currentFilter.equals("pending")) {
-                return !feedback.getStatus().equals("pending") && !feedback.getStatus().equals("in_progress");
-            } else if (currentFilter.equals("resolved")) {
-                return !feedback.getStatus().equals("resolved");
-            }
-            return false;
-        });
-
-        if (feedbackList.isEmpty()) {
-            layoutEmptyState.setVisibility(View.VISIBLE);
-            return;
+        // Show loading state
+        layoutEmptyState.setVisibility(View.VISIBLE);
+        TextView emptyText = layoutEmptyState.findViewById(R.id.tvEmptyState);
+        if (emptyText != null) {
+            emptyText.setText("Loading feedback...");
         }
 
-        layoutEmptyState.setVisibility(View.GONE);
+        // Determine if this is super admin (ECI-INDIA) or state admin
+        boolean isSuperAdmin = "ECI-INDIA".equals(adminState) || adminState == null || adminState.isEmpty();
 
-        // Sort by timestamp (newest first)
-        feedbackList.sort((f1, f2) -> Long.compare(f2.getTimestamp(), f1.getTimestamp()));
+        FirebaseFeedbackManager.OnFeedbackListListener listener = new FirebaseFeedbackManager.OnFeedbackListListener() {
+            @Override
+            public void onSuccess(List<Feedback> feedbackList) {
+                // Filter based on current filter
+                feedbackList.removeIf(feedback -> {
+                    if (currentFilter.equals("pending")) {
+                        return !feedback.getStatus().equals("pending") && !feedback.getStatus().equals("in_progress");
+                    } else if (currentFilter.equals("resolved")) {
+                        return !feedback.getStatus().equals("resolved");
+                    }
+                    return false;
+                });
 
-        for (Feedback feedback : feedbackList) {
-            View feedbackView = LayoutInflater.from(getContext())
-                    .inflate(R.layout.item_admin_feedback_card, feedbackContainer, false);
+                if (feedbackList.isEmpty()) {
+                    layoutEmptyState.setVisibility(View.VISIBLE);
+                    if (emptyText != null) {
+                        emptyText.setText("No feedback found");
+                    }
+                    return;
+                }
 
-            TextView tvTitle = feedbackView.findViewById(R.id.tvAdminFeedbackTitle);
-            TextView tvStatus = feedbackView.findViewById(R.id.tvAdminFeedbackStatus);
-            TextView tvUser = feedbackView.findViewById(R.id.tvAdminFeedbackUser);
-            TextView tvDescription = feedbackView.findViewById(R.id.tvAdminFeedbackDescription);
-            TextView tvDate = feedbackView.findViewById(R.id.tvAdminFeedbackDate);
-            LinearLayout layoutResponse = feedbackView.findViewById(R.id.layoutAdminResponsePreview);
-            TextView tvResponse = feedbackView.findViewById(R.id.tvAdminResponsePreview);
-            Button btnResolve = feedbackView.findViewById(R.id.btnResolveFeedback);
-            Button btnDelete = feedbackView.findViewById(R.id.btnDeleteFeedback);
+                layoutEmptyState.setVisibility(View.GONE);
 
-            tvTitle.setText(feedback.getTitle());
-            tvDescription.setText(feedback.getDescription());
+                // Sort by timestamp (newest first)
+                feedbackList.sort((f1, f2) -> Long.compare(f2.getTimestamp(), f1.getTimestamp()));
 
-            // Format user info
-            String maskedAadhaar = maskAadhaar(feedback.getUserAadhaar());
-            tvUser.setText(feedback.getUserName() + " • " + maskedAadhaar);
-
-            // Format date
-            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault());
-            tvDate.setText("Submitted on: " + sdf.format(new Date(feedback.getTimestamp())));
-
-            // Set status
-            updateStatusBadge(tvStatus, feedback.getStatus());
-
-            // Show admin response if exists
-            if (feedback.getAdminResponse() != null && !feedback.getAdminResponse().isEmpty()) {
-                layoutResponse.setVisibility(View.VISIBLE);
-                tvResponse.setText(feedback.getAdminResponse());
+                for (Feedback feedback : feedbackList) {
+                    displayFeedbackCard(feedback);
+                }
             }
 
-            // Update button text based on status
-            if (feedback.getStatus().equals("resolved")) {
-                btnResolve.setText("View Details");
-            } else {
-                btnResolve.setText("Resolve");
+            @Override
+            public void onFailure(String error) {
+                layoutEmptyState.setVisibility(View.VISIBLE);
+                if (emptyText != null) {
+                    emptyText.setText("Error loading feedback: " + error);
+                }
+                Toast.makeText(getContext(), "Failed to load feedback: " + error, Toast.LENGTH_SHORT).show();
             }
+        };
 
-            btnResolve.setOnClickListener(v -> showResolveDialog(feedback));
-            btnDelete.setOnClickListener(v -> deleteFeedback(feedback));
-
-            feedbackContainer.addView(feedbackView);
+        // Load feedback based on admin type
+        if (isSuperAdmin) {
+            feedbackManager.getAllFeedback(listener);
+        } else {
+            feedbackManager.getFeedbackByState(adminState, listener);
         }
+    }
+
+    private void displayFeedbackCard(Feedback feedback) {
+        View feedbackView = LayoutInflater.from(getContext())
+                .inflate(R.layout.item_admin_feedback_card, feedbackContainer, false);
+
+        TextView tvTitle = feedbackView.findViewById(R.id.tvAdminFeedbackTitle);
+        TextView tvStatus = feedbackView.findViewById(R.id.tvAdminFeedbackStatus);
+        TextView tvUser = feedbackView.findViewById(R.id.tvAdminFeedbackUser);
+        TextView tvDescription = feedbackView.findViewById(R.id.tvAdminFeedbackDescription);
+        TextView tvDate = feedbackView.findViewById(R.id.tvAdminFeedbackDate);
+        LinearLayout layoutResponse = feedbackView.findViewById(R.id.layoutAdminResponsePreview);
+        TextView tvResponse = feedbackView.findViewById(R.id.tvAdminResponsePreview);
+        Button btnResolve = feedbackView.findViewById(R.id.btnResolveFeedback);
+        Button btnDelete = feedbackView.findViewById(R.id.btnDeleteFeedback);
+
+        tvTitle.setText(feedback.getTitle());
+        tvDescription.setText(feedback.getDescription());
+
+        // Format user info
+        String maskedAadhaar = maskAadhaar(feedback.getUserAadhaar());
+        String userInfo = feedback.getUserName() + " • " + maskedAadhaar;
+        if (feedback.getUserState() != null && !feedback.getUserState().isEmpty()) {
+            userInfo += " • " + feedback.getUserState();
+        }
+        tvUser.setText(userInfo);
+
+        // Format date
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault());
+        tvDate.setText("Submitted on: " + sdf.format(new Date(feedback.getTimestamp())));
+
+        // Set status
+        updateStatusBadge(tvStatus, feedback.getStatus());
+
+        // Show admin response if exists
+        if (feedback.getAdminResponse() != null && !feedback.getAdminResponse().isEmpty()) {
+            layoutResponse.setVisibility(View.VISIBLE);
+            tvResponse.setText(feedback.getAdminResponse());
+        }
+
+        // Update button text based on status
+        if (feedback.getStatus().equals("resolved")) {
+            btnResolve.setText("View Details");
+        } else {
+            btnResolve.setText("Resolve");
+        }
+
+        btnResolve.setOnClickListener(v -> showResolveDialog(feedback));
+        btnDelete.setOnClickListener(v -> deleteFeedback(feedback));
+
+        feedbackContainer.addView(feedbackView);
     }
 
     private void updateStatusBadge(TextView badge, String status) {
@@ -230,13 +278,19 @@ public class AdminFeedbackFragment extends Fragment {
             feedback.setStatus("resolved");
             feedback.setResolvedTimestamp(System.currentTimeMillis());
 
-            if (feedbackManager.updateFeedback(feedback)) {
-                Toast.makeText(getContext(), "Feedback resolved successfully", Toast.LENGTH_SHORT).show();
-                loadFeedback();
-                dialog.dismiss();
-            } else {
-                Toast.makeText(getContext(), "Failed to update feedback", Toast.LENGTH_SHORT).show();
-            }
+            feedbackManager.updateFeedback(feedback, new FirebaseFeedbackManager.OnFeedbackOperationListener() {
+                @Override
+                public void onSuccess() {
+                    Toast.makeText(getContext(), "Feedback resolved successfully", Toast.LENGTH_SHORT).show();
+                    loadFeedback();
+                    dialog.dismiss();
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Toast.makeText(getContext(), "Failed to update feedback: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         dialog.show();
@@ -247,12 +301,20 @@ public class AdminFeedbackFragment extends Fragment {
                 .setTitle("Delete Feedback")
                 .setMessage("Are you sure you want to delete this feedback?")
                 .setPositiveButton("Delete", (dialog, which) -> {
-                    if (feedbackManager.deleteFeedback(feedback.getId())) {
-                        Toast.makeText(getContext(), "Feedback deleted", Toast.LENGTH_SHORT).show();
-                        loadFeedback();
-                    } else {
-                        Toast.makeText(getContext(), "Failed to delete feedback", Toast.LENGTH_SHORT).show();
-                    }
+                    feedbackManager.deleteFeedback(feedback.getId(),
+                            new FirebaseFeedbackManager.OnFeedbackOperationListener() {
+                                @Override
+                                public void onSuccess() {
+                                    Toast.makeText(getContext(), "Feedback deleted", Toast.LENGTH_SHORT).show();
+                                    loadFeedback();
+                                }
+
+                                @Override
+                                public void onFailure(String error) {
+                                    Toast.makeText(getContext(), "Failed to delete feedback: " + error,
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
                 })
                 .setNegativeButton("Cancel", null)
                 .show();

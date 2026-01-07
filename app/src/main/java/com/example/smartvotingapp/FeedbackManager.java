@@ -20,7 +20,15 @@ public class FeedbackManager {
         try {
             List<Feedback> feedbackList = getAllFeedback();
             feedbackList.add(feedback);
-            return saveFeedbackList(feedbackList);
+            boolean saved = saveFeedbackList(feedbackList);
+
+            // Also sync to Firebase
+            if (saved) {
+                FirebaseFeedbackManager firebaseManager = new FirebaseFeedbackManager(context);
+                firebaseManager.addFeedback(feedback, null);
+            }
+
+            return saved;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -55,6 +63,7 @@ public class FeedbackManager {
                         obj.getString("userId"),
                         obj.getString("userName"),
                         obj.getString("userAadhaar"),
+                        obj.optString("userState", ""),
                         obj.getString("title"),
                         obj.getString("description"),
                         obj.getString("status"),
@@ -156,6 +165,7 @@ public class FeedbackManager {
                 obj.put("userId", feedback.getUserId());
                 obj.put("userName", feedback.getUserName());
                 obj.put("userAadhaar", feedback.getUserAadhaar());
+                obj.put("userState", feedback.getUserState());
                 obj.put("title", feedback.getTitle());
                 obj.put("description", feedback.getDescription());
                 obj.put("status", feedback.getStatus());

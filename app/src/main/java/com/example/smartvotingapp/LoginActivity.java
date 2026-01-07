@@ -402,20 +402,39 @@ public class LoginActivity extends AppCompatActivity {
     /**
      * Show update required dialog with Update Now and Go Back buttons
      */
+    /**
+     * Show update required dialog with modern card-style UI
+     */
     private void showUpdateRequiredDialog(String versionName, String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("🚀 Update Required");
-        builder.setMessage(
-                message + "\n\n" +
-                        "New Version: " + versionName + "\n" +
-                        "Current Version: " + getCurrentVersionName() + "\n\n" +
-                        "Please update to continue using the app.");
+        // Create custom dialog
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.setContentView(R.layout.dialog_update_available);
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
 
-        // Make dialog non-cancelable
-        builder.setCancelable(false);
+        // Make dialog background transparent to show card properly
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(
+                    new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.getWindow().setLayout(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT);
+        }
+
+        // Get views
+        TextView tvCurrentVersion = dialog.findViewById(R.id.tvCurrentVersion);
+        TextView tvNewVersion = dialog.findViewById(R.id.tvNewVersion);
+        TextView tvUpdateMessage = dialog.findViewById(R.id.tvUpdateMessage);
+        Button btnUpdateNow = dialog.findViewById(R.id.btnUpdateNow);
+        Button btnGoBack = dialog.findViewById(R.id.btnGoBack);
+
+        // Set version info
+        tvCurrentVersion.setText("v" + getCurrentVersionName());
+        tvNewVersion.setText("v" + versionName);
+        tvUpdateMessage.setText(message);
 
         // Update Now button
-        builder.setPositiveButton("Update Now", (dialog, which) -> {
+        btnUpdateNow.setOnClickListener(v -> {
             // Open web link
             android.content.Intent browserIntent = new android.content.Intent(
                     android.content.Intent.ACTION_VIEW,
@@ -423,19 +442,18 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(browserIntent);
 
             // Close the app
+            dialog.dismiss();
             finish();
             System.exit(0);
         });
 
         // Go Back button
-        builder.setNegativeButton("Go Back", (dialog, which) -> {
+        btnGoBack.setOnClickListener(v -> {
             // Close the app
+            dialog.dismiss();
             finish();
             System.exit(0);
         });
-
-        AlertDialog dialog = builder.create();
-        dialog.setCanceledOnTouchOutside(false);
 
         try {
             dialog.show();

@@ -201,6 +201,16 @@ public class MainActivity extends AppCompatActivity {
 
             Log.d(TAG, "onCreate completed successfully");
 
+            // Check for app updates
+            try {
+                AppUpdateChecker updateChecker = new AppUpdateChecker(this);
+                updateChecker.checkForUpdate();
+                Log.d(TAG, "Update check initiated");
+            } catch (Exception e) {
+                Log.e(TAG, "Update check error", e);
+                e.printStackTrace();
+            }
+
         } catch (Exception e) {
             Log.e(TAG, "FATAL onCreate error", e);
             e.printStackTrace();

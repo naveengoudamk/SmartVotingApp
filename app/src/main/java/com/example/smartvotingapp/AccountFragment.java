@@ -122,6 +122,7 @@ public class AccountFragment extends Fragment {
 
             if (user == null) {
                 // GUEST MODE
+                // Show overlay
                 if (guestOverlay != null) {
                     guestOverlay.setVisibility(View.VISIBLE);
                     btnLoginFromAccount.setOnClickListener(v -> {
@@ -130,8 +131,19 @@ public class AccountFragment extends Fragment {
                         startActivity(intent);
                     });
                 }
-                // Hide views accessed by findById if practical? No, just don't populate them.
-                return view;
+
+                // Populate Dummy Data so background looks populated
+                txtName.setText("Guest User");
+                txtAadhaar.setText("XXXX XXXX XXXX");
+                txtMobile.setText("XX-XXXX-XXXX");
+                txtAddress.setText("Login to view address");
+                txtCity.setText("-");
+                txtPincode.setText("-");
+                txtEligible.setText("Login to check eligibility");
+                txtEligible.setTextColor(0xFF6B7280); // Gray
+                editEmail.setText("guest@smartvoting.com");
+
+                // Skip loading actual user data/images
             } else {
                 // LOGGED IN
                 if (guestOverlay != null) {
@@ -154,41 +166,41 @@ public class AccountFragment extends Fragment {
 
                 loadSavedProfileImage();
                 loadUserFeedback();
-            }
 
-            // Listeners only for logged in users
-            updateEmailButton.setOnClickListener(v -> {
-                String updatedEmail = editEmail.getText().toString().trim();
-                MainActivity.email = updatedEmail;
-                updateEmailInJson(updatedEmail);
-                CustomAlert.showSuccess(getContext(), "Success", "Email updated successfully!");
-            });
+                // Listeners only for logged in users
+                updateEmailButton.setOnClickListener(v -> {
+                    String updatedEmail = editEmail.getText().toString().trim();
+                    MainActivity.email = updatedEmail;
+                    updateEmailInJson(updatedEmail);
+                    CustomAlert.showSuccess(getContext(), "Success", "Email updated successfully!");
+                });
 
-            changePhotoButton.setOnClickListener(v -> showImagePickerOptions());
-            profileImage.setOnClickListener(v -> showImagePickerOptions());
+                changePhotoButton.setOnClickListener(v -> showImagePickerOptions());
+                profileImage.setOnClickListener(v -> showImagePickerOptions());
 
-            savePhotoButton.setVisibility(View.GONE);
-            savePhotoButton.setOnClickListener(v -> {
-                String filename = "profile_" + MainActivity.aadhaarId + ".jpg";
-
-                if (capturedImageBitmap != null) {
-                    saveBitmapToInternalStorage(capturedImageBitmap, filename);
-                } else if (selectedImageUri != null) {
-                    try {
-                        InputStream is = getContext().getContentResolver().openInputStream(selectedImageUri);
-                        Bitmap bitmap = BitmapFactory.decodeStream(is);
-                        saveBitmapToInternalStorage(bitmap, filename);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                updatePhotoInJson(filename);
-                CustomAlert.showSuccess(getContext(), "Success", "Profile photo saved!");
                 savePhotoButton.setVisibility(View.GONE);
-            });
+                savePhotoButton.setOnClickListener(v -> {
+                    String filename = "profile_" + MainActivity.aadhaarId + ".jpg";
 
-            btnSubmitFeedback.setOnClickListener(v -> showSubmitFeedbackDialog());
+                    if (capturedImageBitmap != null) {
+                        saveBitmapToInternalStorage(capturedImageBitmap, filename);
+                    } else if (selectedImageUri != null) {
+                        try {
+                            InputStream is = getContext().getContentResolver().openInputStream(selectedImageUri);
+                            Bitmap bitmap = BitmapFactory.decodeStream(is);
+                            saveBitmapToInternalStorage(bitmap, filename);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    updatePhotoInJson(filename);
+                    CustomAlert.showSuccess(getContext(), "Success", "Profile photo saved!");
+                    savePhotoButton.setVisibility(View.GONE);
+                });
+
+                btnSubmitFeedback.setOnClickListener(v -> showSubmitFeedbackDialog());
+            }
 
             return view;
         } catch (Exception e) {

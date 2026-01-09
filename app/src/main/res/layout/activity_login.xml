@@ -15,18 +15,7 @@
         android:alpha="0.2"
         android:contentDescription="@null" />
 
-    <!-- Admin Login Icon Positioned Top Right -->
-    <ImageButton
-        android:id="@+id/btnAdminLogin"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@drawable/ic_notification"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:contentDescription="Admin Login"
-        app:tint="#1E3A8A" />
+
 
     <!-- Foreground Content -->
     <ScrollView
@@ -161,4 +150,17 @@
                 android:visibility="gone"/> <!-- Hiding old link as we have icon now, or keeping it as backup? User said "add... icon... redirect to admin login" -->
         </LinearLayout>
     </ScrollView>
+    <!-- Admin Login Icon Positioned Top Right -->
+    <ImageButton
+        android:id="@+id/btnAdminLogin"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_notification"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="Admin Login"
+        app:tint="#1E3A8A" />
+
 </FrameLayout>

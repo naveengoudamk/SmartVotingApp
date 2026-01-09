@@ -39,20 +39,18 @@ public class VoteFragment extends Fragment
 
             if (userId == null) {
                 // GUEST MODE
+                // Show content behind overlay
+                voteContentContainer.setVisibility(View.VISIBLE);
                 guestOverlay.setVisibility(View.VISIBLE);
-                voteContentContainer.setVisibility(View.GONE);
 
                 btnLogin.setOnClickListener(v -> {
                     Intent intent = new Intent(getContext(), LoginActivity.class);
-                    // Clear back stack so they can't go back to guest mode easily after login?
-                    // Or just normal open. Normal open is fine.
+                    // Clear user session if any weird state exists, though we are guest
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                 });
 
-                // Return early or just don't setup recycler view?
-                // Ideally we don't setup recycler if hidden.
-                return view;
+                // Continue to setup adapter to show data in background
             } else {
                 // LOGGED IN
                 guestOverlay.setVisibility(View.GONE);

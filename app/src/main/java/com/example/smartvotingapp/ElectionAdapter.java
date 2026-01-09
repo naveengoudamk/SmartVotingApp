@@ -106,15 +106,20 @@ public class ElectionAdapter extends RecyclerView.Adapter<ElectionAdapter.ViewHo
             holder.checkBox.setVisibility(View.GONE);
             // Restore normal click listener
             holder.itemView.setOnClickListener(null);
-            holder.itemView.setLongClickable(true);
-            holder.itemView.setOnLongClickListener(v -> {
-                setMultiSelectMode(true);
-                selectedElectionIds.add(election.getId()); // Select the one long-pressed
-                if (selectionChangeListener != null) {
-                    selectionChangeListener.onSelectionChanged(selectedElectionIds.size());
-                }
-                return true;
-            });
+            if (currentUserId != null) {
+                holder.itemView.setLongClickable(true);
+                holder.itemView.setOnLongClickListener(v -> {
+                    setMultiSelectMode(true);
+                    selectedElectionIds.add(election.getId()); // Select the one long-pressed
+                    if (selectionChangeListener != null) {
+                        selectionChangeListener.onSelectionChanged(selectedElectionIds.size());
+                    }
+                    return true;
+                });
+            } else {
+                holder.itemView.setLongClickable(false);
+                holder.itemView.setOnLongClickListener(null);
+            }
         }
 
         // Style status based on value (Only apply visual styles here, button logic

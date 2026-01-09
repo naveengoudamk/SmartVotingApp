@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Semi-transparent blurred glass effect simulation -->
+    <solid android:color="#1AFFFFFF" /> <!-- 10% White -->
+    
+    <stroke
+        android:width="1dp"
+        android:color="#4DFFFFFF" /> <!-- 30% White Border -->
+        
+    <corners android:radius="24dp" />
+</shape>

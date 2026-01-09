@@ -10,8 +10,13 @@
         android:layout_height="match_parent"
         android:src="@drawable/indian_election_bg"
         android:scaleType="centerCrop"
-        android:alpha="0.2"
         android:contentDescription="@null" />
+
+    <!-- Dark Overlay for Glass Effect -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000" />
 
     <!-- 📄 Centered ScrollView -->
     <ScrollView
@@ -21,7 +26,6 @@
         android:background="@android:color/transparent"
         android:padding="24dp">
 
-        <!-- 🧭 Centered LinearLayout -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -29,41 +33,71 @@
             android:gravity="center"
             android:layout_gravity="center">
 
-            <TextView
-                android:text="Admin Login - Election Dept"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/black"
-                android:layout_marginBottom="24dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <EditText
-                android:id="@+id/deptCodeInput"
+            <!-- Glass Card Container -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Enter Department Code"
-                android:layout_marginBottom="16dp"
-                android:padding="12dp"
-                android:background="@drawable/edittext_box_style"
-                android:textColor="@android:color/black" />
+                android:orientation="vertical"
+                android:background="@drawable/glass_card_bg"
+                android:padding="32dp"
+                android:layout_margin="16dp"
+                android:gravity="center">
 
-            <EditText
-                android:id="@+id/passwordInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Enter Password"
-                android:inputType="textPassword"
-                android:layout_marginBottom="24dp"
-                android:padding="12dp"
-                android:background="@drawable/edittext_box_style"
-                android:textColor="@android:color/black" />
+                <TextView
+                    android:text="Admin Login"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginBottom="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
 
-            <Button
-                android:id="@+id/adminLoginBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Login" />
+                <TextView
+                    android:text="Election Dept"
+                    android:textSize="18sp"
+                    android:textColor="#B3FFFFFF"
+                    android:layout_marginBottom="40dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <EditText
+                    android:id="@+id/deptCodeInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Department Code"
+                    android:layout_marginBottom="24dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:background="@drawable/glass_input_bg"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#B3FFFFFF" />
+
+                <EditText
+                    android:id="@+id/passwordInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Password"
+                    android:inputType="textPassword"
+                    android:layout_marginBottom="32dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:background="@drawable/glass_input_bg"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#B3FFFFFF" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/adminLoginBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Login"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/neon_button_bg" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </FrameLayout>

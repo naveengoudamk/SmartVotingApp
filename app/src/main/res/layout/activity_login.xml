@@ -12,10 +12,13 @@
         android:layout_height="match_parent"
         android:src="@drawable/indian_election_bg"
         android:scaleType="centerCrop"
-        android:alpha="0.2"
         android:contentDescription="@null" />
 
-
+    <!-- Dark Overlay for Glass Effect -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000" />
 
     <!-- Foreground Content -->
     <ScrollView
@@ -31,125 +34,170 @@
             android:gravity="center_horizontal"
             android:background="@android:color/transparent">
 
-            <com.airbnb.lottie.LottieAnimationView
-                android:id="@+id/loginAnimation"
-                android:layout_width="300dp"
-                android:layout_height="300dp"
-                app:lottie_rawRes="@raw/login_animation"
-                app:lottie_autoPlay="true"
-                app:lottie_loop="true" />
-
-            <EditText
-                android:id="@+id/aadhaarInput"
-                android:hint="Enter Aadhaar Number"
-                android:inputType="number"
-                android:maxLength="12"
-                android:digits="0123456789"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="12dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/edittext_box_style"/>
-
-            <EditText
-                android:id="@+id/dobInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Enter DOB (yyyy-mm-dd)"
-                android:focusable="false"
-                android:clickable="true"
-                android:inputType="none"
-                android:drawableEnd="@drawable/baseline_calendar_month_24"
-                android:padding="12dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/edittext_box_style" />
-
-            <!-- Send OTP button -->
-            <Button
-                android:id="@+id/sendOtpButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Send OTP"
-                android:layout_marginTop="12dp"/>
-
-            <!-- OTP area: hidden until OTP sent -->
+            <!-- Glass Card Container -->
             <LinearLayout
-                android:id="@+id/otpArea"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:visibility="gone"
-                android:layout_marginTop="12dp">
+                android:background="@drawable/glass_card_bg"
+                android:padding="24dp"
+                android:gravity="center_horizontal"
+                android:layout_margin="8dp">
 
+                <!-- Lottie Animation -->
+                <com.airbnb.lottie.LottieAnimationView
+                    android:id="@+id/loginAnimation"
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
+                    app:lottie_rawRes="@raw/login_animation"
+                    app:lottie_autoPlay="true"
+                    app:lottie_loop="true"
+                    android:layout_marginBottom="16dp"/>
+
+                <!-- Aadhaar Input -->
                 <EditText
-                    android:id="@+id/otpInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Enter OTP"
+                    android:id="@+id/aadhaarInput"
+                    android:hint="Enter Aadhaar Number"
                     android:inputType="number"
-                    android:maxLength="6"
-                    android:padding="12dp"
-                    android:background="@drawable/edittext_box_style"/>
-
-                <TextView
-                    android:id="@+id/otpTimerText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Time left: 02:00"
-                    android:layout_marginTop="6dp"
-                    android:visibility="gone"/>
-
-                <LinearLayout
+                    android:maxLength="12"
+                    android:digits="0123456789"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:layout_marginTop="8dp">
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/glass_input_bg"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#E6E6E6"
+                    android:textSize="16sp" />
 
-                    <Button
-                        android:id="@+id/verifyOtpButton"
+                <!-- DOB Input -->
+                <EditText
+                    android:id="@+id/dobInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Enter DOB (yyyy-mm-dd)"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:inputType="none"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/glass_input_bg"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#E6E6E6"
+                    android:textSize="16sp"
+                    android:drawableEnd="@drawable/baseline_calendar_month_24"
+                    android:drawableTint="#FFFFFF" />
+
+                <!-- Send OTP button -->
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/sendOtpButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Send OTP"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:background="@drawable/neon_button_bg"
+                    android:layout_marginTop="24dp"/>
+
+                <!-- OTP area: hidden until OTP sent -->
+                <LinearLayout
+                    android:id="@+id/otpArea"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:layout_marginTop="16dp">
+
+                    <EditText
+                        android:id="@+id/otpInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter OTP"
+                        android:inputType="number"
+                        android:maxLength="6"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp"
+                        android:paddingStart="20dp"
+                        android:paddingEnd="20dp"
+                        android:background="@drawable/glass_input_bg"
+                        android:textColor="#FFFFFF"
+                        android:textColorHint="#E6E6E6" />
+
+                    <TextView
+                        android:id="@+id/otpTimerText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Verify OTP" />
+                        android:text="Time left: 02:00"
+                        android:textColor="#00E5FF"
+                        android:textStyle="bold"
+                        android:layout_marginTop="8dp"
+                        android:layout_gravity="center_horizontal"
+                        android:visibility="gone"/>
 
-                    <Button
-                        android:id="@+id/resendOtpButton"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Resend OTP"
-                        android:layout_marginStart="12dp"/>
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginTop="16dp">
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/verifyOtpButton"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="Verify OTP"
+                            android:textColor="#FFFFFF"
+                            android:background="@drawable/neon_button_bg"
+                            android:layout_marginEnd="8dp"/>
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/resendOtpButton"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="Resend"
+                            android:textColor="#FFFFFF"
+                            android:background="@drawable/glass_input_bg"
+                            android:layout_marginStart="8dp"/>
+                    </LinearLayout>
                 </LinearLayout>
-            </LinearLayout>
 
-            <Button
-                android:id="@+id/loginButton"
-                android:text="Login"
-                android:layout_marginTop="20dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/loginButton"
+                    android:text="Login"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/neon_button_bg"
+                    android:layout_marginTop="32dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnSkipLogin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Skip Login"
-                android:backgroundTint="#6B7280"
-                android:textColor="#FFFFFF"
-                android:layout_marginTop="12dp"/>
+                android:background="@android:color/transparent"
+                android:textColor="#DDDDDD"
+                android:layout_marginTop="16dp"
+                style="?android:attr/borderlessButtonStyle"/>
 
             <TextView
                 android:id="@+id/govtLoginLink"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Admin Login Link"
-                android:textColor="@android:color/holo_blue_dark"
-                android:textStyle="bold"
-                android:paddingTop="34dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:visibility="gone"/> <!-- Hiding old link as we have icon now, or keeping it as backup? User said "add... icon... redirect to admin login" -->
+                android:visibility="gone"/>
         </LinearLayout>
     </ScrollView>
+
     <!-- Admin Login Icon Positioned Top Right -->
     <ImageButton
         android:id="@+id/btnAdminLogin"
@@ -158,9 +206,9 @@
         android:src="@drawable/ic_notification"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:layout_gravity="top|end"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="48dp"
         android:layout_marginEnd="16dp"
         android:contentDescription="Admin Login"
-        app:tint="#1E3A8A" />
+        app:tint="#FFFFFF" />
 
 </FrameLayout>

@@ -113,12 +113,28 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
         builder.setView(view);
 
         EditText etTitle = view.findViewById(R.id.etTitle);
-        EditText etState = view.findViewById(R.id.etState);
+        android.widget.Spinner spinnerState = view.findViewById(R.id.spinnerState);
         EditText etMinAge = view.findViewById(R.id.etMinAge);
         android.widget.RadioGroup rgStatus = view.findViewById(R.id.rgStatus);
         android.widget.RadioButton rbActive = view.findViewById(R.id.rbActive);
         android.widget.RadioButton rbClosed = view.findViewById(R.id.rbClosed);
         EditText etStopDate = view.findViewById(R.id.etStopDate);
+
+        // Populate State Spinner
+        String[] indianStates = {
+                "National", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+                "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
+                "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland",
+                "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+                "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands",
+                "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir",
+                "Ladakh", "Lakshadweep", "Puducherry"
+        };
+
+        android.widget.ArrayAdapter<String> stateAdapter = new android.widget.ArrayAdapter<>(getContext(),
+                android.R.layout.simple_spinner_item, indianStates);
+        stateAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerState.setAdapter(stateAdapter);
 
         etStopDate.setOnClickListener(v -> {
             Calendar c = Calendar.getInstance();
@@ -129,7 +145,16 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
 
         if (election != null) {
             etTitle.setText(election.getTitle());
-            etState.setText(election.getState());
+
+            // Set Spinner Selection
+            String currentState = election.getState();
+            for (int i = 0; i < indianStates.length; i++) {
+                if (indianStates[i].equalsIgnoreCase(currentState)) {
+                    spinnerState.setSelection(i);
+                    break;
+                }
+            }
+
             etMinAge.setText(String.valueOf(election.getMinAge()));
 
             // Set status radio button
@@ -145,19 +170,24 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
         } else {
             // New Election: Pre-fill and lock state if scoped
             if (adminScope != null && !adminScope.isEmpty()) {
-                etState.setText(adminScope);
-                etState.setEnabled(false);
+                for (int i = 0; i < indianStates.length; i++) {
+                    if (indianStates[i].equalsIgnoreCase(adminScope)) {
+                        spinnerState.setSelection(i);
+                        spinnerState.setEnabled(false);
+                        break;
+                    }
+                }
             }
         }
 
         builder.setPositiveButton("Save", (dialog, which) -> {
             String title = etTitle.getText().toString().trim();
-            String state = etState.getText().toString().trim();
+            String state = spinnerState.getSelectedItem().toString(); // Get from Spinner
             String minAgeStr = etMinAge.getText().toString().trim();
             String status = rbActive.isChecked() ? "Active" : "Closed";
             String stopDate = etStopDate.getText().toString().trim();
 
-            if (title.isEmpty() || state.isEmpty() || minAgeStr.isEmpty()) {
+            if (title.isEmpty() || minAgeStr.isEmpty()) {
                 Toast.makeText(getContext(), "Please fill required fields", Toast.LENGTH_SHORT).show();
                 return;
             }

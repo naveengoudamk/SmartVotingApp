@@ -80,6 +80,8 @@ public class AdminUserListFragment extends Fragment implements UserManager.UserU
                     continue;
                 }
             }
+            if (user.isDeleted())
+                continue;
             visibleCount++;
         }
 
@@ -98,10 +100,16 @@ public class AdminUserListFragment extends Fragment implements UserManager.UserU
 
         for (User user : users) {
             // FILTER: If admin has a scope, only show users from that state
+            // FILTER: If admin has a scope, only show users from that state
             if (adminScope != null && !adminScope.isEmpty()) {
                 if (user.getState() == null || !user.getState().equalsIgnoreCase(adminScope)) {
                     continue; // Skip users from other states
                 }
+            }
+
+            // FILTER: Don't show deleted users
+            if (user.isDeleted()) {
+                continue;
             }
 
             View userView = LayoutInflater.from(getContext()).inflate(R.layout.item_user_admin, userContainer, false);
@@ -109,11 +117,32 @@ public class AdminUserListFragment extends Fragment implements UserManager.UserU
             TextView name = userView.findViewById(R.id.tvName);
             TextView aadhaar = userView.findViewById(R.id.tvAadhaar);
             Button btnEdit = userView.findViewById(R.id.btnEdit);
+            Button btnDelete = userView.findViewById(R.id.btnDelete);
 
             name.setText(user.getName());
             aadhaar.setText("Aadhaar: " + user.getAadhaarId());
 
             btnEdit.setOnClickListener(v -> showEditUserDialog(user));
+
+            // Only Super Admin can delete users
+            if (adminScope == null || adminScope.isEmpty()) {
+                btnDelete.setVisibility(View.VISIBLE);
+                btnDelete.setOnClickListener(v -> {
+                    new AlertDialog.Builder(getContext())
+                            .setTitle("Delete User")
+                            .setMessage("Are you sure you want to delete " + user.getName()
+                                    + "?\nThey will no longer be able to login.")
+                            .setPositiveButton("Delete", (dialog, which) -> {
+                                userManager.deleteUser(user.getAadhaarId());
+                                Toast.makeText(getContext(), "User deleted", Toast.LENGTH_SHORT).show();
+                                loadUsers(); // Refresh list
+                            })
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                });
+            } else {
+                btnDelete.setVisibility(View.GONE);
+            }
 
             userContainer.addView(userView);
         }

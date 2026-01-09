@@ -24,12 +24,19 @@
             android:hint="Election Title"
             android:layout_marginBottom="8dp"/>
 
-        <EditText
-            android:id="@+id/etState"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="State (or National)"
-            android:layout_marginBottom="8dp"/>
+            android:text="Select State / Scope:"
+            android:paddingStart="4dp"
+            android:layout_marginBottom="4dp"/>
+            
+        <Spinner
+            android:id="@+id/spinnerState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:layout_marginBottom="16dp"/>
 
         <EditText
             android:id="@+id/etMinAge"

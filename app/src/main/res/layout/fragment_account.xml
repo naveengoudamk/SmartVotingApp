@@ -577,4 +577,75 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <!-- Guest Login Overlay -->
+    <FrameLayout
+        android:id="@+id/guestOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#F3F4F6"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="24dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="8dp"
+            app:cardBackgroundColor="#FFFFFF">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="32dp"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_account"
+                    app:tint="#1E3A8A"
+                    android:background="@drawable/circle_background"
+                    android:backgroundTint="#EFF6FF"
+                    android:padding="16dp"
+                    android:layout_marginBottom="24dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Guest Mode"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#1E3A8A"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Login to access your profile, manage account settings, and view your voting status."
+                    android:textSize="16sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="32dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="4dp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLoginFromAccount"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="Login Now"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="12dp"
+                    android:backgroundTint="#1E3A8A"
+                    app:icon="@drawable/ic_security"
+                    app:iconGravity="textStart"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </FrameLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

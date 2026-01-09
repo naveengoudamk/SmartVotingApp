@@ -64,6 +64,25 @@ public class AccountFragment extends Fragment {
             prefs = requireContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
             feedbackManager = new FeedbackManager(getContext());
 
+            // Guest Overlay
+            View guestOverlay = view.findViewById(R.id.guestOverlay);
+            com.google.android.material.button.MaterialButton btnLoginFromAccount = view
+                    .findViewById(R.id.btnLoginFromAccount);
+
+            // Checking XML: AppBarLayout has no ID. NestedScrollView has no ID.
+            // I should assign IDs or find by type? Or just find the children of
+            // CoordinatorLayout.
+            // Or use the fact that overlay covers them.
+            // XML check: AppBarLayout is first child. NestedScrollView is second.
+
+            // Let's assume overlay covers them if VISIBLE + click consumption.
+            // But better to hide them if possible.
+            // I'll just rely on overlay covering them for now as I can't easily find them
+            // without IDs.
+            // Actually, I can find NestedScrollView by traversing? No, bad practice.
+            // I will assume overlay is enough.
+
+            // User Views
             txtName = view.findViewById(R.id.txt_name);
             txtAadhaar = view.findViewById(R.id.txt_aadhaar);
             txtMobile = view.findViewById(R.id.txt_mobile);
@@ -83,8 +102,42 @@ public class AccountFragment extends Fragment {
             com.google.android.material.switchmaterial.SwitchMaterial switchDarkMode = view
                     .findViewById(R.id.switchDarkMode);
 
+            // Dark Mode Logic (Run for everyone)
+            boolean isDarkMode = prefs.getBoolean("isDarkMode", false);
+            if (switchDarkMode != null) {
+                switchDarkMode.setChecked(isDarkMode);
+                switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    prefs.edit().putBoolean("isDarkMode", isChecked).apply();
+                    if (isChecked) {
+                        androidx.appcompat.app.AppCompatDelegate
+                                .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
+                    } else {
+                        androidx.appcompat.app.AppCompatDelegate
+                                .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+                    }
+                });
+            }
+
             User user = UserUtils.getCurrentUser(getContext());
-            if (user != null) {
+
+            if (user == null) {
+                // GUEST MODE
+                if (guestOverlay != null) {
+                    guestOverlay.setVisibility(View.VISIBLE);
+                    btnLoginFromAccount.setOnClickListener(v -> {
+                        Intent intent = new Intent(getContext(), LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    });
+                }
+                // Hide views accessed by findById if practical? No, just don't populate them.
+                return view;
+            } else {
+                // LOGGED IN
+                if (guestOverlay != null) {
+                    guestOverlay.setVisibility(View.GONE);
+                }
+
                 txtName.setText(user.getName());
                 txtAadhaar.setText(user.getAadhaarId());
                 txtMobile.setText(user.getMobile());
@@ -98,27 +151,12 @@ public class AccountFragment extends Fragment {
                     txtEligible.setTextColor(0xFFDC2626);
                 }
                 editEmail.setText(user.getEmail());
-            } else {
-                CustomAlert.showError(getContext(), "Error", "User data not found");
+
+                loadSavedProfileImage();
+                loadUserFeedback();
             }
 
-            // Dark Mode Logic
-            boolean isDarkMode = prefs.getBoolean("isDarkMode", false);
-            switchDarkMode.setChecked(isDarkMode);
-
-            switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                prefs.edit().putBoolean("isDarkMode", isChecked).apply();
-                if (isChecked) {
-                    androidx.appcompat.app.AppCompatDelegate
-                            .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
-                } else {
-                    androidx.appcompat.app.AppCompatDelegate
-                            .setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
-                }
-            });
-
-            loadSavedProfileImage();
-
+            // Listeners only for logged in users
             updateEmailButton.setOnClickListener(v -> {
                 String updatedEmail = editEmail.getText().toString().trim();
                 MainActivity.email = updatedEmail;
@@ -151,7 +189,6 @@ public class AccountFragment extends Fragment {
             });
 
             btnSubmitFeedback.setOnClickListener(v -> showSubmitFeedbackDialog());
-            loadUserFeedback();
 
             return view;
         } catch (Exception e) {

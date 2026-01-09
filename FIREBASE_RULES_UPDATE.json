@@ -1,0 +1,36 @@
+{
+    "rules": {
+        "app_version": {
+            ".read": true,
+            ".write": true
+        },
+        "elections": {
+            ".read": true,
+            ".write": true
+        },
+        "news": {
+            ".read": true,
+            ".write": true
+        },
+        "parties": {
+            ".read": true,
+            ".write": true
+        },
+        "users": {
+            ".read": true,
+            ".write": true
+        },
+        "votes": {
+            ".read": true,
+            ".write": true
+        },
+        "voting_options": {
+            ".read": true,
+            ".write": true
+        },
+        "feedback": {
+            ".read": true,
+            ".write": true
+        }
+    }
+}

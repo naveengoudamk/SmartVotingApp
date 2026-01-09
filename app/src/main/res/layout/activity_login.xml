@@ -15,6 +15,19 @@
         android:alpha="0.2"
         android:contentDescription="@null" />
 
+    <!-- Admin Login Icon Positioned Top Right -->
+    <ImageButton
+        android:id="@+id/btnAdminLogin"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_notification"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="Admin Login"
+        app:tint="#1E3A8A" />
+
     <!-- Foreground Content -->
     <ScrollView
         android:layout_width="match_parent"
@@ -126,16 +139,26 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 
+            <Button
+                android:id="@+id/btnSkipLogin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Skip Login"
+                android:backgroundTint="#6B7280"
+                android:textColor="#FFFFFF"
+                android:layout_marginTop="12dp"/>
+
             <TextView
                 android:id="@+id/govtLoginLink"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Admin Login"
+                android:text="Admin Login Link"
                 android:textColor="@android:color/holo_blue_dark"
                 android:textStyle="bold"
                 android:paddingTop="34dp"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                android:visibility="gone"/> <!-- Hiding old link as we have icon now, or keeping it as backup? User said "add... icon... redirect to admin login" -->
         </LinearLayout>
     </ScrollView>
 </FrameLayout>

@@ -3,133 +3,126 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
+    android:layout_marginBottom="16dp"
+    android:layout_marginHorizontal="4dp"
     app:cardBackgroundColor="#FFFFFF"
     app:cardCornerRadius="16dp"
     app:cardElevation="3dp"
-    app:strokeColor="#E5E7EB"
+    app:strokeColor="#F3F4F6"
     app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="18dp">
+        android:padding="20dp">
 
-        <!-- Header with Status -->
+        <!-- Top Row: Title + Status -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="10dp">
+            android:gravity="top">
 
-            <TextView
-                android:id="@+id/tvAdminFeedbackTitle"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Issue Title"
-                android:textColor="#111827"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:maxLines="2"
-                android:ellipsize="end"/>
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvAdminFeedbackTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Login Issue"
+                    android:textColor="#111827"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp"/>
+
+                <!-- User Info Subtitle -->
+                <TextView
+                    android:id="@+id/tvAdminFeedbackUser"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="John Doe • XXXX-1234"
+                    android:textColor="#6B7280"
+                    android:textSize="13sp"
+                    android:textStyle="normal"/>
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tvAdminFeedbackStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Pending"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
+                android:textColor="#B45309"
+                android:textSize="12sp"
                 android:textStyle="bold"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
                 android:background="@drawable/bg_status_active"
-                android:backgroundTint="#F59E0B"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="5dp"
-                android:layout_marginStart="8dp"/>
+                android:backgroundTint="#FEF3C7"/>
         </LinearLayout>
 
-        <!-- User Info -->
-        <LinearLayout
+        <!-- Divider -->
+        <View
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:background="@drawable/bg_status_active"
-            android:backgroundTint="#F9FAFB"
-            android:padding="10dp"
-            android:layout_marginBottom="10dp">
+            android:layout_height="1dp"
+            android:background="#F3F4F6"
+            android:layout_marginVertical="16dp"/>
 
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@android:drawable/ic_menu_myplaces"
-                app:tint="#6B7280"
-                android:layout_marginEnd="6dp"/>
-
-            <TextView
-                android:id="@+id/tvAdminFeedbackUser"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="User Name • XXXX-XXXX-1234"
-                android:textColor="#374151"
-                android:textSize="13sp"
-                android:textStyle="bold"/>
-        </LinearLayout>
-
-        <!-- Description -->
+        <!-- Content -->
         <TextView
             android:id="@+id/tvAdminFeedbackDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Description of the issue goes here..."
-            android:textColor="#4B5563"
-            android:textSize="14sp"
-            android:lineSpacingExtra="2dp"
-            android:layout_marginBottom="10dp"/>
+            android:text="User description text goes here..."
+            android:textColor="#374151"
+            android:textSize="15sp"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="12dp"/>
 
-        <!-- Date -->
         <TextView
             android:id="@+id/tvAdminFeedbackDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Submitted on: 2024-12-05 10:30 AM"
+            android:text="Dec 12, 10:30 AM"
             android:textColor="#9CA3AF"
             android:textSize="12sp"
-            android:layout_marginBottom="12dp"/>
+            android:layout_marginBottom="16dp"/>
 
-        <!-- Admin Response Section (if exists) -->
+        <!-- Admin Response (Modern 'Quoted' Style) -->
         <LinearLayout
             android:id="@+id/layoutAdminResponsePreview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_status_active"
-            android:backgroundTint="#ECFDF5"
-            android:padding="12dp"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="16dp"
+            android:paddingStart="12dp"
+            android:background="@drawable/bg_left_border_accent"
             android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Your Response:"
+                android:text="Admin Response"
                 android:textColor="#059669"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="4dp"/>
+                android:layout_marginBottom="2dp"/>
 
             <TextView
                 android:id="@+id/tvAdminResponsePreview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Response text..."
-                android:textColor="#065F46"
-                android:textSize="13sp"/>
+                android:text="Response content..."
+                android:textColor="#4B5563"
+                android:textSize="14sp"
+                android:textStyle="italic"/>
         </LinearLayout>
 
-        <!-- Action Buttons -->
+        <!-- Actions -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -138,30 +131,22 @@
 
             <Button
                 android:id="@+id/btnDeleteFeedback"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:text="Delete"
-                android:textColor="#DC2626"
-                android:layout_marginEnd="8dp"
-                app:strokeColor="#FCA5A5"
-                app:cornerRadius="10dp"
-                app:icon="@android:drawable/ic_menu_delete"
-                app:iconTint="#DC2626"/>
+                android:textColor="#EF4444"
+                android:layout_marginEnd="8dp"/>
 
             <Button
                 android:id="@+id/btnResolveFeedback"
                 android:layout_width="wrap_content"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:text="Resolve"
-                android:backgroundTint="#1E3A8A"
+                android:backgroundTint="#2563EB"
                 android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                app:cornerRadius="10dp"
-                app:icon="@android:drawable/ic_menu_edit"
-                app:iconTint="#FFFFFF"/>
+                app:cornerRadius="8dp"
+                app:elevation="0dp"/>
         </LinearLayout>
-
     </LinearLayout>
-
 </com.google.android.material.card.MaterialCardView>

@@ -79,21 +79,21 @@ public class MainActivity extends AppCompatActivity {
             eligible = intent.getBooleanExtra("eligible", false);
             Log.d(TAG, "User data loaded: " + aadhaarId);
 
-            // Validate minimum required data
+            // Validate user data or Enable Guest Mode
             if (aadhaarId == null || aadhaarId.isEmpty()) {
-                Log.e(TAG, "No aadhaar ID - redirecting to login");
-                Toast.makeText(this, "Login session error. Please login again.", Toast.LENGTH_LONG).show();
-                finish();
-                return;
-            }
-
-            // Save user session
-            try {
-                UserUtils.saveUserSession(this, aadhaarId);
-                Log.d(TAG, "User session saved");
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to save session", e);
-                e.printStackTrace();
+                Log.i(TAG, "No user data found - Entering Guest Mode");
+                aadhaarId = null; // Ensure it's null for checks
+                Toast.makeText(this, "Entered as Guest", Toast.LENGTH_SHORT).show();
+                // Skip session saving for guest
+            } else {
+                // Save user session for logged in user
+                try {
+                    UserUtils.saveUserSession(this, aadhaarId);
+                    Log.d(TAG, "User session saved");
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to save session", e);
+                    e.printStackTrace();
+                }
             }
 
             // Load default fragment

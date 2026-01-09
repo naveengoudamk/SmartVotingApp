@@ -335,26 +335,28 @@ public class HistoryFragment extends Fragment {
                     String winner = "";
                     String logo = null;
                     boolean tie = false;
-                    StringBuilder sb = new StringBuilder();
+                    int totalVotes = 0;
 
+                    // First pass: Calculate totals and winner
                     for (VotingOption opt : options) {
                         int c = voteCounts.getOrDefault(opt.getId(), 0);
+                        totalVotes += c;
                         if (c > max) {
                             max = c;
                             winner = opt.getOptionName();
                             logo = opt.getLogoPath();
                             tie = false;
-                        } else if (c == max)
+                        } else if (c == max) {
                             tie = true;
-                        sb.append("• ").append(opt.getOptionName()).append(": ").append(c).append("\n");
+                        }
                     }
 
+                    // Set Text Summary (Congrats)
                     if (tie) {
-                        holder.tvResultSummary.setText("It's a tie! (" + max + " votes)\n\n" + sb.toString());
+                        holder.tvResultSummary.setText("It's a tie! (" + max + " votes each)");
                         holder.imgWinner.setVisibility(View.GONE);
                     } else {
-                        holder.tvResultSummary.setText("🎉 Congratulations " + winner + "!\nWinner: " + winner + " ("
-                                + max + " votes)\n\n" + sb.toString());
+                        holder.tvResultSummary.setText("🎉 Congratulations " + winner + "!\nDeclared Winner");
                         if (logo != null) {
                             try {
                                 File file = new File(holder.itemView.getContext().getFilesDir(), logo);
@@ -372,6 +374,37 @@ public class HistoryFragment extends Fragment {
                             holder.imgWinner.setVisibility(View.GONE);
                         }
                     }
+
+                    // Populate Progress Bars
+                    holder.layoutVoteBars.removeAllViews();
+                    for (VotingOption opt : options) {
+                        int count = voteCounts.getOrDefault(opt.getId(), 0);
+
+                        View row = LayoutInflater.from(holder.itemView.getContext())
+                                .inflate(R.layout.item_result_count_row, holder.layoutVoteBars, false);
+
+                        TextView tvName = row.findViewById(R.id.tvOptionName);
+                        TextView tvCount = row.findViewById(R.id.tvVoteCount);
+                        android.widget.ProgressBar progressBar = row.findViewById(R.id.progressBar);
+
+                        tvName.setText(opt.getOptionName());
+                        tvCount.setText(count + " votes");
+
+                        // Fix for 0 total votes division
+                        progressBar.setMax(totalVotes > 0 ? totalVotes : 1);
+                        progressBar.setProgress(count);
+
+                        holder.layoutVoteBars.addView(row);
+                    }
+
+                    // Add Total Label
+                    TextView tvTotal = new TextView(holder.itemView.getContext());
+                    tvTotal.setText("Total Votes: " + totalVotes);
+                    tvTotal.setTypeface(null, android.graphics.Typeface.BOLD);
+                    tvTotal.setPadding(0, 16, 0, 0);
+                    tvTotal.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+                    tvTotal.setTextColor(0xFF374151); // Gray-700
+                    holder.layoutVoteBars.addView(tvTotal);
                 }
 
             } else {
@@ -394,7 +427,7 @@ public class HistoryFragment extends Fragment {
 
         static class ViewHolder extends RecyclerView.ViewHolder {
             TextView tvTitle, tvStatusBadge, tvDate, tvResultSummary;
-            LinearLayout layoutResults, layoutWaiting;
+            LinearLayout layoutResults, layoutWaiting, layoutVoteBars;
             android.widget.ImageView imgWinner;
             SimpleConfettiView confettiView;
 
@@ -405,6 +438,7 @@ public class HistoryFragment extends Fragment {
                 tvDate = itemView.findViewById(R.id.tvDate);
                 tvResultSummary = itemView.findViewById(R.id.tvResultSummary);
                 layoutResults = itemView.findViewById(R.id.layoutResults);
+                layoutVoteBars = itemView.findViewById(R.id.layoutVoteBars);
                 layoutWaiting = itemView.findViewById(R.id.layoutWaiting);
                 imgWinner = itemView.findViewById(R.id.imgWinner);
                 confettiView = itemView.findViewById(R.id.confettiView);

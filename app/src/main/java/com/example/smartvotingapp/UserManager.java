@@ -16,7 +16,9 @@ import org.json.JSONObject;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class UserManager {
@@ -24,7 +26,13 @@ public class UserManager {
     private static final String FILE_NAME = "aadhaar_data.json";
     private Context context;
     private DatabaseReference databaseReference;
-    private List<User> cachedUsers = new ArrayList<>();
+
+    // Separate maps for robust data handling
+    // 1. Immutable map loaded from assets (Backup/Test data)
+    private Map<String, User> assetUserMap = new HashMap<>();
+    // 2. Dynamic map loaded from Firebase (Live data)
+    private Map<String, User> firebaseUserMap = new HashMap<>();
+
     private List<UserUpdateListener> listeners = new ArrayList<>();
     private boolean isDataLoaded = false;
 
@@ -36,35 +44,36 @@ public class UserManager {
         this.context = context;
         databaseReference = FirebaseDatabase.getInstance().getReference("users");
 
-        // Listen for data
+        // 1. Load local assets immediately (synchronously so it's ready for login)
+        loadFromAssets();
+
+        // 2. Listen for Firebase updates (asynchronous overlay)
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                cachedUsers.clear();
                 if (snapshot.exists()) {
                     for (DataSnapshot child : snapshot.getChildren()) {
                         try {
                             User user = child.getValue(User.class);
                             if (user != null) {
-                                cachedUsers.add(user);
+                                firebaseUserMap.put(user.getAadhaarId(), user);
                             }
                         } catch (Exception e) {
                             Log.e(TAG, "Error parsing user: " + e.getMessage());
                         }
                     }
-                    isDataLoaded = true;
-                    Log.d(TAG, "Users loaded from Firebase: " + cachedUsers.size());
-                    notifyListeners();
-                } else {
-                    // Firebase is empty, seed from assets
-                    Log.d(TAG, "Firebase empty. Seeding from assets...");
-                    seedFromAssets();
+                    Log.d(TAG, "Firebase data loaded. Count: " + firebaseUserMap.size());
                 }
+
+                isDataLoaded = true;
+                notifyListeners();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.e(TAG, "Database error: " + error.getMessage());
+                // Even on error, we have local data, so keep isDataLoaded = true
+                isDataLoaded = true;
             }
         });
     }
@@ -88,7 +97,7 @@ public class UserManager {
         }
     }
 
-    private void seedFromAssets() {
+    private void loadFromAssets() {
         try {
             InputStream is = context.getAssets().open(FILE_NAME);
             Scanner scanner = new Scanner(is, StandardCharsets.UTF_8.name());
@@ -96,7 +105,7 @@ public class UserManager {
             scanner.close();
 
             JSONArray array = new JSONArray(json);
-            List<User> initialUsers = new ArrayList<>();
+            int count = 0;
 
             for (int i = 0; i < array.length(); i++) {
                 JSONObject obj = array.getJSONObject(i);
@@ -113,30 +122,47 @@ public class UserManager {
                         obj.optString("pincode", ""),
                         obj.optBoolean("eligible", true));
 
-                initialUsers.add(user);
-                // Upload individually (efficient enough for seeding)
-                databaseReference.child(user.getAadhaarId()).setValue(user);
+                // Add to ASSET map (Immutable)
+                assetUserMap.put(user.getAadhaarId(), user);
+                count++;
             }
-            Log.d(TAG, "Seeded " + initialUsers.size() + " users to Firebase.");
+            Log.d(TAG, "Loaded " + count + " users from assets (Immutable).");
 
         } catch (Exception e) {
-            Log.e(TAG, "Error seeding assets", e);
+            Log.e(TAG, "Error loading assets", e);
         }
+
+        // FAIL-SAFE: Explicitly add Test Users (Guarantees these credentials ALWAYS
+        // work)
+        // 1. Ramesh Gowda (Standard Test User)
+        User ramesh = new User("112233445566", "Ramesh Gowda", "1990-01-01",
+                "ramesh@example.com", "9900112233", "ramesh.jpg",
+                "123 MG Road", "Bengaluru", "Karnataka", "560038", true);
+        assetUserMap.put(ramesh.getAadhaarId(), ramesh);
+
+        // 2. Naveen Gouda (Admin/Dev)
+        User naveen = new User("123456789102", "Naveen Gouda", "2004-01-01",
+                "naveen@example.com", "7766554433", "sneha.jpg",
+                "Hubli Main Rd", "Hubli", "Karnataka", "580020", true);
+        assetUserMap.put(naveen.getAadhaarId(), naveen);
+
+        Log.d(TAG, "Hardcoded fail-safe users added: Ramesh & Naveen");
+        isDataLoaded = true; // Local data is ready
     }
 
     public List<User> getAllUsers() {
-        return new ArrayList<>(cachedUsers);
+        // Merge for display: Firebase overrides Assets
+        Map<String, User> merged = new HashMap<>(assetUserMap);
+        merged.putAll(firebaseUserMap);
+        return new ArrayList<>(merged.values());
     }
 
     public void updateUser(User updatedUser) {
-        // Optimistic update
-        for (int i = 0; i < cachedUsers.size(); i++) {
-            if (cachedUsers.get(i).getAadhaarId().equals(updatedUser.getAadhaarId())) {
-                cachedUsers.set(i, updatedUser);
-                break;
-            }
-        }
+        // Update local cache
+        firebaseUserMap.put(updatedUser.getAadhaarId(), updatedUser);
+        notifyListeners();
 
+        // Update Firebase (Source of Truth for changes)
         Log.d(TAG, "Updating user: " + updatedUser.getAadhaarId());
         databaseReference.child(updatedUser.getAadhaarId()).setValue(updatedUser)
                 .addOnSuccessListener(aVoid -> {
@@ -148,30 +174,82 @@ public class UserManager {
     }
 
     public void addUser(User newUser) {
-        // Check if exists
-        for (User u : cachedUsers) {
-            if (u.getAadhaarId().equals(newUser.getAadhaarId())) {
-                Log.w(TAG, "User already exists: " + newUser.getAadhaarId());
-                return;
-            }
+        if (getUser(newUser.getAadhaarId(), newUser.getDob()) != null) {
+            Log.w(TAG, "User already exists: " + newUser.getAadhaarId());
+            return;
         }
 
-        Log.d(TAG, "Adding new user: " + newUser.getAadhaarId() + ", name: " + newUser.getName());
+        // Update local cache
+        firebaseUserMap.put(newUser.getAadhaarId(), newUser);
+        notifyListeners();
+
+        Log.d(TAG, "Adding new user: " + newUser.getAadhaarId());
         databaseReference.child(newUser.getAadhaarId()).setValue(newUser)
                 .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "✅ User added successfully: " + newUser.getAadhaarId());
+                    Log.d(TAG, "✅ User added successfully");
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "❌ Failed to add user: " + e.getMessage(), e);
                 });
     }
 
-    public User getUser(String aadhaar, String dob) {
-        for (User u : cachedUsers) {
-            if (u.getAadhaarId().equals(aadhaar) && u.getDob().equals(dob)) {
-                return u;
-            }
+    public void deleteUser(String aadhaarId) {
+        // Soft delete: Update Firebase with deleted=true
+        // We first need to get the current user object to preserve other fields
+        User userToDelete = firebaseUserMap.get(aadhaarId);
+        if (userToDelete == null) {
+            userToDelete = assetUserMap.get(aadhaarId);
         }
+
+        if (userToDelete != null) {
+            userToDelete.setDeleted(true);
+            updateUser(userToDelete); // This saves to Firebase
+            Log.d(TAG, "User marked as deleted: " + aadhaarId);
+        } else {
+            // Create a skeleton user just to mark deleted if not found (rare)
+            User skeleton = new User();
+            skeleton.setAadhaarId(aadhaarId);
+            skeleton.setDeleted(true);
+            updateUser(skeleton);
+        }
+    }
+
+    /**
+     * Robust User Retrieval Strategy:
+     * 1. Check local assets & Firebase.
+     * 2. CRITICAL: If *EITHER* source says "deleted=true", BLOCK LOGIN.
+     * (Firebase takes precedence for status updates).
+     */
+    public User getUser(String aadhaar, String dob) {
+        if (aadhaar == null || dob == null)
+            return null;
+
+        String a = aadhaar.trim();
+        String d = dob.trim();
+
+        // Check if user is BANNED/DELETED in Firebase (Source of Truth for status)
+        User firebaseUser = firebaseUserMap.get(a);
+        if (firebaseUser != null && firebaseUser.isDeleted()) {
+            Log.w(TAG, "Login blocked: User is deleted. " + a);
+            return null;
+        }
+
+        // 1. Check ASSETS first
+        User assetUser = assetUserMap.get(a);
+        if (assetUser != null && assetUser.getDob().trim().equals(d)) {
+            // Even if found in assets, double check we didn't miss a ban
+            // (Handled above by checking firebaseUserMap.get(a) first)
+            Log.d(TAG, "User found in assets: " + a);
+            return assetUser;
+        }
+
+        // 2. Check FIREBASE second
+        if (firebaseUser != null && firebaseUser.getDob().trim().equals(d)) {
+            Log.d(TAG, "User found in Firebase: " + a);
+            return firebaseUser;
+        }
+
+        Log.w(TAG, "User not found locally or in Firebase: " + a);
         return null;
     }
 

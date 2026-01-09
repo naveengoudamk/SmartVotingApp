@@ -4,88 +4,76 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F8F9FA">
+    android:background="#F9FAFB">
 
     <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/bg_header_gradient"
+        android:background="#FFFFFF"
         android:padding="20dp"
-        android:elevation="4dp">
+        android:elevation="1dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="User Feedback"
-            android:textColor="#FFFFFF"
-            android:textSize="28sp"
+            android:textColor="#111827"
+            android:textSize="24sp"
             android:textStyle="bold"
-            android:layout_marginBottom="6dp"/>
+            android:layout_marginBottom="4dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Manage user queries and issues"
-            android:textColor="#E0E7FF"
+            android:text="Review and resolve user submitted issues."
+            android:textColor="#6B7280"
             android:textSize="14sp"/>
-    </LinearLayout>
 
-    <!-- Filter Tabs -->
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:cardBackgroundColor="#FFFFFF"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="2dp">
-
+        <!-- Modern Tabs -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="8dp">
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_tab_container"
+            android:padding="4dp">
 
             <Button
                 android:id="@+id/btnFilterAll"
-                style="@style/Widget.MaterialComponents.Button"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:text="All"
                 android:textSize="13sp"
-                android:backgroundTint="#1E3A8A"
-                android:textColor="#FFFFFF"
-                app:cornerRadius="10dp"
-                android:layout_marginEnd="4dp"/>
+                android:textColor="#111827"
+                app:cornerRadius="8dp"/>
 
             <Button
                 android:id="@+id/btnFilterPending"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:text="Pending"
                 android:textSize="13sp"
                 android:textColor="#6B7280"
-                app:strokeColor="#D1D5DB"
-                app:cornerRadius="10dp"
-                android:layout_marginEnd="4dp"/>
+                app:cornerRadius="8dp"/>
 
             <Button
                 android:id="@+id/btnFilterResolved"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:text="Resolved"
                 android:textSize="13sp"
                 android:textColor="#6B7280"
-                app:strokeColor="#D1D5DB"
-                app:cornerRadius="10dp"/>
+                app:cornerRadius="8dp"/>
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
 
     <!-- Feedback List -->
     <androidx.core.widget.NestedScrollView
@@ -98,8 +86,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingBottom="16dp">
+            android:padding="16dp">
 
             <LinearLayout
                 android:id="@+id/feedbackContainer"
@@ -118,25 +105,25 @@
                 android:visibility="gone">
 
                 <ImageView
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
-                    android:src="@android:drawable/ic_dialog_email"
-                    app:tint="#D1D5DB"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_vote"
+                    app:tint="#E5E7EB"
                     android:layout_marginBottom="16dp"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="No Feedback Yet"
-                    android:textColor="#6B7280"
-                    android:textSize="18sp"
+                    android:text="All caught up!"
+                    android:textColor="#374151"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginBottom="4dp"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="User feedback will appear here"
+                    android:text="No feedback found for this filter."
                     android:textColor="#9CA3AF"
                     android:textSize="14sp"
                     android:gravity="center"/>

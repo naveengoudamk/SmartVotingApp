@@ -45,5 +45,16 @@
             android:text="Edit"
             android:textSize="12sp"/>
 
+        <Button
+            android:id="@+id/btnDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:text="Delete"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#DC2626"
+            android:textSize="12sp"
+            android:visibility="gone"/>
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

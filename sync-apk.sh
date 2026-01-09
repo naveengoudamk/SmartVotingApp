@@ -7,18 +7,28 @@ echo "🚀 Starting APK sync to web project..."
 
 # Define paths
 APP_APK_PATH="/Users/naveennavi/Desktop/projects/SmartVotingApp/app/build/outputs/apk/release/app-release.apk"
+APP_APK_UNSIGNED_PATH="/Users/naveennavi/Desktop/projects/SmartVotingApp/app/build/outputs/apk/release/app-release-unsigned.apk"
 WEB_PUBLIC_PATH="/Users/naveennavi/Desktop/projects/SmartVotingApp/smartvotingweb/public/SmartVotingApp.apk"
 
-# Check if APK exists
-if [ ! -f "$APP_APK_PATH" ]; then
-    echo "❌ Error: APK not found at $APP_APK_PATH"
+# Check if APK exists (try signed first, then unsigned)
+if [ -f "$APP_APK_PATH" ]; then
+    SOURCE_APK="$APP_APK_PATH"
+    echo "✅ Found signed APK"
+elif [ -f "$APP_APK_UNSIGNED_PATH" ]; then
+    SOURCE_APK="$APP_APK_UNSIGNED_PATH"
+    echo "✅ Found unsigned APK"
+else
+    echo "❌ Error: APK not found"
+    echo "Tried:"
+    echo "  - $APP_APK_PATH"
+    echo "  - $APP_APK_UNSIGNED_PATH"
     echo "Please build the release APK first using: ./gradlew assembleRelease"
     exit 1
 fi
 
 # Copy APK to web public folder
 echo "📦 Copying APK to web project..."
-cp "$APP_APK_PATH" "$WEB_PUBLIC_PATH"
+cp "$SOURCE_APK" "$WEB_PUBLIC_PATH"
 
 if [ $? -eq 0 ]; then
     echo "✅ APK successfully copied to web project!"

@@ -66,7 +66,10 @@ public class LoginActivity extends AppCompatActivity {
         aadhaarInput = findViewById(R.id.aadhaarInput);
         dobInput = findViewById(R.id.dobInput);
         loginButton = findViewById(R.id.loginButton);
-        govtLoginLink = findViewById(R.id.govtLoginLink);
+        // govtLoginLink = findViewById(R.id.govtLoginLink); // Replaced by icon
+
+        Button btnSkipLogin = findViewById(R.id.btnSkipLogin);
+        ImageButton btnAdminLogin = findViewById(R.id.btnAdminLogin);
 
         // OTP related views
         sendOtpButton = findViewById(R.id.sendOtpButton);
@@ -84,10 +87,18 @@ public class LoginActivity extends AppCompatActivity {
         otpVerified = false;
         setLoginButtonEnabled(false);
 
-        // Admin login click
-        govtLoginLink.setOnClickListener(v -> {
+        // Admin login click (Top Icon)
+        btnAdminLogin.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, GovernmentLoginActivity.class);
             startActivity(intent);
+        });
+
+        // Skip Login click
+        btnSkipLogin.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            // No user data means Guest Mode
+            startActivity(intent);
+            finish();
         });
 
         // Disable keyboard for dob input and show calendar picker
@@ -127,8 +138,12 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             // Validate user exists before sending OTP (keeps flow safe)
-            if (userManager.getUser(aadhaar, dob) == null) {
-                CustomAlert.showError(this, "Authentication Failed", "Aadhaar/DOB not found. Please check details.");
+            User foundUser = userManager.getUser(aadhaar, dob);
+            if (foundUser == null) {
+                // Show detailed error for debugging
+                String msg = "User not found.\nChecked: " + aadhaar + " / " + dob;
+                Log.w("LoginDebug", msg);
+                CustomAlert.showError(this, "Authentication Failed", msg + "\nPlease verify credentials.");
                 return;
             }
 

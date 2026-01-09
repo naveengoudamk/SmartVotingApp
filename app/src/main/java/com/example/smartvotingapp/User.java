@@ -12,6 +12,7 @@ public class User {
     private String state;
     private String pincode;
     private boolean eligible;
+    private boolean deleted = false; // Soft delete flag
 
     public User() {
         // Required for Firebase
@@ -119,5 +120,13 @@ public class User {
 
     public void setEligible(boolean eligible) {
         this.eligible = eligible;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }

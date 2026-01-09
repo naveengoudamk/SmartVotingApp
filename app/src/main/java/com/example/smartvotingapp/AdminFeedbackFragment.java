@@ -73,31 +73,33 @@ public class AdminFeedbackFragment extends Fragment {
     }
 
     private void updateFilterButtonStyles() {
-        // Reset all buttons to outlined style
-        setButtonOutlined(btnFilterAll);
-        setButtonOutlined(btnFilterPending);
-        setButtonOutlined(btnFilterResolved);
+        // Reset all to inactive style
+        setButtonInactive(btnFilterAll);
+        setButtonInactive(btnFilterPending);
+        setButtonInactive(btnFilterResolved);
 
-        // Set active button to filled style
+        // Set active button style
         if (currentFilter.equals("all")) {
-            setButtonFilled(btnFilterAll);
+            setButtonActive(btnFilterAll);
         } else if (currentFilter.equals("pending")) {
-            setButtonFilled(btnFilterPending);
+            setButtonActive(btnFilterPending);
         } else if (currentFilter.equals("resolved")) {
-            setButtonFilled(btnFilterResolved);
+            setButtonActive(btnFilterResolved);
         }
     }
 
-    private void setButtonFilled(Button button) {
+    private void setButtonActive(Button button) {
         button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
-                getResources().getColor(android.R.color.holo_blue_dark, null)));
-        button.setTextColor(getResources().getColor(android.R.color.white, null));
+                getResources().getColor(android.R.color.white, null)));
+        button.setTextColor(getResources().getColor(android.R.color.black, null));
+        button.setElevation(2f);
     }
 
-    private void setButtonOutlined(Button button) {
+    private void setButtonInactive(Button button) {
         button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
                 getResources().getColor(android.R.color.transparent, null)));
         button.setTextColor(getResources().getColor(android.R.color.darker_gray, null));
+        button.setElevation(0f);
     }
 
     private void loadFeedback() {
@@ -105,10 +107,6 @@ public class AdminFeedbackFragment extends Fragment {
 
         // Show loading state
         layoutEmptyState.setVisibility(View.VISIBLE);
-        TextView emptyText = layoutEmptyState.findViewById(R.id.tvEmptyState);
-        if (emptyText != null) {
-            emptyText.setText("Loading feedback...");
-        }
 
         // Determine if this is super admin (ECI-INDIA) or state admin
         boolean isSuperAdmin = "ECI-INDIA".equals(adminState) || adminState == null || adminState.isEmpty();
@@ -128,9 +126,6 @@ public class AdminFeedbackFragment extends Fragment {
 
                 if (feedbackList.isEmpty()) {
                     layoutEmptyState.setVisibility(View.VISIBLE);
-                    if (emptyText != null) {
-                        emptyText.setText("No feedback found");
-                    }
                     return;
                 }
 
@@ -147,9 +142,6 @@ public class AdminFeedbackFragment extends Fragment {
             @Override
             public void onFailure(String error) {
                 layoutEmptyState.setVisibility(View.VISIBLE);
-                if (emptyText != null) {
-                    emptyText.setText("Error loading feedback: " + error);
-                }
                 Toast.makeText(getContext(), "Failed to load feedback: " + error, Toast.LENGTH_SHORT).show();
             }
         };

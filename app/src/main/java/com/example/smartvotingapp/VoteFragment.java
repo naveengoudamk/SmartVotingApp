@@ -30,6 +30,35 @@ public class VoteFragment extends Fragment
         try {
             View view = inflater.inflate(R.layout.fragment_vote, container, false);
 
+            View guestOverlay = view.findViewById(R.id.guestOverlay);
+            View voteContentContainer = view.findViewById(R.id.voteContentContainer);
+            com.google.android.material.button.MaterialButton btnLogin = view.findViewById(R.id.btnLoginFromVote);
+
+            User user = UserUtils.getCurrentUser(getContext());
+            String userId = user != null ? user.getAadhaarId() : MainActivity.aadhaarId;
+
+            if (userId == null) {
+                // GUEST MODE
+                guestOverlay.setVisibility(View.VISIBLE);
+                voteContentContainer.setVisibility(View.GONE);
+
+                btnLogin.setOnClickListener(v -> {
+                    Intent intent = new Intent(getContext(), LoginActivity.class);
+                    // Clear back stack so they can't go back to guest mode easily after login?
+                    // Or just normal open. Normal open is fine.
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                });
+
+                // Return early or just don't setup recycler view?
+                // Ideally we don't setup recycler if hidden.
+                return view;
+            } else {
+                // LOGGED IN
+                guestOverlay.setVisibility(View.GONE);
+                voteContentContainer.setVisibility(View.VISIBLE);
+            }
+
             recyclerView = view.findViewById(R.id.electionRecyclerView);
             recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -41,9 +70,6 @@ public class VoteFragment extends Fragment
 
             electionList = electionManager.getAllElections();
 
-            User user = UserUtils.getCurrentUser(getContext());
-            String userId = user != null ? user.getAadhaarId() : null;
-
             adapter = new ElectionAdapter(electionList, voteManager, userId, this::checkEligibility);
             adapter.setOnSelectionChangeListener(count -> {
                 if (count > 0) {
@@ -51,11 +77,6 @@ public class VoteFragment extends Fragment
                     btnBatchVote.setText("Vote (" + count + ")");
                 } else {
                     btnBatchVote.setVisibility(View.GONE);
-                    // Automatically exit multi-select mode if 0 (optional, but good UX)
-                    if (adapter.isMultiSelectMode()) {
-                        // adapter.setMultiSelectMode(false); // Can be annoying if user just unchecks
-                        // all to recheck different ones
-                    }
                 }
             });
             recyclerView.setAdapter(adapter);

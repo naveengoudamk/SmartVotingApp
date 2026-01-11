@@ -105,21 +105,30 @@ public class LoginActivity extends AppCompatActivity {
         dobInput.setClickable(true);
 
         dobInput.setOnClickListener(v -> {
-            com.google.android.material.datepicker.MaterialDatePicker<Long> datePicker = com.google.android.material.datepicker.MaterialDatePicker.Builder
-                    .datePicker()
-                    .setTitleText("Select Date of Birth")
-                    .setSelection(com.google.android.material.datepicker.MaterialDatePicker.todayInUtcMilliseconds())
-                    .setInputMode(com.google.android.material.datepicker.MaterialDatePicker.INPUT_MODE_CALENDAR)
-                    .build();
+            final Calendar calendar = Calendar.getInstance();
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
 
-            datePicker.addOnPositiveButtonClickListener(selection -> {
-                Calendar calendar = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"));
-                calendar.setTimeInMillis(selection);
-                java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                dobInput.setText(format.format(calendar.getTime()));
-            });
+            // Use Spinner Theme for easier year selection (Holo Light Dialog)
+            DatePickerDialog datePickerDialog = new DatePickerDialog(
+                    LoginActivity.this,
+                    android.R.style.Theme_Holo_Light_Dialog_MinWidth,
+                    (view, selectedYear, selectedMonth, selectedDay) -> {
+                        String formattedDate = selectedYear + "-" +
+                                String.format(Locale.getDefault(), "%02d", (selectedMonth + 1)) + "-" +
+                                String.format(Locale.getDefault(), "%02d", selectedDay);
+                        dobInput.setText(formattedDate);
+                    },
+                    year, month, day);
 
-            datePicker.show(getSupportFragmentManager(), "DOB_PICKER");
+            // Fix for transparent background issue with Holo theme
+            if (datePickerDialog.getWindow() != null) {
+                datePickerDialog.getWindow().setBackgroundDrawable(
+                        new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            }
+
+            datePickerDialog.show();
         });
 
         // Send OTP flow

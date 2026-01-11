@@ -260,8 +260,8 @@ public class LoginActivity extends AppCompatActivity {
 
             otpInput.setText(otp);
             otpInput.setSelection(otp.length());
-
-            Toast.makeText(this, "OTP autofilled", Toast.LENGTH_SHORT).show();
+            // Toast removed for direct login feel
+            // Verification triggers automatically via TextWatcher
         });
 
         builder.setNegativeButton("Close", (dialog, which) -> dialog.dismiss());

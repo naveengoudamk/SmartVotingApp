@@ -156,12 +156,12 @@
                             android:text="Verify OTP"
                             android:textColor="#FFFFFF"
                             android:background="@drawable/neon_button_bg"
-                            android:layout_marginEnd="8dp"/>
+                            android:layout_marginEnd="8dp"
+                            android:visibility="gone"/>
 
                         <androidx.appcompat.widget.AppCompatButton
                             android:id="@+id/resendOtpButton"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Resend"
                             android:textColor="#FFFFFF"
@@ -177,7 +177,8 @@
                     android:background="@drawable/neon_button_bg"
                     android:layout_marginTop="32dp"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"/>
 
             </LinearLayout>
 

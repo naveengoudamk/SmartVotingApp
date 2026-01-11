@@ -51,9 +51,6 @@ public class LoginActivity extends AppCompatActivity {
     private long otpExpiryMillis = 0;
     private CountDownTimer otpTimer;
 
-    // whether the OTP has been successfully verified
-    private boolean otpVerified = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,14 +63,18 @@ public class LoginActivity extends AppCompatActivity {
         aadhaarInput = findViewById(R.id.aadhaarInput);
         dobInput = findViewById(R.id.dobInput);
         loginButton = findViewById(R.id.loginButton);
-        // govtLoginLink = findViewById(R.id.govtLoginLink); // Replaced by icon
+        // loginButton is hidden/removed in XML, keeping reference safely or removing if
+        // unused
+        // But for safety if XML still has it:
+        if (loginButton != null)
+            loginButton.setVisibility(View.GONE);
 
         Button btnSkipLogin = findViewById(R.id.btnSkipLogin);
         ImageButton btnAdminLogin = findViewById(R.id.btnAdminLogin);
 
         // OTP related views
         sendOtpButton = findViewById(R.id.sendOtpButton);
-        verifyOtpButton = findViewById(R.id.verifyOtpButton);
+        // verifyOtpButton = findViewById(R.id.verifyOtpButton); // Removed
         resendOtpButton = findViewById(R.id.resendOtpButton);
         otpInput = findViewById(R.id.otpInput);
         otpArea = findViewById(R.id.otpArea);
@@ -82,10 +83,8 @@ public class LoginActivity extends AppCompatActivity {
         // Check for app updates BEFORE allowing login
         checkForUpdatesOnLogin();
 
-        // Initially hide OTP area and disable the Login button (must verify OTP first)
+        // Initially hide OTP area
         showOtpArea(false);
-        otpVerified = false;
-        setLoginButtonEnabled(false);
 
         // Admin login click (Top Icon)
         btnAdminLogin.setOnClickListener(v -> {
@@ -101,26 +100,26 @@ public class LoginActivity extends AppCompatActivity {
             finish();
         });
 
-        // Disable keyboard for dob input and show calendar picker
+        // Disable keyboard for dob input and show Material Date Picker
         dobInput.setFocusable(false);
         dobInput.setClickable(true);
 
         dobInput.setOnClickListener(v -> {
-            final Calendar calendar = Calendar.getInstance();
-            int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
+            com.google.android.material.datepicker.MaterialDatePicker<Long> datePicker = com.google.android.material.datepicker.MaterialDatePicker.Builder
+                    .datePicker()
+                    .setTitleText("Select Date of Birth")
+                    .setSelection(com.google.android.material.datepicker.MaterialDatePicker.todayInUtcMilliseconds())
+                    .setInputMode(com.google.android.material.datepicker.MaterialDatePicker.INPUT_MODE_CALENDAR)
+                    .build();
 
-            DatePickerDialog datePickerDialog = new DatePickerDialog(
-                    LoginActivity.this,
-                    (view, selectedYear, selectedMonth, selectedDay) -> {
-                        String formattedDate = selectedYear + "-" +
-                                String.format("%02d", (selectedMonth + 1)) + "-" +
-                                String.format("%02d", selectedDay);
-                        dobInput.setText(formattedDate);
-                    },
-                    year, month, day);
-            datePickerDialog.show();
+            datePicker.addOnPositiveButtonClickListener(selection -> {
+                Calendar calendar = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"));
+                calendar.setTimeInMillis(selection);
+                java.text.SimpleDateFormat format = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                dobInput.setText(format.format(calendar.getTime()));
+            });
+
+            datePicker.show(getSupportFragmentManager(), "DOB_PICKER");
         });
 
         // Send OTP flow
@@ -137,12 +136,10 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
-            // Validate user exists before sending OTP (keeps flow safe)
+            // Validate user exists before sending OTP
             User foundUser = userManager.getUser(aadhaar, dob);
             if (foundUser == null) {
-                // Show detailed error for debugging
-                String msg = "User not found.\nChecked: " + aadhaar + " / " + dob;
-                Log.w("LoginDebug", msg);
+                String msg = "User not found.\nChecked: " + aadhaar;
                 CustomAlert.showError(this, "Authentication Failed", msg + "\nPlease verify credentials.");
                 return;
             }
@@ -153,40 +150,28 @@ public class LoginActivity extends AppCompatActivity {
             showOtpArea(true);
             startOtpCountdown(2 * 60 * 1000L);
 
-            CustomAlert.showSuccess(this, "OTP Sent", "OTP sent successfully. Check popup.");
+            CustomAlert.showSuccess(this, "OTP Sent", "OTP sent successfully.");
             sendOtpNotification(currentOtp);
 
             // Show demo dialog (copy & autofill)
             showOtpDialog(currentOtp);
-
-            // Reset verification flag because a new OTP was requested
-            otpVerified = false;
-            setLoginButtonEnabled(false);
         });
 
-        // Verify OTP button
-        verifyOtpButton.setOnClickListener(v -> {
-            String entered = otpInput.getText().toString().trim();
-            if (entered.isEmpty()) {
-                CustomAlert.showWarning(this, "Input Required", "Please enter OTP");
-                return;
+        // Auto-Verify Logic
+        otpInput.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
-            if (currentOtp == null) {
-                CustomAlert.showWarning(this, "Action Required", "No OTP requested yet. Click Send OTP.");
-                return;
-            }
-            if (System.currentTimeMillis() > otpExpiryMillis) {
-                CustomAlert.showError(this, "Expired", "OTP expired. Please resend.");
-                return;
-            }
-            if (entered.equals(currentOtp)) {
-                CustomAlert.showSuccess(this, "Verified", "OTP Verified. You can now Login.");
 
-                // mark verified and enable login button
-                otpVerified = true;
-                setLoginButtonEnabled(true);
-            } else {
-                CustomAlert.showError(this, "Failed", "Invalid OTP. Please try again.");
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                if (s.length() == 6) {
+                    verifyAndLogin(s.toString());
+                }
             }
         });
 
@@ -201,56 +186,46 @@ public class LoginActivity extends AppCompatActivity {
 
             CustomAlert.showInfo(this, "Resent", "OTP has been resent.");
             sendOtpNotification(currentOtp);
-
             showOtpDialog(currentOtp);
-
-            // verification must be redone
-            otpVerified = false;
-            setLoginButtonEnabled(false);
         });
+    }
 
-        // NEW: Login button now requires OTP verification first
-        loginButton.setOnClickListener(v -> {
-            if (!otpVerified) {
-                CustomAlert.showWarning(this, "Verification Pending",
-                        "Please verify OTP first (use Send OTP → Verify).");
-                return;
-            }
+    private void verifyAndLogin(String enteredOtp) {
+        if (currentOtp == null)
+            return;
 
-            // proceed to fetch user details and open main activity
+        if (System.currentTimeMillis() > otpExpiryMillis) {
+            CustomAlert.showError(this, "Expired", "OTP expired. Please resend.");
+            otpInput.setText(""); // Clear for retry
+            return;
+        }
+
+        if (enteredOtp.equals(currentOtp)) {
+            if (otpTimer != null)
+                otpTimer.cancel();
+
+            // Proceed to login
             String aadhaar = aadhaarInput.getText().toString().trim();
             String dob = dobInput.getText().toString().trim();
             User user = userManager.getUser(aadhaar, dob);
 
             if (user != null) {
                 UserUtils.saveUserSession(LoginActivity.this, user);
+                Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show();
 
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 intent.putExtra("aadhaar_id", user.getAadhaarId());
                 intent.putExtra("dob", user.getDob());
-                intent.putExtra("name", user.getName());
-                intent.putExtra("email", user.getEmail());
-                intent.putExtra("mobile", user.getMobile());
-                intent.putExtra("photo", user.getPhoto());
-                intent.putExtra("address", user.getAddress());
-                intent.putExtra("city", user.getCity());
-                intent.putExtra("pincode", user.getPincode());
-                intent.putExtra("eligible", user.isEligible());
-
+                // Pass other extras if needed or rely on session
                 startActivity(intent);
                 finish();
-            } else {
-                // This should be rare because we validated earlier before sending OTP,
-                // but handle gracefully.
-                CustomAlert.showError(this, "Error", "User details not found. Please check Aadhaar/DOB.");
             }
-        });
-    }
-
-    // Helper to enable/disable the login button and indicate visually
-    private void setLoginButtonEnabled(boolean enabled) {
-        loginButton.setEnabled(enabled);
-        loginButton.setAlpha(enabled ? 1f : 0.5f);
+        } else {
+            // Optional: Shake animation or red border?
+            // For now, simple toast/alert if user stops typing
+            CustomAlert.showError(this, "Invalid OTP", "The code you entered is incorrect.");
+            otpInput.setText(""); // Reset to allow retry easily
+        }
     }
 
     // -------------------- OTP DIALOG --------------------
@@ -368,8 +343,7 @@ public class LoginActivity extends AppCompatActivity {
                 otpTimerText.setText("OTP expired");
                 Toast.makeText(LoginActivity.this, "OTP expired", Toast.LENGTH_SHORT).show();
                 currentOtp = null;
-                otpVerified = false;
-                setLoginButtonEnabled(false);
+                // otpVerified and setLoginButtonEnabled removed as they are no longer used
             }
         }.start();
     }

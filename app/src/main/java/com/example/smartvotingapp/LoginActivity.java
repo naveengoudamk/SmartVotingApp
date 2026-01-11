@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Html;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
@@ -247,12 +248,19 @@ public class LoginActivity extends AppCompatActivity {
             return;
 
         String title = "Verification Code";
-        String message = otp
-                + " is your One Time Password (OTP) for SmartVoting App. Valid for 2 minutes.\n\nDo not share this code with anyone.";
+        // HTML formatted message with Bold OTP
+        String message = "<b>" + otp + "</b>"
+                + " is your One Time Password (OTP) for SmartVoting App. Valid for 2 minutes.<br><br>Do not share this code with anyone.";
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(title);
-        builder.setMessage(message);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            builder.setMessage(Html.fromHtml(message, Html.FROM_HTML_MODE_LEGACY));
+        } else {
+            builder.setMessage(Html.fromHtml(message));
+        }
+
         builder.setCancelable(true);
 
         builder.setPositiveButton("Copy & Autofill", (dialog, which) -> {
@@ -273,7 +281,15 @@ public class LoginActivity extends AppCompatActivity {
             sendOtpButton.performClick();
         });
 
-        builder.create().show();
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Auto-dismiss after 3 seconds
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
+        }, 3000);
     }
 
     // -------------------- OTP utilities --------------------

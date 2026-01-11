@@ -141,33 +141,7 @@
                         android:layout_gravity="center_horizontal"
                         android:visibility="gone"/>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center"
-                        android:layout_marginTop="16dp">
 
-                        <androidx.appcompat.widget.AppCompatButton
-                            android:id="@+id/verifyOtpButton"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:layout_height="wrap_content"
-                            android:text="Verify OTP"
-                            android:textColor="#FFFFFF"
-                            android:background="@drawable/neon_button_bg"
-                            android:layout_marginEnd="8dp"
-                            android:visibility="gone"/>
-
-                        <androidx.appcompat.widget.AppCompatButton
-                            android:id="@+id/resendOtpButton"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Resend"
-                            android:textColor="#FFFFFF"
-                            android:background="@drawable/glass_input_bg"
-                            android:layout_marginStart="8dp"/>
-                    </LinearLayout>
                 </LinearLayout>
 
                 <androidx.appcompat.widget.AppCompatButton

@@ -40,7 +40,7 @@ public class LoginActivity extends AppCompatActivity {
     TextView govtLoginLink;
 
     // OTP UI
-    Button sendOtpButton, verifyOtpButton, resendOtpButton;
+    Button sendOtpButton; // verifyOtpButton and resendOtpButton removed
     EditText otpInput;
     LinearLayout otpArea;
     TextView otpTimerText;
@@ -73,9 +73,10 @@ public class LoginActivity extends AppCompatActivity {
         ImageButton btnAdminLogin = findViewById(R.id.btnAdminLogin);
 
         // OTP related views
+        // OTP related views
         sendOtpButton = findViewById(R.id.sendOtpButton);
-        // verifyOtpButton = findViewById(R.id.verifyOtpButton); // Removed
-        resendOtpButton = findViewById(R.id.resendOtpButton);
+        // verifyOtpButton removed
+        // resendOtpButton removed
         otpInput = findViewById(R.id.otpInput);
         otpArea = findViewById(R.id.otpArea);
         otpTimerText = findViewById(R.id.otpTimerText);
@@ -132,6 +133,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         // Send OTP flow
+        // Send OTP flow
         sendOtpButton.setOnClickListener(v -> {
             String aadhaar = aadhaarInput.getText().toString().trim();
             String dob = dobInput.getText().toString().trim();
@@ -153,13 +155,27 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
+            // Cancel any existing timer if resending
+            if (otpTimer != null) {
+                otpTimer.cancel();
+            }
+
             // Generate OTP and "send"
             currentOtp = generateOtp(6);
             otpExpiryMillis = System.currentTimeMillis() + (2 * 60 * 1000); // 2 minutes validity
+
             showOtpArea(true);
             startOtpCountdown(2 * 60 * 1000L);
 
-            CustomAlert.showSuccess(this, "OTP Sent", "OTP sent successfully.");
+            // Determine if this is a first send or resend based on button text or state
+            String successTitle = "OTP Sent";
+            String successMsg = "OTP sent successfully.";
+            if ("Resend OTP".equals(sendOtpButton.getText().toString())) {
+                successTitle = "Resent";
+                successMsg = "OTP has been resent.";
+            }
+
+            CustomAlert.showSuccess(this, successTitle, successMsg);
             sendOtpNotification(currentOtp);
 
             // Show demo dialog (copy & autofill)
@@ -184,19 +200,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        // Resend OTP
-        resendOtpButton.setOnClickListener(v -> {
-            if (otpTimer != null)
-                otpTimer.cancel();
-
-            currentOtp = generateOtp(6);
-            otpExpiryMillis = System.currentTimeMillis() + (2 * 60 * 1000);
-            startOtpCountdown(2 * 60 * 1000L);
-
-            CustomAlert.showInfo(this, "Resent", "OTP has been resent.");
-            sendOtpNotification(currentOtp);
-            showOtpDialog(currentOtp);
-        });
     }
 
     private void verifyAndLogin(String enteredOtp) {
@@ -267,7 +270,7 @@ public class LoginActivity extends AppCompatActivity {
         builder.setNegativeButton("Close", (dialog, which) -> dialog.dismiss());
 
         builder.setNeutralButton("Resend", (dialog, which) -> {
-            resendOtpButton.performClick();
+            sendOtpButton.performClick();
         });
 
         builder.create().show();
@@ -328,12 +331,14 @@ public class LoginActivity extends AppCompatActivity {
             otpArea.setVisibility(View.VISIBLE);
             otpTimerText.setVisibility(View.VISIBLE);
             otpInput.requestFocus();
+            sendOtpButton.setText("Resend OTP");
         } else {
             otpArea.setVisibility(View.GONE);
             otpTimerText.setVisibility(View.GONE);
             if (otpTimer != null)
                 otpTimer.cancel();
             currentOtp = null;
+            sendOtpButton.setText("Send OTP");
         }
     }
 

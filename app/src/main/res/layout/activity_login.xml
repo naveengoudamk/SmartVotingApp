@@ -32,6 +32,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center_horizontal"
+            android:layout_gravity="center"
             android:background="@android:color/transparent">
 
             <!-- Glass Card Container -->
@@ -203,7 +204,7 @@
         android:id="@+id/btnAdminLogin"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:src="@drawable/ic_notification"
+        android:src="@drawable/ic_security"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:layout_gravity="top|end"
         android:layout_marginTop="48dp"

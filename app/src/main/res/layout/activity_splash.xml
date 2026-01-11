@@ -1,25 +1,50 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    android:gravity="center">
+    android:layout_height="match_parent">
 
+    <!-- Shared Background Image -->
     <ImageView
-        android:id="@+id/splash_logo"
-        android:layout_width="180dp"
-        android:layout_height="180dp"
-        android:layout_centerInParent="true"
-        android:src="@drawable/app_icon"
-        android:contentDescription="App Logo" />
+        android:id="@+id/backgroundImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/indian_election_bg"
+        android:scaleType="centerCrop"
+        android:contentDescription="@null" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Made by Navi"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="32dp"/>
-</RelativeLayout>
+    <!-- Dark Overlay for Glass Effect coherence -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000" />
+
+    <!-- Content Container -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center">
+
+        <ImageView
+            android:id="@+id/splash_logo"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:layout_centerInParent="true"
+            android:src="@drawable/app_icon"
+            android:contentDescription="App Logo" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Made by Navi"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:textColor="#FFFFFF"
+            android:shadowColor="#000000"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="4"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="48dp"/>
+    </RelativeLayout>
+</FrameLayout>

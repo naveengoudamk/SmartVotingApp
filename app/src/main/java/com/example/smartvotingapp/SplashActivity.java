@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity;
 public class SplashActivity extends AppCompatActivity {
 
     private static final int SPLASH_DURATION = 2500; // 2.5 seconds
+    private Handler handler;
+    private Runnable runnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,11 +35,24 @@ public class SplashActivity extends AppCompatActivity {
         Animation fadeIn = AnimationUtils.loadAnimation(this, R.anim.splash_fade_in);
         logo.startAnimation(fadeIn);
 
-        // Proceed to login after splash duration
-        // Update check will happen in LoginActivity
-        new Handler().postDelayed(() -> {
+        // Initialize Handler and Runnable
+        handler = new Handler();
+        runnable = () -> {
             startActivity(new Intent(SplashActivity.this, LoginActivity.class));
             finish();
-        }, SPLASH_DURATION);
+        };
+
+        // Proceed to login after splash duration
+        handler.postDelayed(runnable, SPLASH_DURATION);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Prevent double navigation if activity is destroyed (e.g. theme change
+        // restart)
+        if (handler != null && runnable != null) {
+            handler.removeCallbacks(runnable);
+        }
     }
 }

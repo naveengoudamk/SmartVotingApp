@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
     private android.widget.EditText etSearch;
     private android.widget.TextView tvNotificationBadge;
     private NotificationHelper notificationHelper;
+    private String pendingTargetId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +107,8 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Error loading home", Toast.LENGTH_SHORT).show();
             }
 
+            // ... inside onCreate ...
+
             // Setup bottom navigation
             if (bottomNavigationView != null) {
                 bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -126,6 +129,14 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         if (selectedFragment != null) {
+                            // Pass pending target ID if available
+                            if (pendingTargetId != null) {
+                                Bundle args = new Bundle();
+                                args.putString("target_id", pendingTargetId);
+                                selectedFragment.setArguments(args);
+                                pendingTargetId = null; // Reset after usage
+                            }
+
                             loadFragment(selectedFragment);
                             if (etSearch != null) {
                                 etSearch.setText("");
@@ -225,12 +236,18 @@ public class MainActivity extends AppCompatActivity {
     private void handleNavigationIntent(Intent intent) {
         if (intent != null && intent.hasExtra("navigate_to")) {
             String destination = intent.getStringExtra("navigate_to");
+            if (intent.hasExtra("target_id")) {
+                pendingTargetId = intent.getStringExtra("target_id");
+            }
+
             if ("vote".equals(destination)) {
                 bottomNavigationView.setSelectedItemId(R.id.nav_vote);
             } else if ("account".equals(destination)) {
                 bottomNavigationView.setSelectedItemId(R.id.nav_account);
             } else if ("home".equals(destination)) {
                 bottomNavigationView.setSelectedItemId(R.id.nav_home);
+            } else if ("history".equals(destination)) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_history);
             }
         }
     }

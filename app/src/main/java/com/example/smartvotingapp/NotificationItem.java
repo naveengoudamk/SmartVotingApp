@@ -4,6 +4,7 @@ public class NotificationItem {
     public static final int TYPE_NEWS = 1;
     public static final int TYPE_ELECTION = 2;
     public static final int TYPE_FEEDBACK = 3;
+    public static final int TYPE_RESULT = 4;
 
     private int type;
     private String title;

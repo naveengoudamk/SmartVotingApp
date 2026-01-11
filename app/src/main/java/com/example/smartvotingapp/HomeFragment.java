@@ -17,6 +17,8 @@ public class HomeFragment extends Fragment implements SearchableFragment, NewsMa
     private NewsManager newsManager;
     private List<News> allNews;
 
+    private String targetId;
+
     public HomeFragment() {
     }
 
@@ -25,6 +27,10 @@ public class HomeFragment extends Fragment implements SearchableFragment, NewsMa
             Bundle savedInstanceState) {
         try {
             View view = inflater.inflate(R.layout.fragment_home, container, false);
+
+            if (getArguments() != null) {
+                targetId = getArguments().getString("target_id");
+            }
 
             newsManager = new NewsManager(getContext());
             // Register listener immediately
@@ -140,6 +146,7 @@ public class HomeFragment extends Fragment implements SearchableFragment, NewsMa
 
         for (News news : newsList) {
             View newsView = LayoutInflater.from(getContext()).inflate(R.layout.item_news_card, newsContainer, false);
+            newsView.setTag(news.getId()); // Set ID as tag for scrolling
 
             TextView title = newsView.findViewById(R.id.tvTitle);
             TextView date = newsView.findViewById(R.id.tvDate);
@@ -195,6 +202,31 @@ public class HomeFragment extends Fragment implements SearchableFragment, NewsMa
             newsView.startAnimation(animation);
 
             newsContainer.addView(newsView);
+        }
+
+        // Scroll to target if present
+        if (targetId != null) {
+            newsContainer.post(() -> {
+                for (int i = 0; i < newsContainer.getChildCount(); i++) {
+                    View child = newsContainer.getChildAt(i);
+                    if (child.getTag() != null && child.getTag().equals(targetId)) {
+                        int y = child.getTop();
+                        if (getView() != null && getView().findViewById(R.id.newsContainer)
+                                .getParent() instanceof androidx.core.widget.NestedScrollView) {
+                            ((androidx.core.widget.NestedScrollView) getView().findViewById(R.id.newsContainer)
+                                    .getParent()).smoothScrollTo(0, y);
+                        } else {
+                            // Fallback if structure is different
+                            child.getParent().requestChildFocus(child, child);
+                        }
+                        // Highlight effect?
+                        child.setBackgroundColor(0x33FFC107); // Subtle highlight
+                        child.postDelayed(() -> child.setBackgroundColor(0x00000000), 2000);
+                        targetId = null;
+                        break;
+                    }
+                }
+            });
         }
     }
 }

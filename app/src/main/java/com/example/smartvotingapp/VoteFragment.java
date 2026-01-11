@@ -22,6 +22,7 @@ public class VoteFragment extends Fragment
     private ElectionAdapter adapter;
     private ElectionManager electionManager;
     private VoteManager voteManager;
+    private String targetId;
 
     @Nullable
     @Override
@@ -29,6 +30,10 @@ public class VoteFragment extends Fragment
             @Nullable Bundle savedInstanceState) {
         try {
             View view = inflater.inflate(R.layout.fragment_vote, container, false);
+
+            if (getArguments() != null) {
+                targetId = getArguments().getString("target_id");
+            }
 
             View guestOverlay = view.findViewById(R.id.guestOverlay);
             View voteContentContainer = view.findViewById(R.id.voteContentContainer);
@@ -78,6 +83,18 @@ public class VoteFragment extends Fragment
                 }
             });
             recyclerView.setAdapter(adapter);
+
+            // Scroll if targetId exists
+            if (targetId != null) {
+                for (int i = 0; i < electionList.size(); i++) {
+                    if (String.valueOf(electionList.get(i).getId()).equals(targetId)) {
+                        int pos = i;
+                        recyclerView.post(() -> recyclerView.smoothScrollToPosition(pos));
+                        targetId = null;
+                        break;
+                    }
+                }
+            }
 
             btnBatchVote = view.findViewById(R.id.btnBatchVote);
             btnBatchVote.setOnClickListener(v -> startBatchVoting());
@@ -154,6 +171,17 @@ public class VoteFragment extends Fragment
                 electionList.addAll(electionManager.getAllElections());
                 if (adapter != null) {
                     adapter.notifyDataSetChanged();
+                }
+                // Also check scroll here if data updated late
+                if (targetId != null) {
+                    for (int i = 0; i < electionList.size(); i++) {
+                        if (String.valueOf(electionList.get(i).getId()).equals(targetId)) {
+                            int pos = i;
+                            recyclerView.post(() -> recyclerView.smoothScrollToPosition(pos));
+                            targetId = null;
+                            break;
+                        }
+                    }
                 }
             });
         }

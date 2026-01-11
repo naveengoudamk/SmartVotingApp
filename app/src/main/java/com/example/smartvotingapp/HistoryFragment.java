@@ -31,6 +31,7 @@ public class HistoryFragment extends Fragment {
     private List<WinnerSummary> winnerList = new ArrayList<>();
     private HistoryAdapter historyAdapter;
     private WinnerSummaryAdapter winnerAdapter;
+    private String targetId;
 
     public HistoryFragment() {
     }
@@ -39,6 +40,10 @@ public class HistoryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         try {
             View view = inflater.inflate(R.layout.fragment_history, container, false);
+
+            if (getArguments() != null) {
+                targetId = getArguments().getString("target_id");
+            }
 
             rvHistory = view.findViewById(R.id.rvHistory);
             rvHistory.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -97,6 +102,17 @@ public class HistoryFragment extends Fragment {
         electionList.clear();
         electionList.addAll(electionManager.getAllElections());
         historyAdapter.notifyDataSetChanged();
+
+        if (targetId != null) {
+            for (int i = 0; i < electionList.size(); i++) {
+                if (String.valueOf(electionList.get(i).getId()).equals(targetId)) {
+                    int pos = i;
+                    rvHistory.post(() -> rvHistory.smoothScrollToPosition(pos));
+                    targetId = null;
+                    break;
+                }
+            }
+        }
 
         // Calculate Winners for Top Bar
         winnerList.clear();

@@ -63,6 +63,28 @@ public class NotificationHelper {
                         System.currentTimeMillis(), // Placeholder as we don't have creation time
                         String.valueOf(election.getId())));
             }
+
+            // 2.1 Election Result Notifications
+            if (election.getResultDate() != null && !election.getResultDate().isEmpty()) {
+                long timestamp = System.currentTimeMillis();
+                try {
+                    // Try standard format first, fallback to current time
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd",
+                            java.util.Locale.getDefault());
+                    java.util.Date date = sdf.parse(election.getResultDate());
+                    if (date != null)
+                        timestamp = date.getTime();
+                } catch (Exception e) {
+                    // fall back to current
+                }
+
+                notifications.add(new NotificationItem(
+                        NotificationItem.TYPE_RESULT,
+                        "Results Announced",
+                        "Results for " + election.getTitle() + " have been declared!",
+                        timestamp,
+                        String.valueOf(election.getId())));
+            }
         }
 
         // 3. Feedback Notifications (Resolved)

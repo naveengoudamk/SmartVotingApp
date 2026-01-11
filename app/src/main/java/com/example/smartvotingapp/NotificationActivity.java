@@ -71,6 +71,8 @@ public class NotificationActivity extends AppCompatActivity {
             sender = "Election Commission";
         else if (item.getType() == NotificationItem.TYPE_FEEDBACK)
             sender = "Support Team";
+        else if (item.getType() == NotificationItem.TYPE_RESULT)
+            sender = "Election Commission";
 
         tvSender.setText("From: " + sender);
 
@@ -83,15 +85,34 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     private void handleNotificationClick(NotificationItem item) {
-        Intent intent = new Intent(this, MainActivity.class);
+        boolean isAdmin = getIntent().getBooleanExtra("is_admin", false);
+        String deptCode = getIntent().getStringExtra("dept_code");
+
+        Intent intent;
+        if (isAdmin) {
+            intent = new Intent(this, AdminDashboardActivity.class);
+            intent.putExtra("dept_code", deptCode);
+            // Verify if deptCode is null, maybe handle gracefully, but we pass what we got
+        } else {
+            intent = new Intent(this, MainActivity.class);
+        }
+
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("target_id", item.getReferenceId());
 
         if (item.getType() == NotificationItem.TYPE_NEWS) {
             intent.putExtra("navigate_to", "home");
         } else if (item.getType() == NotificationItem.TYPE_ELECTION) {
-            intent.putExtra("navigate_to", "vote");
+            intent.putExtra("navigate_to", isAdmin ? "election" : "vote"); // Admin maps to election, User to vote
         } else if (item.getType() == NotificationItem.TYPE_FEEDBACK) {
-            intent.putExtra("navigate_to", "account");
+            // Feedback for Admin? Maybe AdminFeedbackFragment
+            intent.putExtra("navigate_to", isAdmin ? "home" : "account"); // Admin home has recent feedback? or default
+            // Admin users don't get Feedback notifications usually (users get them).
+            // The item created in NotificationHelper: "Admin responded: ..." -> User
+            // notification.
+            // But if Admin gets one, default to home.
+        } else if (item.getType() == NotificationItem.TYPE_RESULT) {
+            intent.putExtra("navigate_to", isAdmin ? "result" : "history");
         }
 
         startActivity(intent);

@@ -18,6 +18,8 @@ public class AdminDashboardActivity extends AppCompatActivity {
     private NotificationHelper notificationHelper;
     private BottomNavigationView bottomNavigationView;
 
+    private String currentDeptCode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,27 +34,29 @@ public class AdminDashboardActivity extends AppCompatActivity {
         notificationHelper = new NotificationHelper(this);
 
         // Parse Admin Scope first
-        String deptCode = getIntent().getStringExtra("dept_code");
+        currentDeptCode = getIntent().getStringExtra("dept_code");
         String adminStateScope = null;
-        if (deptCode != null) {
-            if (deptCode.equals("KAR-GOVT"))
+        if (currentDeptCode != null) {
+            if (currentDeptCode.equals("KAR-GOVT"))
                 adminStateScope = "Karnataka";
-            else if (deptCode.equals("TN-GOVT"))
+            else if (currentDeptCode.equals("TN-GOVT"))
                 adminStateScope = "Tamil Nadu";
             // ECI-INDIA stays null (Global)
         }
         final String finalScope = adminStateScope;
 
         // Load default fragment with scope
-        try {
-            AdminHomeFragment homeFragment = new AdminHomeFragment();
-            Bundle args = new Bundle();
-            args.putString("admin_scope", finalScope);
-            homeFragment.setArguments(args);
-            loadFragment(homeFragment);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "Error loading dashboard: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        if (savedInstanceState == null) {
+            try {
+                AdminHomeFragment homeFragment = new AdminHomeFragment();
+                Bundle args = new Bundle();
+                args.putString("admin_scope", finalScope);
+                homeFragment.setArguments(args);
+                loadFragment(homeFragment);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Error loading dashboard: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
         }
 
         bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -103,6 +107,10 @@ public class AdminDashboardActivity extends AppCompatActivity {
         try {
             notificationIcon.setOnClickListener(v -> {
                 Intent notificationIntent = new Intent(AdminDashboardActivity.this, NotificationActivity.class);
+                notificationIntent.putExtra("is_admin", true);
+                if (currentDeptCode != null) {
+                    notificationIntent.putExtra("dept_code", currentDeptCode);
+                }
                 startActivity(notificationIntent);
             });
 
@@ -110,6 +118,9 @@ public class AdminDashboardActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // Handle navigation intent (e.g. returning from notification)
+        handleNavigationIntent(getIntent());
     }
 
     @Override
@@ -152,11 +163,57 @@ public class AdminDashboardActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        try {
+            handleNavigationIntent(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String pendingTargetId = null;
+
+    private void handleNavigationIntent(Intent intent) {
+        if (intent != null && intent.hasExtra("navigate_to")) {
+            String destination = intent.getStringExtra("navigate_to");
+            if (intent.hasExtra("target_id")) {
+                pendingTargetId = intent.getStringExtra("target_id");
+            }
+
+            if ("home".equals(destination)) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_admin_home);
+            } else if ("vote".equals(destination) || "election".equals(destination)) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_admin_elections);
+            } else if ("history".equals(destination) || "result".equals(destination)) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_admin_results);
+            }
+        }
+    }
+
     private void loadFragment(Fragment fragment) {
         try {
+            if (pendingTargetId != null) {
+                Bundle args = fragment.getArguments();
+                if (args == null)
+                    args = new Bundle();
+                args.putString("target_id", pendingTargetId);
+                fragment.setArguments(args);
+                pendingTargetId = null; // Consume it
+                // Note: We might be overwriting args set by bottomNav listener logic (the
+                // scope).
+                // We should ensure we don't lose the scope.
+                // The bottomNav listener sets args NEWLY.
+                // This loadFragment is called by the listener.
+                // BUT the listener creates the fragment then calls loadFragment.
+                // So here we are just adding to existing args.
+            }
+
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, fragment)
-                    .commitAllowingStateLoss(); // Safer than commit() in some async cases
+                    .commitAllowingStateLoss();
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(this, "Nav Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();

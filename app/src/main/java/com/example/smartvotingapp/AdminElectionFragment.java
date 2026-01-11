@@ -25,12 +25,14 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
     }
 
     private String adminScope;
+    private String targetId;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         try {
             if (getArguments() != null) {
                 adminScope = getArguments().getString("admin_scope");
+                targetId = getArguments().getString("target_id");
             }
             View view = inflater.inflate(R.layout.fragment_admin_election, container, false);
 
@@ -104,6 +106,24 @@ public class AdminElectionFragment extends Fragment implements ElectionManager.E
             btnManageOptions.setOnClickListener(v -> showManageVotingOptionsDialog(election));
 
             electionContainer.addView(electionView);
+
+            // Tag logic for scrolling
+            if (targetId != null && String.valueOf(election.getId()).equals(targetId)) {
+                final String tid = targetId;
+                electionView.post(() -> {
+                    int y = electionView.getTop();
+                    if (getView() != null && getView().findViewById(R.id.electionContainer)
+                            .getParent() instanceof android.widget.ScrollView) {
+                        ((android.widget.ScrollView) getView().findViewById(R.id.electionContainer).getParent())
+                                .smoothScrollTo(0, y);
+                    } else {
+                        electionView.getParent().requestChildFocus(electionView, electionView);
+                    }
+                    electionView.setBackgroundColor(0x33FFC107);
+                    electionView.postDelayed(() -> electionView.setBackgroundColor(0x00000000), 2000);
+                });
+                targetId = null; // Found it
+            }
         }
     }
 

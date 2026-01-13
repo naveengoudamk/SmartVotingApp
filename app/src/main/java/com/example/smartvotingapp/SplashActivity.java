@@ -31,9 +31,9 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        ImageView logo = findViewById(R.id.splash_logo);
-        Animation fadeIn = AnimationUtils.loadAnimation(this, R.anim.splash_fade_in);
-        logo.startAnimation(fadeIn);
+        android.view.View logoCard = findViewById(R.id.logo_card);
+        Animation splashAnim = AnimationUtils.loadAnimation(this, R.anim.splash_animation);
+        logoCard.startAnimation(splashAnim);
 
         // Initialize Handler and Runnable
         handler = new Handler();

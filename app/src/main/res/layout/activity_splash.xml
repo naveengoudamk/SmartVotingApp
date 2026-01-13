@@ -1,4 +1,5 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -23,28 +24,41 @@
         android:layout_height="match_parent"
         android:gravity="center">
 
-        <ImageView
-            android:id="@+id/splash_logo"
+        <androidx.cardview.widget.CardView
+            android:id="@+id/logo_card"
             android:layout_width="180dp"
             android:layout_height="180dp"
             android:layout_centerInParent="true"
-            android:src="@drawable/app_icon"
-            android:contentDescription="App Logo" />
+            app:cardCornerRadius="90dp"
+            app:cardElevation="12dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            android:backgroundTint="@android:color/transparent">
+
+            <ImageView
+                android:id="@+id/splash_logo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/app_icon"
+                android:scaleType="centerCrop"
+                android:contentDescription="App Logo" />
+        </androidx.cardview.widget.CardView>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Made by Navi"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:textStyle="bold"
-            android:letterSpacing="0.1"
-            android:textColor="#FFFFFF"
-            android:shadowColor="#000000"
-            android:shadowDx="2"
-            android:shadowDy="2"
-            android:shadowRadius="4"
+            android:letterSpacing="0.2"
+            android:textColor="#B3FFFFFF"
+            android:shadowColor="#40000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="48dp"/>
+            android:layout_marginBottom="48dp"
+            android:textAllCaps="true"
+            android:fontFamily="sans-serif-medium"/>
     </RelativeLayout>
 </FrameLayout>

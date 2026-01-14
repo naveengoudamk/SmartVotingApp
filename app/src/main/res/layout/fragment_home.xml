@@ -3,13 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/transparent"
+    android:background="@drawable/bg_home_modern"
+    android:fillViewport="true"
     android:padding="12dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingBottom="80dp">
 
         <!-- Results Section -->
         <LinearLayout
@@ -24,15 +26,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🏆 Latest Results"
-                android:textColor="#059669"
+                android:textColor="#4ADE80"
                 android:textStyle="bold"
                 android:textSize="22sp"
+                android:shadowColor="#059669"
+                android:shadowDx="0"
+                android:shadowDy="0"
+                android:shadowRadius="10"
                 android:paddingBottom="12dp" />
 
              <androidx.recyclerview.widget.RecyclerView
                  android:id="@+id/rvHomeResults"
                  android:layout_width="match_parent"
                  android:layout_height="wrap_content"
+                 android:clipToPadding="false"
+                 android:paddingStart="4dp"
+                 android:paddingEnd="4dp"
                  android:orientation="horizontal" />
         </LinearLayout>
 
@@ -42,13 +51,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="🇮🇳 Indian Election News"
-            android:textColor="#1E3A8A"
-            android:textStyle="bold"
-            android:textSize="22sp"
-            android:paddingBottom="8dp" />
-
-
-
+            android:textColor="#FFFFFF"
+            android:fontFamily="sans-serif-black"
+            android:textSize="26sp"
+            android:layout_marginBottom="16dp"
+            android:shadowColor="#000000"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="4" />
 
         <LinearLayout
             android:id="@+id/newsContainer"
@@ -58,3 +68,4 @@
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
+

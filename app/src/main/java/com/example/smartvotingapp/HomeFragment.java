@@ -402,8 +402,8 @@ public class HomeFragment extends Fragment
             }
 
             android.view.animation.Animation animation = android.view.animation.AnimationUtils
-                    .loadAnimation(getContext(), R.anim.slide_in_up);
-            animation.setStartOffset(newsContainer.getChildCount() * 100);
+                    .loadAnimation(getContext(), R.anim.anim_glass_entry);
+            animation.setStartOffset(newsContainer.getChildCount() * 150);
             newsView.startAnimation(animation);
 
             newsContainer.addView(newsView);

@@ -1,82 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="6dp"
-    app:cardBackgroundColor="#FFFFFF">
+    android:layout_marginBottom="24dp"
+    android:background="@drawable/bg_glass_card"
+    android:elevation="0dp"
+    android:padding="0dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardImageContainer"
+        android:layout_width="0dp"
+        android:layout_height="220dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp"
+        android:layout_margin="8dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Image Container -->
-        <FrameLayout
+        <ImageView
+            android:id="@+id/imgNews"
             android:layout_width="match_parent"
-            android:layout_height="220dp">
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@android:drawable/ic_menu_gallery"
+            android:background="#33FFFFFF"
+            android:contentDescription="News Poster" />
 
-            <ImageView
-                android:id="@+id/imgNews"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@android:drawable/ic_menu_gallery"
-                android:background="#E0E0E0"
-                android:contentDescription="News Poster" />
+        <!-- Gradient Overlay for readability -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/gradient_overlay" />
 
-            <!-- Gradient Overlay -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/gradient_overlay" />
-
-            <!-- Title and Date on Image -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/tvTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="News Title"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:shadowColor="#000000"
-                    android:shadowDx="1"
-                    android:shadowDy="1"
-                    android:shadowRadius="2" />
-
-                <TextView
-                    android:id="@+id/tvDate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Oct 27, 2023"
-                    android:textColor="#E0E0E0"
-                    android:textSize="12sp"
-                    android:layout_marginTop="4dp" />
-
-            </LinearLayout>
-        </FrameLayout>
-
-        <!-- Description -->
-        <TextView
-            android:id="@+id/tvDescription"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:text="This is a short description of the news event. It gives users a quick overview of what happened."
-            android:textColor="#424242"
-            android:textSize="14sp"
-            android:lineSpacingExtra="4dp" />
+            android:layout_gravity="bottom"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="News Title"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:fontFamily="sans-serif-medium"
+                android:shadowColor="#80000000"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="4" />
 
-</androidx.cardview.widget.CardView>
+            <TextView
+                android:id="@+id/tvDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Oct 27, 2023"
+                android:textColor="#E0E0E0"
+                android:textSize="13sp"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/tvDescription"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
+        android:text="This is a short description."
+        android:textColor="#CCFFFFFF"
+        android:textSize="15sp"
+        android:lineSpacingExtra="6dp"
+        android:fontFamily="sans-serif-light"
+        app:layout_constraintTop_toBottomOf="@id/cardImageContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

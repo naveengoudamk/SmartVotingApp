@@ -1,49 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="120dp"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="140dp"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
-    app:cardBackgroundColor="#FFFFFF"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="2dp">
+    android:layout_margin="8dp"
+    android:background="@drawable/bg_glass_card"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="12dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <ImageView
+        android:id="@+id/imgWinnerLogo"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginBottom="8dp"
+        android:src="@drawable/ic_vote"
+        android:background="@drawable/circle_background"
+        android:padding="4dp"
+        android:contentDescription="Party Logo"/>
+
+    <TextView
+        android:id="@+id/tvWinnerParty"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:ellipsize="end"
         android:gravity="center"
-        android:orientation="vertical"
-        android:padding="8dp">
+        android:maxLines="1"
+        android:text="Party"
+        android:textSize="14sp"
+        android:fontFamily="sans-serif-medium"
+        android:textColor="#FFFFFF"/>
 
-        <ImageView
-            android:id="@+id/imgWinnerLogo"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginBottom="4dp"
-            android:src="@drawable/ic_vote"
-            android:contentDescription="Party Logo"/>
+    <TextView
+        android:id="@+id/tvState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:text="State"
+        android:textSize="12sp"
+        android:textColor="#B0BEC5"
+        android:layout_marginTop="2dp"/>
 
-        <TextView
-            android:id="@+id/tvWinnerParty"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:gravity="center"
-            android:maxLines="1"
-            android:text="Party"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:textColor="#000000"/>
+</LinearLayout>
 
-        <TextView
-            android:id="@+id/tvState"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:gravity="center"
-            android:maxLines="1"
-            android:text="State"
-            android:textSize="10sp"
-            android:textColor="#666666"/>
-    </LinearLayout>
-</com.google.android.material.card.MaterialCardView>

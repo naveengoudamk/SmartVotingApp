@@ -11,8 +11,13 @@
         android:layout_height="match_parent"
         android:src="@drawable/indian_election_bg"
         android:scaleType="centerCrop"
-        android:alpha="0.2"
         android:contentDescription="@null" />
+
+    <!-- Dark Overlay for Glass Effect -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000" />
 
     <!-- Main Layout Over Image -->
     <LinearLayout

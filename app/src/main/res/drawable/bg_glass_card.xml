@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#26FFFFFF" /> <!-- 15% White for transparency -->
+    <solid android:color="#CCFFFFFF" /> <!-- More opaque white -->
     <stroke
         android:width="1dp"
-        android:color="#4DFFFFFF" /> <!-- 30% White border -->
+        android:color="#E5E7EB" /> <!-- Gray-200 border for visibility on white -->
     <corners android:radius="24dp" />
     <padding
         android:bottom="16dp"

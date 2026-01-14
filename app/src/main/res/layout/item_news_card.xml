@@ -73,7 +73,7 @@
         android:paddingEnd="16dp"
         android:paddingBottom="16dp"
         android:text="This is a short description."
-        android:textColor="#CCFFFFFF"
+        android:textColor="#374151"
         android:textSize="15sp"
         android:lineSpacingExtra="6dp"
         android:fontFamily="sans-serif-light"

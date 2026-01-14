@@ -28,7 +28,7 @@
         android:text="Party"
         android:textSize="14sp"
         android:fontFamily="sans-serif-medium"
-        android:textColor="#FFFFFF"/>
+        android:textColor="#1F2937"/>
 
     <TextView
         android:id="@+id/tvState"
@@ -39,7 +39,7 @@
         android:maxLines="1"
         android:text="State"
         android:textSize="12sp"
-        android:textColor="#B0BEC5"
+        android:textColor="#6B7280"
         android:layout_marginTop="2dp"/>
 
 </LinearLayout>

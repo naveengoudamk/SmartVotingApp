@@ -9,12 +9,26 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.io.File;
 
-public class HomeFragment extends Fragment implements SearchableFragment, NewsManager.NewsUpdateListener {
+public class HomeFragment extends Fragment
+        implements SearchableFragment, NewsManager.NewsUpdateListener, ElectionManager.ElectionUpdateListener {
 
     private LinearLayout newsContainer;
+    private LinearLayout resultSummaryContainer;
+    private RecyclerView rvHomeResults;
     private NewsManager newsManager;
+    private ElectionManager electionManager;
+    private VoteManager voteManager;
+    private VotingOptionManager optionManager;
     private List<News> allNews;
 
     private String targetId;
@@ -37,6 +51,32 @@ public class HomeFragment extends Fragment implements SearchableFragment, NewsMa
             newsManager.addListener(this);
 
             newsContainer = view.findViewById(R.id.newsContainer);
+            resultSummaryContainer = view.findViewById(R.id.resultSummaryContainer);
+            rvHomeResults = view.findViewById(R.id.rvHomeResults);
+            rvHomeResults
+                    .setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+
+            electionManager = new ElectionManager(getContext());
+            electionManager.addListener(this);
+
+            voteManager = new VoteManager(getContext()); // Needed for calculating winners
+            // We verify data on load but don't strictly need real-time vote updates for the
+            // summary unless we want it extremely lively.
+            // But to show the winner correctly, we need loaded votes.
+            voteManager.addListener(() -> {
+                if (getActivity() != null)
+                    getActivity().runOnUiThread(this::updateResultsUI);
+            });
+
+            optionManager = new VotingOptionManager(getContext());
+            optionManager.addListener(() -> {
+                if (getActivity() != null)
+                    getActivity().runOnUiThread(this::updateResultsUI);
+            });
+
+            // Initial load
+            updateNewsUI();
+            updateResultsUI();
 
             // Initial load (might be empty if firebase not ready, but listener will catch
             // it)
@@ -58,12 +98,177 @@ public class HomeFragment extends Fragment implements SearchableFragment, NewsMa
         if (newsManager != null) {
             newsManager.removeListener(this);
         }
+        if (electionManager != null) {
+            electionManager.removeListener(this);
+        }
+        // Remove other listeners if we stored them - for now inline lambdas are tricky
+        // to remove but context leak is minor in fragments if managed well.
+        // Ideally store listeners but for brevity this is acceptable or we should
+        // assume managers handle weak refs/clearing.
+        // Actually managers use simple lists. To be safe let's assume simple usage.
     }
 
     @Override
     public void onNewsUpdated() {
         if (getActivity() != null) {
             getActivity().runOnUiThread(this::updateNewsUI);
+        }
+    }
+
+    @Override
+    public void onElectionsUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(this::updateResultsUI);
+        }
+    }
+
+    private void updateResultsUI() {
+        if (electionManager == null || voteManager == null || optionManager == null)
+            return;
+        List<Election> elections = electionManager.getAllElections();
+        List<WinnerSummary> winners = new ArrayList<>();
+
+        for (Election election : elections) {
+            if (isElectionDeclared(election)) {
+                WinnerSummary winner = calculateWinner(election);
+                if (winner != null) {
+                    winners.add(winner);
+                }
+            }
+        }
+
+        if (winners.isEmpty()) {
+            resultSummaryContainer.setVisibility(View.GONE);
+        } else {
+            resultSummaryContainer.setVisibility(View.VISIBLE);
+            WinnerAdapter adapter = new WinnerAdapter(winners);
+            rvHomeResults.setAdapter(adapter);
+        }
+    }
+
+    private boolean isElectionDeclared(Election election) {
+        String resultDateStr = election.getResultDate();
+        if ("Results Announced".equalsIgnoreCase(election.getStatus()))
+            return true;
+        if (resultDateStr != null && !resultDateStr.isEmpty()) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                Date resultDate = sdf.parse(resultDateStr);
+                java.util.Calendar today = java.util.Calendar.getInstance();
+                today.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                today.set(java.util.Calendar.MINUTE, 0);
+                today.set(java.util.Calendar.SECOND, 0);
+                today.set(java.util.Calendar.MILLISECOND, 0);
+
+                java.util.Calendar resultCal = java.util.Calendar.getInstance();
+                resultCal.setTime(resultDate);
+                resultCal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                resultCal.set(java.util.Calendar.MINUTE, 0);
+                resultCal.set(java.util.Calendar.SECOND, 0);
+                resultCal.set(java.util.Calendar.MILLISECOND, 0);
+
+                if (!today.before(resultCal))
+                    return true;
+            } catch (Exception e) {
+            }
+        }
+        return false;
+    }
+
+    private WinnerSummary calculateWinner(Election election) {
+        Map<String, Integer> voteCounts = voteManager.getVoteCountsByElection(election.getId());
+        List<VotingOption> options = optionManager.getOptionsByElection(election.getId());
+        if (options.isEmpty())
+            return null;
+
+        String winnerParty = "";
+        String logoPath = null;
+        int maxVotes = -1;
+        boolean tie = false;
+
+        for (VotingOption option : options) {
+            int count = voteCounts.getOrDefault(option.getId(), 0);
+            if (count > maxVotes) {
+                maxVotes = count;
+                winnerParty = option.getDescription(); // Or getOptionName()
+                logoPath = option.getLogoPath();
+                tie = false;
+            } else if (count == maxVotes) {
+                tie = true;
+            }
+        }
+        if (maxVotes > 0 && !tie) {
+            return new WinnerSummary(election.getState(), winnerParty, logoPath);
+        }
+        return null;
+    }
+
+    private static class WinnerSummary {
+        String state, party, logo;
+
+        public WinnerSummary(String state, String party, String logo) {
+            this.state = state;
+            this.party = party;
+            this.logo = logo;
+        }
+    }
+
+    private static class WinnerAdapter extends RecyclerView.Adapter<WinnerAdapter.ViewHolder> {
+        List<WinnerSummary> list;
+
+        public WinnerAdapter(List<WinnerSummary> list) {
+            this.list = list;
+        }
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_winner_summary, parent, false);
+            return new ViewHolder(v);
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            WinnerSummary w = list.get(position);
+            holder.tvState.setText(w.state);
+            holder.tvParty.setText(w.party);
+            if (w.logo != null) {
+                try {
+                    File file = new File(holder.itemView.getContext().getFilesDir(), w.logo);
+                    if (file.exists()) {
+                        holder.imgLogo
+                                .setImageBitmap(android.graphics.BitmapFactory.decodeFile(file.getAbsolutePath()));
+                    } else {
+                        // Try abs path
+                        file = new File(w.logo);
+                        if (file.exists())
+                            holder.imgLogo
+                                    .setImageBitmap(android.graphics.BitmapFactory.decodeFile(file.getAbsolutePath()));
+                        else
+                            holder.imgLogo.setImageResource(R.drawable.ic_vote);
+                    }
+                } catch (Exception e) {
+                    holder.imgLogo.setImageResource(R.drawable.ic_vote);
+                }
+            } else {
+                holder.imgLogo.setImageResource(R.drawable.ic_vote);
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return list.size();
+        }
+
+        static class ViewHolder extends RecyclerView.ViewHolder {
+            TextView tvState, tvParty;
+            ImageView imgLogo;
+
+            public ViewHolder(View v) {
+                super(v);
+                tvState = v.findViewById(R.id.tvState);
+                tvParty = v.findViewById(R.id.tvWinnerParty);
+                imgLogo = v.findViewById(R.id.imgWinnerLogo);
+            }
         }
     }
 

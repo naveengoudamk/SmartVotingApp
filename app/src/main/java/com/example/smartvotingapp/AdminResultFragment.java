@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 public class AdminResultFragment extends Fragment
-        implements VoteManager.VoteUpdateListener, ElectionManager.ElectionUpdateListener {
+        implements VoteManager.VoteUpdateListener, ElectionManager.ElectionUpdateListener,
+        VotingOptionManager.VotingOptionUpdateListener {
 
     private LinearLayout resultsContainer;
     private ElectionManager electionManager;
@@ -44,6 +45,7 @@ public class AdminResultFragment extends Fragment
             voteManager.addListener(this);
 
             optionManager = new VotingOptionManager(getContext());
+            optionManager.addListener(this);
 
             loadElections();
 
@@ -64,6 +66,9 @@ public class AdminResultFragment extends Fragment
         if (electionManager != null) {
             electionManager.removeListener(this);
         }
+        if (optionManager != null) {
+            optionManager.removeListener(this);
+        }
     }
 
     @Override
@@ -75,6 +80,13 @@ public class AdminResultFragment extends Fragment
 
     @Override
     public void onElectionsUpdated() {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(this::loadElections);
+        }
+    }
+
+    @Override
+    public void onVotingOptionsUpdated() {
         if (getActivity() != null) {
             getActivity().runOnUiThread(this::loadElections);
         }

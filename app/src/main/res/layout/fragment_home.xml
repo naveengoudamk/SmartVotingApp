@@ -11,6 +11,31 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Results Section -->
+        <LinearLayout
+            android:id="@+id/resultSummaryContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginBottom="24dp">
+            
+             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🏆 Latest Results"
+                android:textColor="#059669"
+                android:textStyle="bold"
+                android:textSize="22sp"
+                android:paddingBottom="12dp" />
+
+             <androidx.recyclerview.widget.RecyclerView
+                 android:id="@+id/rvHomeResults"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:orientation="horizontal" />
+        </LinearLayout>
+
         <!-- Header -->
         <TextView
             android:id="@+id/tvHeader"
